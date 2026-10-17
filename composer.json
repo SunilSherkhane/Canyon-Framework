@@ -1,0 +1,23 @@
+{
+    "name": "canyon/framework",
+    "description": "A minimal PHP framework inspired by Laravel and CodeIgniter",
+    "type": "library",
+    "require": {
+        "php": "^8.1",
+        "ext-mbstring": "*",
+        "ext-json": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "Canyon\\": "app/"
+        },
+        "files": [
+            "app/Helpers/functions.php"
+        ]
+    },
+    "bin": [
+        "canyon"
+    ],
+    "license": "MIT",
+    "keywords": ["framework", "mvc", "laravel", "codeigniter", "php"]
+}
