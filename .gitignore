@@ -1,0 +1,30 @@
+# Composer vendor directory
+/vendor/
+
+# Storage directory
+/storage/
+
+# Environment files
+.env
+
+# IDE and editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Node modules (if frontend assets installed)
+/node_modules/
+
+# Build artifacts
+/dist/
+/build/
+
+# PHP files that shouldn't be committed
+*.log
+/*.php~
