@@ -1,116 +1,136 @@
-# Canyon Framework - Apache Configuration
-# Security hardened
+# Canyon Framework — Shared Hosting Optimized .htaccess
+# This file is designed to work on ANY shared hosting (cPanel, Plesk, GoDaddy, HostGator, Bluehost, etc.)
 
-# Disable directory listing
-Options -Indexes
+# ============================================================
+# SECURITY: Protect sensitive files
+# ============================================================
 
-# Enable URL rewriting
-RewriteEngine On
+# Block access to hidden files (starting with .)
+<FilesMatch "^\.">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
 
-# Redirect HTTP to HTTPS (uncomment if HTTPS is available)
-RewriteCond %{HTTPS} !=on
-RewriteCond %{HTTP_HOST} !^localhost$ [NC]
-RewriteCond %{HTTP_HOST} !^127\.0\.0\.1$ [NC]
-RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+# Block access to sensitive config files
+<FilesMatch "\.(env|env\..*|log|md|sql|lock)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
 
-# Route all requests to index.php
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteRule ^ index.php [L]
+# Block access to common sensitive files
+<FilesMatch "^(config\.php|composer\.json|composer\.lock|package\.json|phpunit\.xml)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
 
-# Security headers
-<IfModule mod_headers.c>
-    # Prevent clickjacking
-    Header always set X-Frame-Options "DENY"
-    
-    # Prevent MIME type sniffing
-    Header always set X-Content-Type-Options "nosniff"
-    
-    # XSS Protection (legacy browsers)
-    Header always set X-XSS-Protection "1; mode=block"
-    
-    # Referrer Policy
-    Header always set Referrer-Policy "strict-origin-when-cross-origin"
-    
-    # Content Security Policy
-    # NOTE: 'unsafe-inline' is kept for style-src only (bundled views use inline <style>).
-    # script-src is locked to 'self' + the pinned CDN - there are no inline <script> blocks.
-    Header always set Content-Security-Policy "default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; img-src 'self' data:; font-src 'self' https://cdn.jsdelivr.net; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
-    
-    # Permissions Policy
-    Header always set Permissions-Policy "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()"
-    
-    # HSTS (only for HTTPS)
-    Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains" env=HTTPS
+# Block access to storage directory
+<IfModule mod_rewrite.c>
+    RewriteRule ^storage/ - [F,L]
 </IfModule>
 
-# Disable ETag
-Header unset ETag
-FileETag None
+# Block access to app directory (if accessible)
+<IfModule mod_rewrite.c>
+    RewriteRule ^app/ - [F,L]
+</IfModule>
 
-# Set expiration headers for static assets
+# Block access to vendor directory
+<IfModule mod_rewrite.c>
+    RewriteRule ^vendor/ - [F,L]
+</IfModule>
+
+# ============================================================
+# URL ROUTING: Route everything to index.php
+# ============================================================
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    
+    # If the requested file/directory doesn't exist, route to index.php
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^ index.php [L]
+</IfModule>
+
+# ============================================================
+# CACHING: Browser cache for static files
+# ============================================================
+
 <IfModule mod_expires.c>
     ExpiresActive On
-    ExpiresByType text/css "access plus 1 year"
-    ExpiresByType text/javascript "access plus 1 year"
-    ExpiresByType application/javascript "access plus 1 year"
-    ExpiresByType application/x-javascript "access plus 1 year"
-    ExpiresByType image/png "access plus 1 year"
+    
+    # Images
     ExpiresByType image/jpeg "access plus 1 year"
+    ExpiresByType image/png "access plus 1 year"
     ExpiresByType image/gif "access plus 1 year"
     ExpiresByType image/svg+xml "access plus 1 year"
     ExpiresByType image/webp "access plus 1 year"
-    ExpiresByType font/ttf "access plus 1 year"
-    ExpiresByType font/otf "access plus 1 year"
+    
+    # CSS and JavaScript
+    ExpiresByType text/css "access plus 1 year"
+    ExpiresByType application/javascript "access plus 1 year"
+    ExpiresByType application/x-javascript "access plus 1 year"
+    
+    # Fonts
     ExpiresByType font/woff "access plus 1 year"
     ExpiresByType font/woff2 "access plus 1 year"
-    ExpiresByType application/pdf "access plus 1 year"
-    ExpiresDefault "access plus 2 days"
+    ExpiresByType font/ttf "access plus 1 year"
+    
+    # Default
+    ExpiresDefault "access plus 1 month"
 </IfModule>
 
-# Block access to sensitive files
-<FilesMatch "^\.">
-    Require all denied
-</FilesMatch>
+# ============================================================
+# COMPRESSION: Gzip compression for faster loading
+# ============================================================
 
-<FilesMatch "\.(env|env\..*|config\.php|composer\.json|composer\.lock)$">
-    Require all denied
-</FilesMatch>
-
-# Block access to storage and logs directories
-<DirectoryMatch "^.*/storage/">
-    Require all denied
-</DirectoryMatch>
-
-<DirectoryMatch "^.*/logs/">
-    Require all denied
-</DirectoryMatch>
-
-# Block PHP execution in uploads directory (if exists)
-<DirectoryMatch "^.*/uploads/">
-    <FilesMatch "\.php$">
-        Require all denied
-    </FilesMatch>
-</DirectoryMatch>
-
-# Compression
 <IfModule mod_deflate.c>
     AddOutputFilterByType DEFLATE text/plain
     AddOutputFilterByType DEFLATE text/html
-    AddOutputFilterByType DEFLATE text/xml
     AddOutputFilterByType DEFLATE text/css
-    AddOutputFilterByType DEFLATE application/xml
-    AddOutputFilterByType DEFLATE application/xhtml+xml
-    AddOutputFilterByType DEFLATE application/rss+xml
     AddOutputFilterByType DEFLATE application/javascript
-    AddOutputFilterByType DEFLATE application/x-javascript
     AddOutputFilterByType DEFLATE application/json
+    AddOutputFilterByType DEFLATE image/svg+xml
 </IfModule>
 
-# Custom error pages
-ErrorDocument 400 "Bad Request"
-ErrorDocument 401 "Unauthorized"
-ErrorDocument 403 "Forbidden"
-ErrorDocument 404 "Not Found"
-ErrorDocument 500 "Internal Server Error"
+# ============================================================
+# SECURITY HEADERS (only if mod_headers is available)
+# ============================================================
+
+<IfModule mod_headers.c>
+    # Prevent clickjacking
+    Header set X-Frame-Options "DENY"
+    
+    # Prevent MIME type sniffing
+    Header set X-Content-Type-Options "nosniff"
+    
+    # XSS Protection
+    Header set X-XSS-Protection "1; mode=block"
+    
+    # Referrer Policy
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
+
+# ============================================================
+# PHP SETTINGS (if allowed by host)
+# ============================================================
+
+<IfModule mod_php.c>
+    php_value upload_max_filesize 10M
+    php_value post_max_size 10M
+    php_value max_execution_time 300
+    php_value memory_limit 128M
+</IfModule>
+
+# ============================================================
+# DISABLE DIRECTORY LISTING
+# ============================================================
+
+Options -Indexes
+
+# ============================================================
+# CUSTOM ERROR PAGES
+# ============================================================
+
+ErrorDocument 404 "404 - Page Not Found"
+ErrorDocument 403 "403 - Access Denied"
+ErrorDocument 500 "500 - Server Error"
