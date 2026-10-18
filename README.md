@@ -1,6 +1,6 @@
 # 🌊 Canyon Framework
 
-**A lightweight, secure PHP framework inspired by Laravel, CodeIgniter, Elgg, Yii, Symfony, and QUIC.cloud — works on any shared hosting like WordPress.**
+**A lightweight, secure PHP framework inspired by Laravel, CodeIgniter - works on any shared hosting.**
 
 > Version: 0.5.0 | PHP: 8.1+ | License: MIT
 
