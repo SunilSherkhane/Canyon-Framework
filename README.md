@@ -1,25 +1,28 @@
 # 🌊 Canyon Framework
 
-**A modular, secure PHP framework inspired by Laravel, CodeIgniter, and Elgg — designed for building anything from APIs to social networks.**
+**A modular, secure PHP framework inspired by Laravel, CodeIgniter, Elgg, and QUIC.cloud — build anything from APIs to social networks to high-performance sites.**
 
-> Version: 0.4.0 | PHP: 8.1+ | License: MIT
+> Version: 0.5.0 | PHP: 8.1+ | License: MIT
 
 ---
 
 ## ⚡ Quick Start
 
 ```bash
-./canyon serve          # Start dev server (port 8000)
-./canyon routes          # List registered routes
-./canyon migrate         # Run database migrations
-./canyon queue work      # Process queued jobs
+./canyon serve              # Start dev server (port 8000)
+./canyon routes             # List registered routes
+./canyon migrate            # Run database migrations
+./canyon queue work         # Process queued jobs
+./canyon info               # Framework info
 ```
+
+**New to Canyon?** See **[INSTALLATION.md](INSTALLATION.md)** for step-by-step setup instructions.
 
 Open `http://localhost:8000/` — security headers, sessions, and CSRF active by default.
 
 ---
 
-## 📦 Feature Matrix (Laravel + CodeIgniter + Elgg Inspired)
+## 📦 Feature Matrix (Laravel + CodeIgniter + Elgg + QUIC.cloud Inspired)
 
 ### Core Architecture
 | Module | Class | Key Methods |
@@ -30,43 +33,63 @@ Open `http://localhost:8000/` — security headers, sessions, and CSRF active by
 | **Middleware** | `Middleware` | Abstract `handle($request, Closure $next)` — pipeline execution |
 | **Router** | `Router` | `get/post/put/delete/patch/any()`, `group()`, `{param}`, named routes, catch-all, HTTP method spoofing |
 | **Validation** | `Validation` | Rule strings (`'required\|email\|min:3'`), `passes()`, `fails()`, `errors()` |
+| **Plugin System** | `Plugin` | `loadAll()`, `isActive()`, `getSetting()`, `getUserConfig()` |
+| **HMAC** | `Hmac` | `generate()`, `validate()`, `signedUrl()`, `generateActionToken()` |
+| **Cron** | `Cron` | `register()`, `run()`, `runDue()`, `isDue()`, `addInterval()` |
 
 ### Database & Data
 | Module | Class | Key Methods |
 |---|---|---|
 | **Database** | `Database` | `select()`, `insert()`, `update()`, `delete()`, `statement()`, `beginTransaction()`, `transaction()` |
 | **Migration** | `Migration` | `migrate()`, `rollback()`, `reset()`, `status()` — `up()`/`down()` classes |
-| **Entity** | `Entity` | `find()`, `first()`, `save()`, `delete()`, `fillable`, `casts`, `getGuid()`, `getEntityType()` |
-| **Collection** | `Collection` | `filter()`, `map()`, `reduce()`, `where()`, `chunk()`, `skip()`, `take()`, `first()`, `last()`, `random()` |
+| **Entity** | `Entity` | `find()`, `first()`, `save()`, `delete()`, `fillable`, `casts`, `getGuid()` |
+| **Collection** | `Collection` | `filter()`, `map()`, `reduce()`, `where()`, `chunk()`, `skip()`, `take()`, `first()`, `last()` |
+| **Search** | `Search` | `query()`, `byType()`, `byOwner()`, `byMetadata()`, `advanced()`, `suggestions()` |
+| **River** | `River` | `add()`, `get()`, `forEntity()`, `forOwner()`, `deleteEntityItems()` |
 
 ### Views & UI
 | Module | Class | Key Methods |
 |---|---|---|
 | **View** | `View` | `make()`, `render()`, `exists()`, `escape()`, `raw()` — auto-escaping + path-traversal protection |
 | **Partial** | `Partial` | `section()`, `endSection()`, `yield()`, `include()`, `extend()`, `has()` |
-| **Widget** | `Widget` | `register()`, `render()`, `byPosition()`, `setPosition()`, `setOrder()`, `setUserConfig()` |
+| **Widget** | `Widget` | `register()`, `render()`, `byPosition()`, `setPosition()`, `setUserConfig()` |
+| **Menu** | `Menu` | `add()`, `remove()`, `get()`, `render()`, `addChildren()`, `setPriority()` |
+| **Themes** | `Themes` | `register()`, `activate()`, `setVariable()`, `addCss()`, `addJs()`, `render()` |
 
 ### Security
 | Module | Class | Key Methods |
 |---|---|---|
 | **Security** | `Security` | `csrfField()`, `verifyCsrfToken()`, `throttle()`, `throttleIp()`, `sanitizeInput()`, `escape()`, `logEvent()` |
-| **AccessControl** | `AccessControl` | `addRole()`, `addGroup()`, `inGroup()`, `setAccess()`, `canAccess()`, `getAccessible()` |
+| **AccessControl** | `AccessControl` | `addRole()`, `addGroup()`, `inGroup()`, `setAccess()`, `canAccess()` |
+| **Permissions** | `Permissions` | `can()`, `canEdit()`, `canDelete()`, `canView()`, `require()` |
+| **PageOwnership** | `PageOwnership` | `setOwner()`, `getOwner()`, `setContext()`, `pushContext()`, `popContext()` |
 
 ### Events & Queue
 | Module | Class | Key Methods |
 |---|---|---|
 | **EventDispatcher** | `EventDispatcher` | `listen()`, `dispatch()`, `subscribe()`, `hasListeners()` |
 | **Queue** | `Queue` | `push()`, `pop()`, `process()`, `work()`, `fail()`, `clear()` |
+| **Notification** | `Notification` | `send()`, `markRead()`, `subscribe()`, `unreadCount()`, `get()`, `stats()` |
 
 ### Services
 | Module | Class | Key Methods |
 |---|---|---|
 | **Cache** | `Cache` | `put()`, `get()`, `has()`, `remember()`, `flush()`, `forget()` |
 | **Email** | `Email` | `send()`, `queue()`, `sendTemplate()`, `sendNotification()`, `processQueue()` |
-| **Notification** | `Notification` | `send()`, `markRead()`, `subscribe()`, `unreadCount()`, `get()`, `stats()` |
 | **FileStorage** | `FileStorage` | `store()`, `get()`, `delete()`, `getUrl()`, `stream()`, `getByOwner()` |
 | **I18n** | `I18n` | `get()`, `trans()`, `choice()`, `setLocale()`, `detectLocale()`, `has()` |
 | **RPC** | `RPC` | `register()`, `handle()`, `getMethods()` — JSON-RPC 2.0 with API key auth |
+| **Settings** | `Settings` | `get()`, `set()`, `getUser()`, `setUser()`, `all()`, `allUser()` |
+
+### Performance (QUIC.cloud Inspired)
+| Module | Class | Key Methods |
+|---|---|---|
+| **AssetOptimizer** | `AssetOptimizer` | `minifyCss()`, `minifyJs()`, `minifyHtml()`, `combineCss()`, `lazyImage()`, `asyncCss()`, `deferJs()`, `generateCriticalCss()`, `cacheHeaders()`, `dnsPrefetch()`, `http2Push()`, `versioned()` |
+| **ImageOptimizer** | `ImageOptimizer` | `optimizeUpload()`, `generateWebP()`, `generateAvif()`, `generateResponsive()`, `srcset()`, `picture()`, `isImagickAvailable()` |
+| **DatabaseOptimizer** | `DatabaseOptimizer` | `cleanSessions()`, `cleanCache()`, `cleanQueue()`, `optimizeTables()`, `analyzeTables()`, `getDatabaseSize()`, `runAllCleanup()` |
+| **Opcache** | `Opcache` | `isEnabled()`, `getStatus()`, `clear()`, `invalidate()`, `precompile()`, `healthReport()` |
+| **Heartbeat** | `Heartbeat` | `shouldProcess()`, `process()`, `setEnabled()`, `setInterval()`, `status()` |
+| **PreloadCrawler** | `PreloadCrawler` | `loadSitemap()`, `crawl()`, `preload()`, `preloadUrls()`, `checkRobots()`, `getReport()` |
 
 ### CLI
 ```bash
@@ -90,7 +113,7 @@ canyon/
 │   ├── index.php        # Bootstrap: env, session, host check, dispatch
 │   └── .htaccess        # Rewrite rules + security headers
 ├── app/
-│   ├── Core/            # 16 framework classes (see above)
+│   ├── Core/            # 30 framework classes (see above)
 │   ├── Controllers/     # Base Controller + your controllers
 │   └── Helpers/         # env(), base_url(), asset(), route_path(), response_time()
 ├── routes/
@@ -102,11 +125,18 @@ canyon/
 ├── config/
 │   └── app.php          # App configuration
 ├── storage/             # Sessions, cache, logs, queue, files
+├── plugins/             # Plugin directory
+│   └── my-plugin/
+│       ├── canyon-plugin.php
+│       └── composer.json
 ├── .env                 # Environment (NOT committed)
 ├── .env.example         # Template for .env
 ├── canyon               # CLI binary
 ├── composer.json        # PSR-4 autoload + bin: canyon
-└── tests/               # PHPUnit (Security/, Router/ suites)
+├── phpunit.xml          # PHPUnit config
+├── INSTALLATION.md      # Step-by-step installation guide
+├── tests/               # PHPUnit (Security/, Router/ suites)
+└── README.md            # This file
 ```
 
 ---
@@ -127,96 +157,116 @@ Router::group(AuthMiddleware::class, function () {
 });
 ```
 
-### Controller + Validation + Database
+### Plugin System
 ```php
-<?php
-namespace Canyon\Controllers;
-
-class PostController extends Controller
-{
-    public function index(): string
-    {
-        $posts = $this->db()->select('posts', ['*'], [], 20);
-        return $this->view('posts.index', ['posts' => $posts]);
-    }
-
-    public function show(string $id): string
-    {
-        $post = $this->db()->select('posts', ['*'], ['id' => $id])[0] ?? null;
-        if (!$post) return $this->notFound();
-        return $this->view('posts.show', ['post' => $post]);
-    }
-
-    public function store(): never
-    {
-        $data = $this->post([
-            'title' => 'string',
-            'body' => 'string',
-            'category_id' => 'int',
-        ]);
-
-        $validator = new \Canyon\Core\Validation($data, [
-            'title' => 'required|string|max:255',
-            'body' => 'required|string|max:5000',
-        ]);
-
-        if ($validator->fails()) {
-            $this->json(['errors' => $validator->errors()], 422);
-        }
-
-        $id = $this->db()->insert('posts', $data);
-        $this->success(['id' => $id], 'Post created', 201);
-    }
-}
+// plugins/my-plugin/canyon-plugin.php
+return [
+    'plugin' => [
+        'name' => 'My Plugin',
+        'version' => '1.0.0',
+        'active' => true,
+    ],
+    'routes' => [
+        'my_plugin_index' => [
+            'path' => '/my-plugin',
+            'method' => 'GET',
+            'controller' => [MyPluginController::class, 'index'],
+        ],
+    ],
+    'widgets' => [
+        'my_widget' => [
+            'name' => 'My Widget',
+            'callback' => fn($data) => '<div>Widget!</div>',
+            'options' => ['access' => 'logged_in'],
+        ],
+    ],
+    'settings' => [
+        'default_value' => 'hello',
+    ],
+];
 ```
 
-### Entity System (Active Record)
+### Performance Optimization
 ```php
-class Post extends \Canyon\Core\Entity
-{
-    protected string $table = 'posts';
-    protected array $fillable = ['title', 'body', 'author_id', 'status'];
-    protected array $casts = [
-        'id' => 'int',
-        'is_published' => 'boolean',
-        'settings' => 'json',
-        'password_hash' => 'encrypted',
-    ];
-}
+// Minify CSS/JS
+$css = AssetOptimizer::minifyCss($css);
+$js = AssetOptimizer::minifyJs($js);
 
-$post = Post::find(1);
-$post->title = 'Updated';
+// Lazy-load images
+$img = AssetOptimizer::lazyImage('/uploads/photo.jpg', 'Photo');
+
+// Generate critical CSS
+$critical = AssetOptimizer::generateCriticalCss($html, 'styles.css');
+
+// CDN + versioned assets
+$url = AssetOptimizer::versioned('/css/main.css');
+
+// Image optimization (WebP/AVIF)
+$metadata = ImageOptimizer::optimizeUpload($_FILES['photo'], 'images');
+echo ImageOptimizer::picture($metadata['url'], $metadata, 'Photo');
+
+// Cache pages
+$html = Cache::remember('page.home', fn() => $this->renderHome(), 3600);
+```
+
+### Entity + Search + River
+```php
+// Entity
+$post = new Post(['title' => 'Hello', 'body' => 'World']);
 $post->save();
+
+// Search
+$search = new Search();
+$results = $search->query('hello', ['type' => 'object', 'subtype' => 'post'], ['limit' => 10]);
+
+// River
+$river = new River();
+$river->add([
+    'type' => 'object',
+    'subtype' => 'post',
+    'action_type' => 'create',
+    'entity_id' => $post->getAttribute('id'),
+    'entity_type' => 'object',
+    'owner_id' => '123',
+]);
 ```
 
-### Events + Queue + Notifications
+### Events + Cron + Queue
 ```php
-// Event
-\EventDispatcher::listen('user.created', function ($payload) {
-    \Notification::send($payload['user_id'], 'Welcome!', 'Thanks for joining!');
+// Events
+EventDispatcher::listen('user.created', function ($payload) {
+    Notification::send($payload['user_id'], 'Welcome!', 'Thanks!');
 });
-\EventDispatcher::dispatch('user.created', ['user_id' => 123]);
+EventDispatcher::dispatch('user.created', ['user_id' => 123]);
+
+// Cron
+Cron::register('daily', function () {
+    $optimizer = new DatabaseOptimizer();
+    $optimizer->runAllCleanup();
+});
 
 // Queue
-\Queue::push(SendWelcomeEmail::class, ['user_id' => 123]);
-$processed = \Queue::work(10);
+Queue::push(SendEmail::class, ['to' => 'user@test.com']);
+Queue::work(10);
 ```
 
-### Caching + i18n + Widgets
+### Themes + Widgets + Menus
 ```php
-// Cache
-$users = \Cache::remember('users.all', fn() => $this->db()->select('users'), 3600);
-
-// i18n
-\I18n::setLocale('en');
-$text = \I18n::get('posts.welcome', ['name' => 'Alice']);
+// Theme
+Themes::register('dark', 'Dark Theme');
+Themes::activate('dark');
+Themes::setVariable('bg_color', '#1a1a1a');
+Themes::addCss('/themes/dark/style.css');
 
 // Widget
-\Widget::register('recent_posts', 'Recent Posts', function ($data) {
-    return $this->view('widgets.recent_posts', $data);
-}, ['access' => 'logged_in', 'cache' => 300]);
+Widget::register('recent_posts', 'Recent Posts', function ($data) {
+    return '<div>Latest posts...</div>';
+}, ['access' => 'logged_in', 'cache' => 300, 'position' => 'sidebar']);
 
-echo \Widget::renderPosition('sidebar', ['user_id' => 123]);
+// Menu
+Menu::add('main', 'home', ['text' => 'Home', 'href' => '/', 'priority' => 100]);
+Menu::add('main', 'about', ['text' => 'About', 'href' => '/about', 'priority' => 200]);
+echo Menu::render('main');
 ```
 
 ---
@@ -233,7 +283,8 @@ echo \Widget::renderPosition('sidebar', ['user_id' => 123]);
 - Input sanitization (modern PHP 8.1+ `FILTER_VALIDATE_*` only)
 - Open redirect prevention (rejects `//evil.com`, absolute URLs, protocol-relative)
 - Error sanitization (no stack traces in production)
-- .htaccess: blocks `.env`, `storage/`, `logs/`, directory listing, PHP execution in uploads, ETag disabled
+- HMAC signatures for signed URLs and data integrity
+- .htaccess: blocks `.env`, `storage/`, `logs/`, directory listing, PHP execution in uploads
 
 ---
 
