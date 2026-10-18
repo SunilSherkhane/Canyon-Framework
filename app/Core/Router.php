@@ -41,7 +41,7 @@ class Router
 
     public static function post(string $uri, mixed $handler, ?string $name = null, array $middleware = []): void
     {
-        self::add('POST', $uri, $handler, $name, 'middleware');
+        self::add('POST', $uri, $handler, $name, $middleware);
     }
 
     public static function put(string $uri, mixed $handler, ?string $name = null, array $middleware = []): void
@@ -131,7 +131,7 @@ class Router
     public static function dispatch(): ?string
     {
         try {
-            $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+            $method = self::resolveMethod();
 
             if (!in_array($method, self::ALLOWED_METHODS, true)) {
                 self::sendErrorResponse(405, 'Method Not Allowed');
@@ -211,6 +211,33 @@ class Router
 
         // Exact match
         return $pattern === $uri ? ['route' => $route, 'params' => []] : null;
+    }
+
+    // -----------------------------------------------------------------------
+    // Request method resolution
+    // -----------------------------------------------------------------------
+
+    /**
+     * Resolve the HTTP method, supporting method spoofing via _method field.
+     * Forms can use <input type="hidden" name="_method" value="PUT"> to
+     * spoof PUT/PATCH/DELETE requests.
+     */
+    protected static function resolveMethod(): string
+    {
+        $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+
+        // Only POST requests can spoof method
+        if ($method === 'POST') {
+            $spoofed = $_POST['_method'] ?? null;
+            if (is_string($spoofed)) {
+                $spoofed = strtoupper($spoofed);
+                if (in_array($spoofed, ['PUT', 'PATCH', 'DELETE'], true)) {
+                    return $spoofed;
+                }
+            }
+        }
+
+        return $method;
     }
 
     // -----------------------------------------------------------------------

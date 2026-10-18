@@ -1,331 +1,252 @@
 # 🌊 Canyon Framework
 
-**A minimal, secure PHP framework inspired by Laravel and CodeIgniter — designed for modular web applications.**
+**A modular, secure PHP framework inspired by Laravel, CodeIgniter, and Elgg — designed for building anything from APIs to social networks.**
 
-> Version: 0.2.0 | PHP: 8.1+ | License: MIT
+> Version: 0.4.0 | PHP: 8.1+ | License: MIT
 
 ---
 
-## Quick Start
+## ⚡ Quick Start
 
 ```bash
-# Clone / pull
-clones from https://github.com/SunilSherkhane/Canyon-Framework.git
-
-# Start server immediately
-./canyon serve     # default port 8000
-# or manually
-php -S 127.0.0.1:8000 -t public
+./canyon serve          # Start dev server (port 8000)
+./canyon routes          # List registered routes
+./canyon migrate         # Run database migrations
+./canyon queue work      # Process queued jobs
 ```
 
-Open `http://localhost:8000/` — the framework boots with security headers, session hardening, and CSRF protection already active.
+Open `http://localhost:8000/` — security headers, sessions, and CSRF active by default.
 
 ---
 
-## What's Inside (Modular — Build Anything)
+## 📦 Feature Matrix (Laravel + CodeIgniter + Elgg Inspired)
 
-| Module | Purpose | Use When... |
+### Core Architecture
+| Module | Class | Key Methods |
 |---|---|---|
-| **Router** (`app/Core/Router.php`) | HTTP method allow-list, URI sanitization, parameterized routes (`{id}`), named routes, catch-all, middleware groups | Defining URLs |
-| **Controllers** (`app/Controllers/`) | Base `Controller` with `view()`, `json()`, `redirect()`, CSRF helpers, DB access | Handling requests |
-| **Views** (`app/Core/View.php`) | Auto-escaping (`htmlspecialchars()`), path-traversal protection, `View::raw()` escape hatch | Rendering HTML |
-| **Security** (`app/Core/Security.php`) | CSRF, rate limiting, host header validation, output escaping, input sanitization, CSP, logging | Any security need |
-| **Middleware** (`app/Core/Middleware.php`) | Pipeline pattern — abstract `handle($request, Closure $next)` | Cross-cutting concerns |
-| **Database** (`app/Core/Database.php`) | PDO wrapper: `select()`, `insert()`, `update()`, `delete()`, `statement()`, transactions | Data persistence |
-| **Container** (`app/Core/Container.php`) | Laravel-style DI: `bind()`, `singleton()`, `resolve()`, `when()` | Dependency injection |
-| **Application** (`app/Core/Application.php`) | Singleton for shared view data (`csrf_token`, `app_name`, etc.) | Global state |
-| **CLI** (`canyon`) | `serve`, `routes`, `test`, `clear-cache`, `info` | Development / ops |
-| **Tests** (`tests/` + `phpunit.xml`) | PHPUnit setup + bootstrap | Quality assurance |
+| **DI Container** | `Container` | `bind()`, `singleton()`, `resolve()`, `when()` with contextual bindings |
+| **Application** | `Application` | `set()`, `get()`, `isProduction()`, `isDebug()`, shared view data |
+| **Config** | `Config` | `get('app.debug')`, `set()`, `has()`, `all()` — dot notation |
+| **Middleware** | `Middleware` | Abstract `handle($request, Closure $next)` — pipeline execution |
+| **Router** | `Router` | `get/post/put/delete/patch/any()`, `group()`, `{param}`, named routes, catch-all, HTTP method spoofing |
+| **Validation** | `Validation` | Rule strings (`'required\|email\|min:3'`), `passes()`, `fails()`, `errors()` |
+
+### Database & Data
+| Module | Class | Key Methods |
+|---|---|---|
+| **Database** | `Database` | `select()`, `insert()`, `update()`, `delete()`, `statement()`, `beginTransaction()`, `transaction()` |
+| **Migration** | `Migration` | `migrate()`, `rollback()`, `reset()`, `status()` — `up()`/`down()` classes |
+| **Entity** | `Entity` | `find()`, `first()`, `save()`, `delete()`, `fillable`, `casts`, `getGuid()`, `getEntityType()` |
+| **Collection** | `Collection` | `filter()`, `map()`, `reduce()`, `where()`, `chunk()`, `skip()`, `take()`, `first()`, `last()`, `random()` |
+
+### Views & UI
+| Module | Class | Key Methods |
+|---|---|---|
+| **View** | `View` | `make()`, `render()`, `exists()`, `escape()`, `raw()` — auto-escaping + path-traversal protection |
+| **Partial** | `Partial` | `section()`, `endSection()`, `yield()`, `include()`, `extend()`, `has()` |
+| **Widget** | `Widget` | `register()`, `render()`, `byPosition()`, `setPosition()`, `setOrder()`, `setUserConfig()` |
+
+### Security
+| Module | Class | Key Methods |
+|---|---|---|
+| **Security** | `Security` | `csrfField()`, `verifyCsrfToken()`, `throttle()`, `throttleIp()`, `sanitizeInput()`, `escape()`, `logEvent()` |
+| **AccessControl** | `AccessControl` | `addRole()`, `addGroup()`, `inGroup()`, `setAccess()`, `canAccess()`, `getAccessible()` |
+
+### Events & Queue
+| Module | Class | Key Methods |
+|---|---|---|
+| **EventDispatcher** | `EventDispatcher` | `listen()`, `dispatch()`, `subscribe()`, `hasListeners()` |
+| **Queue** | `Queue` | `push()`, `pop()`, `process()`, `work()`, `fail()`, `clear()` |
+
+### Services
+| Module | Class | Key Methods |
+|---|---|---|
+| **Cache** | `Cache` | `put()`, `get()`, `has()`, `remember()`, `flush()`, `forget()` |
+| **Email** | `Email` | `send()`, `queue()`, `sendTemplate()`, `sendNotification()`, `processQueue()` |
+| **Notification** | `Notification` | `send()`, `markRead()`, `subscribe()`, `unreadCount()`, `get()`, `stats()` |
+| **FileStorage** | `FileStorage` | `store()`, `get()`, `delete()`, `getUrl()`, `stream()`, `getByOwner()` |
+| **I18n** | `I18n` | `get()`, `trans()`, `choice()`, `setLocale()`, `detectLocale()`, `has()` |
+| **RPC** | `RPC` | `register()`, `handle()`, `getMethods()` — JSON-RPC 2.0 with API key auth |
+
+### CLI
+```bash
+./canyon serve [port] [host]   # Dev server
+./canyon routes                # List routes
+./canyon migrate [action]      # migrate|rollback|reset|status
+./canyon queue [action]        # work|status|clear|clear-failed
+./canyon config                # Show configuration
+./canyon test                  # Run tests
+./canyon clear-cache           # Clear cache
+./canyon info                  # Framework info
+```
 
 ---
 
-## Project Layout
+## 🏗️ Project Layout
 
 ```
 canyon/
-├── public/              # Web entry: .htaccess + index.php
-│   ├── index.php        # Bootstraps env, session, host check, router
+├── public/              # Web entry point
+│   ├── index.php        # Bootstrap: env, session, host check, dispatch
 │   └── .htaccess        # Rewrite rules + security headers
 ├── app/
-│   ├── Core/            # Router, View, Security, Database, Middleware, Container, Application
-│   ├── Controllers/     # HomeController, TestController, your controllers
-│   └── Helpers/         # env(), base_url(), asset(), storage_path(), route_path()
+│   ├── Core/            # 16 framework classes (see above)
+│   ├── Controllers/     # Base Controller + your controllers
+│   └── Helpers/         # env(), base_url(), asset(), route_path(), response_time()
 ├── routes/
-│   └── web.php          # Route definitions: Router::get/post/put/delete/patch/group
-├── resources/views/     # PHP templates (auto-escaping, path-traversal protected)
-│   ├── home/            # index.php, about.php, contact.php, features.php
-│   ├── errors/          # 404.php
-│   └── test/            # index.php (debug only when APP_DEBUG=true)
+│   └── web.php          # Route definitions
+├── resources/
+│   ├── views/           # PHP templates (auto-escaping)
+│   ├── lang/            # i18n translation files
+│   └── emails/          # Email templates
 ├── config/
-│   └── app.php          # App config (name, debug, URL, timezone, DB)
-├── storage/             # Sessions, logs, cache (outside web root)
-├── .env                 # Environment (NOT committed — see .env.example)
+│   └── app.php          # App configuration
+├── storage/             # Sessions, cache, logs, queue, files
+├── .env                 # Environment (NOT committed)
 ├── .env.example         # Template for .env
+├── canyon               # CLI binary
 ├── composer.json        # PSR-4 autoload + bin: canyon
-├── canyon               # Executable CLI
-└── tests/               # PHPUnit bootstrap + Security/Router test dirs
+└── tests/               # PHPUnit (Security/, Router/ suites)
 ```
 
 ---
 
-## How to Use — Build on Top of It
+## 📝 Usage Examples
 
-### 1. Add a Route
-
-Edit `routes/web.php`:
-
+### Routes + Middleware
 ```php
-use Canyon\Controllers\HomeController;
 use Canyon\Core\Router;
+use Canyon\Controllers\PostController;
+use Canyon\Middleware\AuthMiddleware;
 
-Router::get('/', [HomeController::class, 'index'], 'home');
-Router::get('/posts/{id}', [PostController::class, 'show'], 'post.show');
+Router::get('/posts', [PostController::class, 'index'], 'posts.index');
+Router::get('/posts/{id}', [PostController::class, 'show'], 'posts.show');
 
-// Group with middleware
-Router::group('App\Core\Middleware\AuthMiddleware', function () {
-    Router::get('/dashboard', [DashboardController::class, 'index']);
+Router::group(AuthMiddleware::class, function () {
+    Router::post('/posts', [PostController::class, 'store'], 'posts.store');
 });
 ```
 
-### 2. Create a Controller
-
+### Controller + Validation + Database
 ```php
 <?php
 namespace Canyon\Controllers;
 
 class PostController extends Controller
 {
-    public function show(string $id): string
-    {
-        $post = $this->db()->select('posts', ['*'], ['id' => $id]);
-        return $this->view('posts.show', ['post' => $post[0] ?? null]);
-    }
-
-    public function list(): string
+    public function index(): string
     {
         $posts = $this->db()->select('posts', ['*'], [], 20);
-        return $this->view('posts.list', ['posts' => $posts]);
+        return $this->view('posts.index', ['posts' => $posts]);
     }
-}
-```
 
-### 3. Create a View
-
-`resources/views/posts/show.php`:
-
-```php
-<!DOCTYPE html>
-<html>
-<head><title><?= $title ?? 'Post' ?></title></head>
-<body>
-  <h1><?= $post['title'] ?? 'Untitled' ?></h1>
-  <p><?= $post['body'] ?? '' ?></p>
-  <!-- Data is auto-escaped; use $raw for raw HTML only when you fully trust it -->
-</body>
-</html>
-```
-
-### 4. Use the Database
-
-```php
-// Direct PDO
-$db = new \Canyon\Core\Database();
-$row = $db->select('users', ['*'], ['email' => 'user@test.com']);
-
-// In a controller (convenient)
-$this->db()->insert('users', ['name' => 'Alice', 'email' => 'alice@test.com']);
-$this->db()->update('users', ['name' => 'Alice Updated'], ['id' => 1]);
-$this->db()->delete('users', ['id' => 5]);
-
-// Transactions
-$this->db()->transaction(function ($db) {
-    $db->insert('orders', [...]);
-    $db->insert('order_items', [...]);
-    return true;
-});
-```
-
-### 5. Use Middleware (Pipeline)
-
-Create `app/Core/Middleware/AuthMiddleware.php`:
-
-```php
-<?php
-namespace Canyon\Core;
-
-abstract class Middleware
-{
-    abstract public function handle($request, \Closure $next);
-}
-```
-
-Then create `app/Middleware/AuthMiddleware.php` (or wherever you prefer):
-
-```php
-<?php
-namespace App\Middleware;
-
-use Canyon\Core\Middleware;
-
-class AuthMiddleware extends Middleware
-{
-    public function handle($request, \Closure $next)
+    public function show(string $id): string
     {
-        if (session_status() !== PHP_SESSION_ACTIVE) session_start();
-        if (empty($_SESSION['user_id'])) {
-            header('Location: /login');
-            exit;
+        $post = $this->db()->select('posts', ['*'], ['id' => $id])[0] ?? null;
+        if (!$post) return $this->notFound();
+        return $this->view('posts.show', ['post' => $post]);
+    }
+
+    public function store(): never
+    {
+        $data = $this->post([
+            'title' => 'string',
+            'body' => 'string',
+            'category_id' => 'int',
+        ]);
+
+        $validator = new \Canyon\Core\Validation($data, [
+            'title' => 'required|string|max:255',
+            'body' => 'required|string|max:5000',
+        ]);
+
+        if ($validator->fails()) {
+            $this->json(['errors' => $validator->errors()], 422);
         }
-        return $next(); // Continue to controller
+
+        $id = $this->db()->insert('posts', $data);
+        $this->success(['id' => $id], 'Post created', 201);
     }
 }
 ```
 
-### 6. Use the Container (Dependency Injection)
-
+### Entity System (Active Record)
 ```php
-use Canyon\Core\Container;
-
-// Bind interface to concrete
-Container::bind('App\Contracts\Mailer', 'App\Services\SmtpMailer');
-
-// Singleton
-Container::singleton('App\Services\Logger', 'App\Services\FileLogger');
-
-// Resolve
-$logger = Container::resolve('App\Services\Logger');
-
-// Contextual (only for specific controllers)
-Container::when('App\Controllers\OrderController', 'App\Contracts\PaymentGateway', 'App\Services\StripeGateway');
-```
-
-### 7. Use Security Features
-
-```php
-// CSRF field in form
-<?= \Canyon\Core\Security::csrfField() ?>
-
-// Verify in controller
-if (!$this->verifyCsrf($_POST['_canyon_csrf_token'] ?? null)) {
-    $this->unauthorized('Invalid CSRF token');
+class Post extends \Canyon\Core\Entity
+{
+    protected string $table = 'posts';
+    protected array $fillable = ['title', 'body', 'author_id', 'status'];
+    protected array $casts = [
+        'id' => 'int',
+        'is_published' => 'boolean',
+        'settings' => 'json',
+        'password_hash' => 'encrypted',
+    ];
 }
 
-// Rate limit
-if (!\Canyon\Core\Security::throttle('contact', 5, 60)) {
-    \Canyon\Core\Security::rateLimitResponse(60);
-}
+$post = Post::find(1);
+$post->title = 'Updated';
+$post->save();
+```
 
-// Sanitize input
-$clean = \Canyon\Core\Security::sanitizeInput($_POST, ['email' => 'email', 'age' => 'int']);
+### Events + Queue + Notifications
+```php
+// Event
+\EventDispatcher::listen('user.created', function ($payload) {
+    \Notification::send($payload['user_id'], 'Welcome!', 'Thanks for joining!');
+});
+\EventDispatcher::dispatch('user.created', ['user_id' => 123]);
 
-// Escape for HTML
-$safe = \Canyon\Core\Security::escape('<script>');
+// Queue
+\Queue::push(SendWelcomeEmail::class, ['user_id' => 123]);
+$processed = \Queue::work(10);
+```
+
+### Caching + i18n + Widgets
+```php
+// Cache
+$users = \Cache::remember('users.all', fn() => $this->db()->select('users'), 3600);
+
+// i18n
+\I18n::setLocale('en');
+$text = \I18n::get('posts.welcome', ['name' => 'Alice']);
+
+// Widget
+\Widget::register('recent_posts', 'Recent Posts', function ($data) {
+    return $this->view('widgets.recent_posts', $data);
+}, ['access' => 'logged_in', 'cache' => 300]);
+
+echo \Widget::renderPosition('sidebar', ['user_id' => 123]);
 ```
 
 ---
 
-## Security Defaults (Already Active)
+## 🔒 Security Defaults (Already Active)
 
-Every request gets:
-
-- **CSRF protection** (session tokens + `hash_equals()` verification + 1-hour expiry)
-- **Host header validation** (configurable allow-list with wildcard subdomains; port-stripped; bad hosts logged at `storage/logs/security.log`)
-- **URI sanitization** (null bytes/reject control chars; length capped at 2048; `%00`-decoded for visibility)
-- **Session hardening** (`HttpOnly`, `SameSite=Lax`, `use_strict_mode`, `use_only_cookies`, `CANYONSESSID`, storage outside web root)
-- **Security headers** (CSP `default-src 'self'`, X-Frame-Options DENY, X-Content-Type-Options nosniff, Referrer-Policy, Permissions-Policy, HSTS when HTTPS)
-- **CSP in meta tags** aligned with HTTP headers (no `'unsafe-inline'` on `script-src`)
-- **Rate limiting** (session-based; configurable attempts/decay; JSON 429 response)
-- **Open redirect prevention** (`sanitizeRedirectUrl()` rejects `//evil.com`, absolute URLs, protocol-relative URLs)
-- **Output escaping** (view layer auto-escapes all string data via `htmlspecialchars()`)
-- **JSON protection** (`JSON_HEX_*` flags on all JSON responses)
-- **Error sanitization** (no stack traces in production; sanitized HTML response)
-- **.htaccess** (blocks `.env`, `storage/`, `logs/`, directory listing, PHP execution in uploads, MIME sniffing disabled, ETag disabled, compression enabled)
+- CSRF tokens on all POST forms (`hash_equals()` verification + 1-hour expiry)
+- Host header injection protection (configurable allow-list, wildcard subdomain support)
+- Session hardening (`HttpOnly`, `SameSite=Lax`, `use_strict_mode`, `use_only_cookies`, `CANYONSESSID`, storage outside web root)
+- Security headers: CSP, X-Frame-Options DENY, X-Content-Type-Options nosniff, Referrer-Policy, Permissions-Policy, HSTS
+- Rate limiting: session-based (`throttle()`) + IP-based (`throttleIp()`)
+- Output auto-escaping in views (`htmlspecialchars()`)
+- `JSON_HEX_*` flags on all JSON responses
+- Input sanitization (modern PHP 8.1+ `FILTER_VALIDATE_*` only)
+- Open redirect prevention (rejects `//evil.com`, absolute URLs, protocol-relative)
+- Error sanitization (no stack traces in production)
+- .htaccess: blocks `.env`, `storage/`, `logs/`, directory listing, PHP execution in uploads, ETag disabled
 
 ---
 
-## CLI Commands
+## 🧪 Testing
 
 ```bash
-./canyon              # Shows help
-./canyon info         # Framework version, PHP version, env
-./canyon routes       # List all registered routes
-./canyon serve        # Start dev server (port 8000 by default)
-./canyon serve 8080 0.0.0.0
-./canyon test         # Run framework tests
-./canyon clear-cache  # Clear storage/cache
+./canyon test
+# or
+./vendor/bin/phpunit
 ```
 
 ---
 
-## Testing
+## 📄 License
 
-```bash
-# Install PHPUnit if needed (composer require --dev phpunit/phpunit)
-phpunit                # Runs phpunit.xml suite
-phpunit --testsuite="Canyon Security Suite"
-```
-
-Bootstrap (`tests/bootstrap.php`) sets up the framework environment, defines paths, and initializes `Application::init()`.
-
----
-
-## Configuration (`.env` / `config/app.php`)
-
-Copy `.env.example` → `.env` and edit:
-
-```bash
-cp .env.example .env
-```
-
-Key variables:
-
-| Variable | Default | Purpose |
-|---|---|---|
-| `APP_NAME` | Canyon Framework | App name |
-| `APP_ENV` | production | production / development / testing |
-| `APP_DEBUG` | false | Show errors / display_errors |
-| `APP_URL` | http://localhost | Base URL for links |
-| `TIMEZONE` | UTC | PHP timezone |
-| `ALLOWED_HOSTS` | localhost,127.0.0.1 | Host header validation (comma-separated; wildcard `*.example.com` allowed) |
-| `DB_CONNECTION` | mysql | Database driver |
-| `DB_HOST` `/`DB_PORT` / `DB_DATABASE` / `DB_USERNAME` / `DB_PASSWORD` | 127.0.0.1 / 3306 / canyon / root / (empty) | Database |
-| `CORS_ALLOWED_ORIGINS` | (empty) | Allowed CORS origins |
-| `HSTS_ENABLED` / `HSTS_MAX_AGE` | false / 31536000 | HSTS header |
-
----
-
-## Modular Build Pattern
-
-To create anything from this framework:
-
-1. **Define data** (`resources/views/` template or `Database::select()` query)
-2. **Create controller** (`app/Controllers/YourController.php` extends `Controller`)
-3. **Register route** (`routes/web.php` with `Router::get/post` or group)
-4. **Add middleware if needed** (`Router::group()` or per-route array)
-5. **Optionally use Container** (`Container::bind()` / `Container::singleton()`) for dependency injection
-6. **Use Security helpers** (`csrfField()`, `sanitizeInput()`, `throttle()`, `escape()`) on every form/endpoint
-7. **Optional: create Model** — extend `Canyon\Core\Model` (if you build one) or use `Database::select()` directly
-
-The framework is intentionally minimal — you bring the models, services, and business logic; it provides security, routing, rendering, database access, DI, and CLI.
-
----
-
-## Backup
-
-A complete backup archive is saved at:
-
-```
-/home/sunilsherkhane/canyon-framework-backup.tar.gz
-```
-
-Also pushed to:
-
-```
-https://github.com/SunilSherkhane/Canyon-Framework
-```
-
----
-
-## Credits & Notes
-
-Built for modular, secure PHP applications. Inspired by Laravel (router, middleware pipeline, container, security patterns) and CodeIgniter (controller/view separation, .htaccess security, session management, CLI). All security patterns verified against real framework bugs — see `app/Core/Security.php`, `public/index.php`, `public/.htaccess`, `app/Controllers/Controller.php`.
+MIT — free for personal and commercial use.

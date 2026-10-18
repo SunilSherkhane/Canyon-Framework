@@ -1,7 +1,8 @@
 #!/usr/bin/env php
 <?php
 /**
- * Canyon CLI - Minimal command line tool for the Canyon Framework
+ * Canyon CLI - Command line tool for the Canyon Framework
+ * Supports: serve, routes, test, clear-cache, info, migrate, queue, config
  */
 
 // Find the project root
@@ -25,7 +26,6 @@ if ($basePath === null) {
 
 define('CANYON_BASE_PATH', $basePath);
 define('CANYON_APP_PATH', $basePath . '/app');
-
 define('CANYON_CONFIG_PATH', $basePath . '/config');
 define('CANYON_ROUTES_PATH', $basePath . '/routes');
 define('CANYON_RESOURCES_PATH', $basePath . '/resources');
@@ -34,11 +34,16 @@ define('CANYON_STORAGE_PATH', $basePath . '/storage');
 require $basePath . '/vendor/autoload.php';
 require $basePath . '/app/Helpers/env.php';
 require $basePath . '/app/Core/Application.php';
+require $basePath . '/app/Core/Config.php';
 
 use Canyon\Core\Application;
 use Canyon\Core\Router;
+use Canyon\Core\Config;
+use Canyon\Core\Migration;
+use Canyon\Core\Queue;
 
 Application::init();
+Config::init();
 
 // Load .env if exists
 if (file_exists($basePath . '/.env')) {
@@ -57,7 +62,7 @@ if (file_exists($basePath . '/.env')) {
 
 $command = $argv[1] ?? 'help';
 
-echo "Canyon Framework CLI v0.2.0\n";
+echo "Canyon Framework CLI v0.3.0\n";
 echo "Project: " . env('APP_NAME', 'Canyon Framework') . "\n";
 echo "Environment: " . env('APP_ENV', 'production') . "\n\n";
 
@@ -114,20 +119,165 @@ switch ($command) {
         echo "Cache cleared.\n";
         break;
 
+    case 'migrate':
+        $action = $argv[2] ?? 'migrate';
+        $migration = new Migration();
+
+        switch ($action) {
+            case 'migrate':
+                $migrated = $migration->migrate();
+                if (empty($migrated)) {
+                    echo "Nothing to migrate.\n";
+                } else {
+                    echo "Migrated " . count($migrated) . " file(s):\n";
+                    foreach ($migrated as $m) {
+                        echo "  - {$m}\n";
+                    }
+                }
+                break;
+
+            case 'rollback':
+                $rolledBack = $migration->rollback();
+                if (empty($rolledBack)) {
+                    echo "Nothing to rollback.\n";
+                } else {
+                    echo "Rolled back " . count($rolledBack) . " migration(s):\n";
+                    foreach ($rolledBack as $m) {
+                        echo "  - {$m}\n";
+                    }
+                }
+                break;
+
+            case 'reset':
+                $reset = $migration->reset();
+                echo "Reset " . count($reset) . " migration(s).\n";
+                break;
+
+            case 'status':
+                $status = $migration->status();
+                echo "Migration Status:\n";
+                echo "  Total: " . $status['total'] . "\n";
+                echo "  Executed: " . count($status['executed']) . "\n";
+                echo "  Pending: " . count($status['pending']) . "\n";
+                if (!empty($status['executed'])) {
+                    echo "\nExecuted:\n";
+                    foreach ($status['executed'] as $m) {
+                        echo "  [x] {$m}\n";
+                    }
+                }
+                if (!empty($status['pending'])) {
+                    echo "\nPending:\n";
+                    foreach ($status['pending'] as $m) {
+                        echo "  [ ] {$m}\n";
+                    }
+                }
+                break;
+
+            default:
+                echo "Usage: canyon migrate [migrate|rollback|reset|status]\n";
+        }
+        break;
+
+    case 'queue':
+        $action = $argv[2] ?? 'work';
+
+        switch ($action) {
+            case 'work':
+                $maxJobs = (int) ($argv[3] ?? 0);
+                $processed = Queue::work($maxJobs);
+                if (empty($processed)) {
+                    echo "No jobs processed.\n";
+                } else {
+                    echo "Processed " . count($processed) . " job(s):\n";
+                    foreach ($processed as $job) {
+                        $status = $job['success'] ? 'success' : 'failed';
+                        echo "  [{$status}] {$job['class']}\n";
+                    }
+                }
+                break;
+
+            case 'status':
+                $pending = Queue::pending();
+                $failed = Queue::failed();
+                echo "Queue Status:\n";
+                echo "  Pending jobs: " . count($pending) . "\n";
+                echo "  Failed jobs: " . count($failed) . "\n";
+                if (!empty($pending)) {
+                    echo "\nPending:\n";
+                    foreach ($pending as $job) {
+                        echo "  - {$job['class']} (available at: " . date('Y-m-d H:i:s', $job['available_at']) . ")\n";
+                    }
+                }
+                if (!empty($failed)) {
+                    echo "\nFailed:\n";
+                    foreach ($failed as $job) {
+                        echo "  - {$job['class']} (error: {$job['error']})\n";
+                    }
+                }
+                break;
+
+            case 'clear':
+                Queue::clear();
+                echo "Queue cleared.\n";
+                break;
+
+            case 'clear-failed':
+                Queue::clearFailed();
+                echo "Failed jobs cleared.\n";
+                break;
+
+            default:
+                echo "Usage: canyon queue [work|status|clear|clear-failed]\n";
+        }
+        break;
+
+    case 'config':
+        echo "Configuration:\n";
+        $config = Config::all();
+        foreach ($config as $file => $data) {
+            echo "\n[{$file}]\n";
+            printConfig($data, '  ');
+        }
+        break;
+
     case 'info':
         echo "Framework: Canyon\n";
-        echo "Version: 0.2.0\n";
+        echo "Version: 0.3.0\n";
         echo "PHP: " . PHP_VERSION . "\n";
         echo "Base Path: $basePath\n";
         echo "Debug: " . (env('APP_DEBUG') ? 'yes' : 'no') . "\n";
+        echo "Environment: " . env('APP_ENV', 'production') . "\n";
+        echo "Database: " . env('DB_CONNECTION', 'mysql') . "\n";
         break;
 
     default:
         echo "Available commands:\n";
         echo "  serve [port] [host]   Start development server\n";
         echo "  routes                 List registered routes\n";
+        echo "  migrate [action]       Run migrations (migrate|rollback|reset|status)\n";
+        echo "  queue [action]         Queue operations (work|status|clear|clear-failed)\n";
+        echo "  config                 Show configuration\n";
         echo "  test                   Run framework tests\n";
         echo "  clear-cache            Clear storage cache\n";
         echo "  info                   Show framework info\n";
         echo "  help                   Show this help\n";
+}
+
+/**
+ * Recursively print config data.
+ */
+function printConfig(array $data, string $indent = ''): void
+{
+    foreach ($data as $key => $value) {
+        if (is_array($value)) {
+            echo "{$indent}{$key}:\n";
+            printConfig($value, $indent . '  ');
+        } else {
+            $display = is_bool($value) ? ($value ? 'true' : 'false') : $value;
+            if (str_contains(strtolower((string) $key), 'password') || str_contains(strtolower((string) $key), 'secret')) {
+                $display = '********';
+            }
+            echo "{$indent}{$key}: {$display}\n";
+        }
+    }
 }

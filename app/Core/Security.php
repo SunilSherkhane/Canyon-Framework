@@ -410,6 +410,34 @@ class Security
     }
 
     /**
+     * Per-IP rate limiter.
+     *
+     * Secondary layer on top of session-based throttling.
+     * Returns true when the caller is within the allowed number of
+     * attempts for the given key, false when the limit is exceeded.
+     */
+    public static function throttleIp(string $key, int $maxAttempts = 30, int $decaySeconds = 60): bool
+    {
+        self::startSession();
+
+        $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+        $bucketKey = 'throttle_ip_' . md5($key . '_' . $ip);
+        $now = time();
+
+        if (!isset($_SESSION[$bucketKey])) {
+            $_SESSION[$bucketKey] = ['count' => 0, 'reset' => $now + $decaySeconds];
+        }
+
+        if ($now > $_SESSION[$bucketKey]['reset']) {
+            $_SESSION[$bucketKey] = ['count' => 0, 'reset' => $now + $decaySeconds];
+        }
+
+        $_SESSION[$bucketKey]['count']++;
+
+        return $_SESSION[$bucketKey]['count'] <= $maxAttempts;
+    }
+
+    /**
      * Send a JSON 429 response for a rate-limited request.
      */
     public static function rateLimitResponse(int $retryAfter = 60): void
