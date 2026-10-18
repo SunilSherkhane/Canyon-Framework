@@ -4,82 +4,61 @@ namespace Canyon\Core;
 
 /**
  * Canyon Framework View Class
- * Inspired by Laravel Blade and CodeIgniter Views
  *
- * Features:
- * - Automatic output escaping for XSS prevention
- * - Secure view path handling (path traversal protection)
- * - Template inheritance support
+ * Renders PHP templates with automatic output escaping (XSS prevention)
+ * and path-traversal protection.
+ *
+ * Inspired by Laravel Blade and CodeIgniter Views.
  */
 class View
 {
-    protected static $paths = [];
+    /** @var array<string, array<int, string>> */
+    protected static array $paths = [];
+
+    // -----------------------------------------------------------------------
+    // Path registration
+    // -----------------------------------------------------------------------
 
     /**
-     * Register view paths
+     * Register a directory to search for view files.
      */
-    public static function addPath($path, $namespace = 'default')
+    public static function addPath(string $path, string $namespace = 'default'): void
     {
-        if (!isset(self::$paths[$namespace])) {
-            self::$paths[$namespace] = [];
-        }
         self::$paths[$namespace][] = $path;
     }
 
+    // -----------------------------------------------------------------------
+    // Rendering
+    // -----------------------------------------------------------------------
+
     /**
-     * Render a view with automatic output escaping
+     * Render a view and return the output as a string.
+     *
+     * @param string $view   Dot-notated view name (e.g. 'home.index')
+     * @param array  $data   Variables to extract into the view scope
+     * @param bool   $escape Whether to auto-escape string values
      */
-    public static function make($view, $data = [], bool $escape = true)
+    public static function make(string $view, array $data = [], bool $escape = true): string
     {
-        // Reject invalid view names outright - prevents path traversal
-        if (!is_string($view) || $view === '') {
-            throw new \InvalidArgumentException("View name must be a non-empty string");
-        }
+        self::assertValidViewName($view);
 
-        if (str_contains($view, '..') ||
-            str_contains($view, '/') ||
-            str_contains($view, '\\') ||
-            str_contains($view, "\0")) {
-            throw new \InvalidArgumentException("Invalid view name");
-        }
-
-        // Find the view file
         $viewPath = self::findView($view);
 
-        if (!$viewPath || !file_exists($viewPath)) {
-            throw new \Exception("View not found: " . self::escape($view));
+        if ($viewPath === null || !file_exists($viewPath)) {
+            throw new \RuntimeException('View not found: ' . self::escape($view));
         }
 
-        // Validate view path to prevent LFI/path traversal
-        $basePath = realpath(CANYON_RESOURCES_PATH . '/views');
-        $viewPathReal = realpath($viewPath);
+        self::assertPathIsWithinBase($viewPath);
 
-        if ($basePath === false || $viewPathReal === false || strpos($viewPathReal, $basePath) !== 0) {
-            throw new \Exception("Invalid view path");
-        }
-
-        // Store escaped data for use in views
-        $escapedData = [];
-        foreach ($data as $key => $value) {
-            if ($escape && is_string($value)) {
-                $escapedData[$key] = htmlspecialchars($value, ENT_QUOTES | ENT_HTML5, 'UTF-8');
-            } elseif ($escape && is_array($value)) {
-                $escapedData[$key] = self::escapeArray($value);
-            } else {
-                $escapedData[$key] = $value;
-            }
-        }
-
-        // Also store raw data for unescaped output (with explicit access)
+        // Prepare escaped and raw data for the view
+        $escapedData = $escape ? self::escapeData($data) : $data;
         $rawData = $data;
 
-        // Start output buffering
         ob_start();
 
-        // Include the view
         extract($escapedData, EXTR_SKIP);
 
-        // Make raw data available for unescaped output via $raw
+        // Provide raw (unescaped) data via $raw for explicit unescaped output
         $raw = new \stdClass();
         foreach ($rawData as $key => $value) {
             $raw->$key = $value;
@@ -87,39 +66,38 @@ class View
 
         try {
             include $viewPath;
-        } catch (\Throwable $e) {
+        } catch (\Throwable $exception) {
             ob_end_clean();
-            throw $e;
+            throw $exception;
         }
 
-        // Get and clean buffer
-        $content = ob_get_clean();
-
-        return $content;
+        return ob_get_clean();
     }
 
     /**
-     * Escape an array recursively
+     * Render a view and echo the output immediately.
      */
-    protected static function escapeArray(array $array): array
+    public static function render(string $view, array $data = [], bool $escape = true): void
     {
-        $escaped = [];
-        foreach ($array as $key => $value) {
-            if (is_string($value)) {
-                $escaped[$key] = htmlspecialchars($value, ENT_QUOTES | ENT_HTML5, 'UTF-8');
-            } elseif (is_array($value)) {
-                $escaped[$key] = self::escapeArray($value);
-            } else {
-                $escaped[$key] = $value;
-            }
-        }
-        return $escaped;
+        echo self::make($view, $data, $escape);
     }
 
     /**
-     * Escape HTML entities
+     * Check whether a view exists in any registered path.
      */
-    public static function escape($value): string
+    public static function exists(string $view): bool
+    {
+        return self::findView($view) !== null;
+    }
+
+    // -----------------------------------------------------------------------
+    // Escaping helpers
+    // -----------------------------------------------------------------------
+
+    /**
+     * Escape a value for safe HTML output.
+     */
+    public static function escape(mixed $value): string
     {
         if (is_string($value)) {
             return htmlspecialchars($value, ENT_QUOTES | ENT_HTML5, 'UTF-8');
@@ -128,9 +106,68 @@ class View
     }
 
     /**
-     * Find a view file in registered paths
+     * Get the raw (unescaped) value for a view key.
+     * Use this only for outputting HTML that was generated by the application.
      */
-    protected static function findView($view)
+    public static function raw(mixed $value): string
+    {
+        if (is_string($value)) {
+            return $value;
+        }
+        if (is_array($value)) {
+            return json_encode($value, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
+        }
+        return (string) $value;
+    }
+
+    // -----------------------------------------------------------------------
+    // Internal helpers
+    // -----------------------------------------------------------------------
+
+    /**
+     * Recursively escape string values in an array.
+     */
+    protected static function escapeArray(array $data): array
+    {
+        $escaped = [];
+
+        foreach ($data as $key => $value) {
+            if (is_string($value)) {
+                $escaped[$key] = htmlspecialchars($value, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+            } elseif (is_array($value)) {
+                $escaped[$key] = self::escapeArray($value);
+            } else {
+                $escaped[$key] = $value;
+            }
+        }
+
+        return $escaped;
+    }
+
+    /**
+     * Escape all string values in the data array.
+     */
+    protected static function escapeData(array $data): array
+    {
+        $escaped = [];
+
+        foreach ($data as $key => $value) {
+            if (is_string($value)) {
+                $escaped[$key] = htmlspecialchars($value, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+            } elseif (is_array($value)) {
+                $escaped[$key] = self::escapeArray($value);
+            } else {
+                $escaped[$key] = $value;
+            }
+        }
+
+        return $escaped;
+    }
+
+    /**
+     * Find the absolute path to a view file, or null if not found.
+     */
+    protected static function findView(string $view): ?string
     {
         foreach (self::$paths as $namespace => $paths) {
             foreach ($paths as $path) {
@@ -140,40 +177,36 @@ class View
                 }
             }
         }
-        return false;
+        return null;
     }
 
     /**
-     * Render and echo a view
+     * Reject view names that could enable path traversal.
      */
-    public static function render($view, $data = [], bool $escape = true)
+    protected static function assertValidViewName(string $view): void
     {
-        echo self::make($view, $data, $escape);
-    }
-
-    /**
-     * Check if a view exists
-     */
-    public static function exists($view): bool
-    {
-        return self::findView($view) !== false;
-    }
-
-    /**
-     * Get the raw (unescaped) data for a view key.
-     * Use this for outputting HTML that was generated by the application.
-     *
-     * @param mixed $value
-     * @return string
-     */
-    public static function raw($value): string
-    {
-        if (is_string($value)) {
-            return $value;
+        if ($view === '') {
+            throw new \InvalidArgumentException('View name must be a non-empty string');
         }
-        if (is_array($value)) {
-            return json_encode($value, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
+
+        if (str_contains($view, '..') ||
+            str_contains($view, '/') ||
+            str_contains($view, '\\') ||
+            str_contains($view, "\0")) {
+            throw new \InvalidArgumentException('Invalid view name');
         }
-        return (string) $value;
+    }
+
+    /**
+     * Ensure the resolved view path is inside the base views directory.
+     */
+    protected static function assertPathIsWithinBase(string $viewPath): void
+    {
+        $basePath = realpath(CANYON_RESOURCES_PATH . '/views');
+        $realViewPath = realpath($viewPath);
+
+        if ($basePath === false || $realViewPath === false || strpos($realViewPath, $basePath) !== 0) {
+            throw new \RuntimeException('Invalid view path');
+        }
     }
 }

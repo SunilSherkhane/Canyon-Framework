@@ -1,0 +1,133 @@
+#!/usr/bin/env php
+<?php
+/**
+ * Canyon CLI - Minimal command line tool for the Canyon Framework
+ */
+
+// Find the project root
+$paths = [
+    __DIR__ . '/..',
+    dirname(__DIR__),
+];
+
+$basePath = null;
+foreach ($paths as $p) {
+    if (file_exists($p . '/app/Core/Router.php')) {
+        $basePath = realpath($p);
+        break;
+    }
+}
+
+if ($basePath === null) {
+    fwrite(STDERR, "Canyon CLI: Unable to find project root\n");
+    exit(1);
+}
+
+define('CANYON_BASE_PATH', $basePath);
+define('CANYON_APP_PATH', $basePath . '/app');
+
+define('CANYON_CONFIG_PATH', $basePath . '/config');
+define('CANYON_ROUTES_PATH', $basePath . '/routes');
+define('CANYON_RESOURCES_PATH', $basePath . '/resources');
+define('CANYON_STORAGE_PATH', $basePath . '/storage');
+
+require $basePath . '/vendor/autoload.php';
+require $basePath . '/app/Helpers/env.php';
+require $basePath . '/app/Core/Application.php';
+
+use Canyon\Core\Application;
+use Canyon\Core\Router;
+
+Application::init();
+
+// Load .env if exists
+if (file_exists($basePath . '/.env')) {
+    $envLines = file($basePath . '/.env', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    foreach ($envLines as $line) {
+        $line = trim($line);
+        if ($line === '' || str_starts_with($line, '#') || !str_contains($line, '=')) continue;
+        $separatorPos = strpos($line, '=');
+        $key = trim(substr($line, 0, $separatorPos));
+        $value = trim(substr($line, $separatorPos + 1));
+        if (preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/', $key)) {
+            $_ENV[$key] = $value;
+        }
+    }
+}
+
+$command = $argv[1] ?? 'help';
+
+echo "Canyon Framework CLI v0.2.0\n";
+echo "Project: " . env('APP_NAME', 'Canyon Framework') . "\n";
+echo "Environment: " . env('APP_ENV', 'production') . "\n\n";
+
+switch ($command) {
+    case 'serve':
+        $port = $argv[2] ?? '8000';
+        $host = $argv[3] ?? '127.0.0.1';
+        echo "Starting development server at http://{$host}:{$port}\n";
+        echo "Press Ctrl+C to stop.\n\n";
+        $docRoot = $basePath . '/public';
+        passthru("php -S {$host}:{$port} -t {$docRoot}");
+        break;
+
+    case 'routes':
+        echo "Registered Routes:\n";
+        $routes = Router::getRoutes();
+        foreach ($routes as $route) {
+            printf("  %-6s %s  -> %s\n",
+                $route['method'],
+                $route['uri'],
+                is_array($route['handler'])
+                    ? $route['handler'][0] . '::' . $route['handler'][1]
+                    : (is_string($route['handler']) ? $route['handler'] : 'closure')
+            );
+        }
+        break;
+
+    case 'test':
+        echo "Running framework security tests...\n";
+        $testFile = $basePath . '/tests/security-test.php';
+        if (file_exists($testFile)) {
+            require $testFile;
+        } else {
+            echo "No test file found at tests/security-test.php\n";
+            echo "Create one or run: canyon serve && curl -I http://localhost:8000/\n";
+        }
+        break;
+
+    case 'clear-cache':
+        $cacheDir = $basePath . '/storage/cache';
+        if (is_dir($cacheDir)) {
+            $files = new RecursiveIteratorIterator(
+                new RecursiveDirectoryIterator($cacheDir, RecursiveDirectoryIterator::SKIP_DOTS),
+                RecursiveIteratorIterator::CHILD_FIRST
+            );
+            foreach ($files as $file) {
+                if ($file->isDir()) {
+                    rmdir($file->getRealPath());
+                } else {
+                    unlink($file->getRealPath());
+                }
+            }
+        }
+        echo "Cache cleared.\n";
+        break;
+
+    case 'info':
+        echo "Framework: Canyon\n";
+        echo "Version: 0.2.0\n";
+        echo "PHP: " . PHP_VERSION . "\n";
+        echo "Base Path: $basePath\n";
+        echo "Debug: " . (env('APP_DEBUG') ? 'yes' : 'no') . "\n";
+        break;
+
+    default:
+        echo "Available commands:\n";
+        echo "  serve [port] [host]   Start development server\n";
+        echo "  routes                 List registered routes\n";
+        echo "  test                   Run framework tests\n";
+        echo "  clear-cache            Clear storage cache\n";
+        echo "  info                   Show framework info\n";
+        echo "  help                   Show this help\n";
+}

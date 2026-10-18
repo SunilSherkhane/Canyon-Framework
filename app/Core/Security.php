@@ -4,37 +4,26 @@ namespace Canyon\Core;
 
 /**
  * Canyon Framework Security Class
- * Provides security utilities for the framework
  *
- * Security features:
- * - CSRF token generation/verification (hash_equals, timed expiry)
- * - Open-redirect prevention
- * - Host header validation
- * - Output escaping (XSS)
- * - Input sanitization (no deprecated filters)
- * - Security headers (CSP without unsafe-inline for scripts)
- * - Per-session rate limiting
- * - Security event logging
+ * Central security utility: CSRF protection, rate limiting, host validation,
+ * output escaping, input sanitization, security headers, and event logging.
  */
 class Security
 {
-    /**
-     * Allowed hosts for HTTP_HOST validation (prevents host header injection)
-     */
+    /** @var array<int, string> */
     protected static array $allowedHosts = [];
 
-    /**
-     * CSRF token name
-     */
     protected static string $csrfTokenName = '_canyon_csrf_token';
 
-    /**
-     * CSRF token validity time in seconds (default: 1 hour)
-     */
+    /** Token lifetime in seconds (default: 1 hour) */
     protected static int $csrfTokenLifetime = 3600;
 
+    // -----------------------------------------------------------------------
+    // Host validation
+    // -----------------------------------------------------------------------
+
     /**
-     * Set allowed hosts for host header validation
+     * Set the allowed hosts for HTTP_HOST validation.
      */
     public static function setAllowedHosts(array $hosts): void
     {
@@ -42,7 +31,7 @@ class Security
     }
 
     /**
-     * Validate HTTP_HOST against allowed hosts
+     * Check whether a host is in the allowed list.
      */
     public static function validateHost(string $host): bool
     {
@@ -52,11 +41,15 @@ class Security
         return in_array(strtolower($host), self::$allowedHosts, true);
     }
 
+    // -----------------------------------------------------------------------
+    // Redirect sanitization
+    // -----------------------------------------------------------------------
+
     /**
-     * Sanitize URL for redirect - prevents open redirect vulnerability.
+     * Sanitize a URL for redirect — prevents open-redirect vulnerabilities.
      *
      * Only same-site relative URLs are allowed. Protocol-relative URLs
-     * (//evil.com), absolute URLs and URLs carrying a scheme are rejected.
+     * (//evil.com), absolute URLs, and URLs carrying a scheme are rejected.
      */
     public static function sanitizeRedirectUrl(string $url): ?string
     {
@@ -64,7 +57,7 @@ class Security
             return null;
         }
 
-        // Reject control characters, whitespace and null bytes
+        // Reject control characters, whitespace, and null bytes
         if (preg_match('/[\x00-\x1F\x7F]/', $url) === 1) {
             return null;
         }
@@ -81,7 +74,7 @@ class Security
 
         $parsed = parse_url($url);
 
-        // Reject anything we cannot parse, or that carries a scheme/host
+        // Reject anything unparseable or that carries a scheme/host
         if ($parsed === false || isset($parsed['scheme']) || isset($parsed['host'])) {
             return null;
         }
@@ -94,19 +87,12 @@ class Security
         return null;
     }
 
-    /**
-     * Start the session with secure configuration applied
-     */
-    protected static function startSession(): void
-    {
-        if (session_status() !== PHP_SESSION_ACTIVE) {
-            self::secureSessionConfig();
-            session_start();
-        }
-    }
+    // -----------------------------------------------------------------------
+    // CSRF protection
+    // -----------------------------------------------------------------------
 
     /**
-     * Generate CSRF token
+     * Generate a CSRF token, rotating it when expired.
      */
     public static function generateCsrfToken(): string
     {
@@ -122,7 +108,7 @@ class Security
     }
 
     /**
-     * Verify CSRF token using a timing-safe comparison
+     * Verify a CSRF token using timing-safe comparison.
      */
     public static function verifyCsrfToken(string $token): bool
     {
@@ -136,7 +122,7 @@ class Security
             return false;
         }
 
-        // Check token age
+        // Reject expired tokens
         if ((time() - ($_SESSION['_canyon_csrf_token_created'] ?? 0)) > self::$csrfTokenLifetime) {
             unset($_SESSION['_canyon_csrf_token'], $_SESSION['_canyon_csrf_token_created']);
             return false;
@@ -146,7 +132,7 @@ class Security
     }
 
     /**
-     * Get CSRF token field HTML
+     * Get a hidden HTML input field containing the CSRF token.
      */
     public static function csrfField(): string
     {
@@ -155,32 +141,45 @@ class Security
             . htmlspecialchars($token, ENT_QUOTES, 'UTF-8') . '">';
     }
 
-    /**
-     * Get CSRF token name
-     */
     public static function getCsrfTokenName(): string
     {
         return self::$csrfTokenName;
     }
 
-    /**
-     * Set CSRF token lifetime
-     */
     public static function setCsrfTokenLifetime(int $seconds): void
     {
         self::$csrfTokenLifetime = $seconds;
     }
 
+    // -----------------------------------------------------------------------
+    // Output escaping
+    // -----------------------------------------------------------------------
+
     /**
-     * XSS protection - escape HTML output
+     * Escape a string for safe HTML output.
      */
     public static function escape(string $value): string
     {
         return htmlspecialchars($value, ENT_QUOTES | ENT_HTML5, 'UTF-8');
     }
 
+    // -----------------------------------------------------------------------
+    // Session management
+    // -----------------------------------------------------------------------
+
     /**
-     * Secure session configuration
+     * Start the session with secure configuration applied.
+     */
+    protected static function startSession(): void
+    {
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            self::secureSessionConfig();
+            session_start();
+        }
+    }
+
+    /**
+     * Apply secure session cookie settings.
      */
     public static function secureSessionConfig(): void
     {
@@ -188,31 +187,33 @@ class Security
             return;
         }
 
-        $secureConfig = [
-            'cookie_httponly' => true,
-            'cookie_secure' => (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off'),
-            'cookie_samesite' => 'Lax',
-            'use_strict_mode' => true,
-            'use_cookies' => true,
-            'use_only_cookies' => true,
+        $secureCookie = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off');
+
+        $config = [
+            'cookie_httponly'    => true,
+            'cookie_secure'      => $secureCookie,
+            'cookie_samesite'    => 'Lax',
+            'use_strict_mode'    => true,
+            'use_cookies'        => true,
+            'use_only_cookies'   => true,
         ];
 
-        foreach ($secureConfig as $setting => $value) {
+        foreach ($config as $setting => $value) {
             ini_set('session.' . $setting, $value ? '1' : '0');
         }
     }
 
     /**
-     * Regenerate session ID for security
+     * Regenerate the session ID.
      */
-    public static function regenerateSession(bool $destroy = false): void
+    public static function regenerateSession(bool $destroyOld = false): void
     {
         self::startSession();
-        session_regenerate_id($destroy);
+        session_regenerate_id($destroyOld);
     }
 
     /**
-     * Kill session for logout
+     * Destroy the session completely.
      */
     public static function killSession(): void
     {
@@ -221,7 +222,6 @@ class Security
             session_destroy();
             session_write_close();
 
-            // Delete session cookie
             if (ini_get('session.use_cookies')) {
                 $params = session_get_cookie_params();
                 setcookie(session_name(), '', time() - 42000,
@@ -234,47 +234,46 @@ class Security
         }
     }
 
-    /**
-     * Get current session ID
-     */
     public static function getSessionId(): ?string
     {
         self::startSession();
         return session_id();
     }
 
-    /**
-     * Get session value
-     */
-    public static function getSession(string $key, $default = null)
+    public static function getSession(string $key, mixed $default = null): mixed
     {
         self::startSession();
         return $_SESSION[$key] ?? $default;
     }
 
-    /**
-     * Set session value
-     */
-    public static function setSession(string $key, $value): void
+    public static function setSession(string $key, mixed $value): void
     {
         self::startSession();
         $_SESSION[$key] = $value;
     }
 
-    /**
-     * Check if request is AJAX
-     */
+    // -----------------------------------------------------------------------
+    // Request helpers
+    // -----------------------------------------------------------------------
+
     public static function isAjax(): bool
     {
         return !empty($_SERVER['HTTP_X_REQUESTED_WITH']) &&
                strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
     }
 
+    // -----------------------------------------------------------------------
+    // Input sanitization
+    // -----------------------------------------------------------------------
+
     /**
-     * Validate and sanitize input data.
+     * Validate and sanitize input data using strict type coercion.
      *
-     * Uses strict validation instead of the deprecated FILTER_SANITIZE_*
-     * filters (removed in PHP 8.1).
+     * Uses filter_var() instead of the deprecated FILTER_SANITIZE_* filters
+     * (removed in PHP 8.1).
+     *
+     * @param array $data  Raw input
+     * @param array $rules Per-key type rules: 'int', 'float', 'email', 'url', 'string'
      */
     public static function sanitizeInput(array $data, array $rules = []): array
     {
@@ -285,8 +284,7 @@ class Security
                 $value = trim($value);
 
                 if (isset($rules[$key])) {
-                    $rule = $rules[$key];
-                    $value = match ($rule) {
+                    $value = match ($rules[$key]) {
                         'int'    => filter_var($value, FILTER_VALIDATE_INT) !== false ? (int) $value : 0,
                         'float'  => filter_var($value, FILTER_VALIDATE_FLOAT) !== false ? (float) $value : 0.0,
                         'email'  => self::sanitizeEmail($value),
@@ -306,7 +304,7 @@ class Security
     }
 
     /**
-     * Validate an email address; returns empty string when invalid
+     * Validate an email address; returns empty string when invalid.
      */
     public static function sanitizeEmail(string $value): string
     {
@@ -315,7 +313,7 @@ class Security
     }
 
     /**
-     * Validate a URL; returns empty string when invalid
+     * Validate a URL; returns empty string when invalid.
      */
     public static function sanitizeUrl(string $value): string
     {
@@ -323,74 +321,42 @@ class Security
         return $url === false ? '' : $url;
     }
 
+    // -----------------------------------------------------------------------
+    // Security headers
+    // -----------------------------------------------------------------------
+
     /**
-     * Security headers that should be sent on all responses.
+     * Send recommended security headers on every response.
      *
      * Note: 'unsafe-inline' is intentionally kept for style-src because the
      * bundled views use inline <style> blocks. script-src is locked down to
-     * 'self' plus the pinned CDN - there are no inline <script> blocks.
+     * 'self' plus the pinned CDN — there are no inline <script> blocks.
      */
     public static function sendSecurityHeaders(): void
     {
-        // Prevent clickjacking
         header('X-Frame-Options: DENY');
-
-        // Prevent MIME type sniffing
         header('X-Content-Type-Options: nosniff');
-
-        // XSS Protection (legacy browsers)
         header('X-XSS-Protection: 1; mode=block');
-
-        // Referrer policy
         header('Referrer-Policy: strict-origin-when-cross-origin');
-
-        // Content Security Policy
         header("Content-Security-Policy: default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; img-src 'self' data:; font-src 'self' https://cdn.jsdelivr.net; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'");
-
-        // Permissions Policy
         header('Permissions-Policy: accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()');
     }
 
     /**
-     * Set HSTS header (requires HTTPS)
+     * Send the HSTS header (only effective over HTTPS).
      */
     public static function setHsts(int $maxAge = 31536000, bool $includeSubDomains = true): void
     {
-        $hsts = "max-age={$maxAge};" . ($includeSubDomains ? ' includeSubDomains' : '');
-        header("Strict-Transport-Security: {$hsts}");
+        $hstsValue = "max-age={$maxAge};" . ($includeSubDomains ? ' includeSubDomains' : '');
+        header("Strict-Transport-Security: {$hstsValue}");
     }
 
-    /**
-     * Log security event
-     */
-    public static function logEvent(string $event, array $data = [], string $level = 'info'): void
-    {
-        $logDir = CANYON_BASE_PATH . '/storage/logs';
-        if (!is_dir($logDir)) {
-            @mkdir($logDir, 0750, true);
-        }
-
-        $timestamp = date('Y-m-d H:i:s');
-        $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
-        $userAgent = substr($_SERVER['HTTP_USER_AGENT'] ?? 'unknown', 0, 512);
-        $userAgent = str_replace(["\r", "\n"], ' ', $userAgent);
-
-        $logEntry = sprintf(
-            "[%s] %s | IP: %s | UA: %s | Event: %s | Data: %s\n",
-            $timestamp,
-            strtoupper($level),
-            $ip,
-            $userAgent,
-            $event,
-            json_encode($data, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE)
-        );
-
-        $logFile = $logDir . '/security.log';
-        file_put_contents($logFile, $logEntry, FILE_APPEND | LOCK_EX);
-    }
+    // -----------------------------------------------------------------------
+    // CORS
+    // -----------------------------------------------------------------------
 
     /**
-     * Check if request is from allowed origin for CORS
+     * Check whether an Origin header value is in the CORS allow-list.
      */
     public static function isValidOrigin(string $origin): bool
     {
@@ -402,7 +368,7 @@ class Security
     }
 
     /**
-     * Get allowed CORS origins
+     * Read allowed CORS origins from the environment.
      */
     protected static function getAllowedOrigins(): array
     {
@@ -410,9 +376,12 @@ class Security
         if (empty($envOrigins)) {
             return [];
         }
-
         return array_map('trim', explode(',', $envOrigins));
     }
+
+    // -----------------------------------------------------------------------
+    // Rate limiting
+    // -----------------------------------------------------------------------
 
     /**
      * Per-session rate limiter.
@@ -441,7 +410,7 @@ class Security
     }
 
     /**
-     * Send a JSON error response for a rate-limited request
+     * Send a JSON 429 response for a rate-limited request.
      */
     public static function rateLimitResponse(int $retryAfter = 60): void
     {
@@ -454,5 +423,37 @@ class Security
             'message' => 'Too many requests. Please try again later.'
         ], JSON_UNESCAPED_UNICODE);
         exit;
+    }
+
+    // -----------------------------------------------------------------------
+    // Security event logging
+    // -----------------------------------------------------------------------
+
+    /**
+     * Write a structured security event to the log file.
+     */
+    public static function logEvent(string $event, array $data = [], string $level = 'info'): void
+    {
+        $logDir = CANYON_BASE_PATH . '/storage/logs';
+        if (!is_dir($logDir)) {
+            @mkdir($logDir, 0750, true);
+        }
+
+        $timestamp = date('Y-m-d H:i:s');
+        $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+        $userAgent = substr($_SERVER['HTTP_USER_AGENT'] ?? 'unknown', 0, 512);
+        $userAgent = str_replace(["\r", "\n"], ' ', $userAgent);
+
+        $logEntry = sprintf(
+            "[%s] %s | IP: %s | UA: %s | Event: %s | Data: %s\n",
+            $timestamp,
+            strtoupper($level),
+            $ip,
+            $userAgent,
+            $event,
+            json_encode($data, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE)
+        );
+
+        file_put_contents($logDir . '/security.log', $logEntry, FILE_APPEND | LOCK_EX);
     }
 }

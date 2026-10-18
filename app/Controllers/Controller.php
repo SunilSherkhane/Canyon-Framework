@@ -4,116 +4,196 @@ namespace Canyon\Controllers;
 
 use Canyon\Core\View;
 use Canyon\Core\Security;
+use Canyon\Core\Database;
+use Canyon\Core\Application;
 
 /**
  * Canyon Framework Base Controller
- * Inspired by Laravel Controller and CodeIgniter Controller
- * 
- * Security features:
- * - XSS protection via escape()
- * - Open redirect prevention
- * - CSRF protection
+ *
+ * Provides shared response helpers: view rendering, JSON responses,
+ * safe redirects, CSRF protection, and common error responses.
  */
 class Controller
 {
+    /** @var Database|null Database connection for derived controllers */
+    protected ?Database $db = null;
+
     /**
-     * Render a view with automatic XSS protection
+     * Get the database connection instance.
      */
-    protected function view($view, $data = [])
+    protected function db(): Database
     {
-        return View::make($view, $data);
+        if ($this->db === null) {
+            $this->db = new Database();
+        }
+        return $this->db;
     }
-    
+
     /**
-     * Send JSON response with security headers
+     * Get a view rendered with global data.
      */
-    protected function json($data, $status = 200)
+    protected function view(string $view, array $data = []): string
+    {
+        // Merge with application-wide data
+        $appData = Application::getSharedData();
+        return View::make($view, array_merge($appData, $data));
+    }
+
+    // -----------------------------------------------------------------------
+    // JSON responses
+    // -----------------------------------------------------------------------
+
+    /**
+     * Send a JSON response with security headers.
+     */
+    protected function json(mixed $data, int $status = 200): never
     {
         http_response_code($status);
         header('Content-Type: application/json; charset=UTF-8');
         header('X-Content-Type-Options: nosniff');
-        
-        // Use JSON_HEX_TAG to prevent XSS in JSON responses
+
+        // JSON_HEX_* flags prevent XSS in JSON responses
         echo json_encode(
-            $data, 
+            $data,
             JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE
         );
         exit;
     }
-    
+
     /**
-     * Redirect to URL with security validation
-     * @param string $url The URL to redirect to (relative or absolute)
-     * @param int $status HTTP status code (301, 302, 303, 307, 308)
-     * @param bool $secure Whether to force secure connection
+     * Send a success JSON response with data wrapper.
      */
-    protected function redirect($url, $status = 302, $secure = null)
+    protected function success(mixed $data = null, string $message = 'Success', int $status = 200): never
     {
-        // Validate and sanitize redirect URL to prevent open redirect
+        $this->json([
+            'success' => true,
+            'message' => $message,
+            'data'    => $data,
+        ], $status);
+    }
+
+    /**
+     * Send an error JSON response.
+     */
+    protected function error(string $message, int $status = 400): never
+    {
+        $this->json([
+            'success' => false,
+            'message' => $message,
+        ], $status);
+    }
+
+    /**
+     * Send a success JSON response (alias for backward compatibility).
+     */
+    protected function successJson(mixed $data = null, string $message = 'Success'): never
+    {
+        $this->success($data, $message);
+    }
+
+    /**
+     * Send an error JSON response (alias for backward compatibility).
+     */
+    protected function errorJson(string $message, int $status = 400): never
+    {
+        $this->error($message, $status);
+    }
+
+    // -----------------------------------------------------------------------
+    // Common error responses
+    // -----------------------------------------------------------------------
+
+    protected function badRequest(string $message = 'Bad Request'): never
+    {
+        $this->error($message, 400);
+    }
+
+    protected function unauthorized(string $message = 'Unauthorized'): never
+    {
+        $this->error($message, 401);
+    }
+
+    protected function forbidden(string $message = 'Forbidden'): never
+    {
+        $this->error($message, 403);
+    }
+
+    protected function notFound(string $message = 'Not Found'): never
+    {
+        $this->error($message, 404);
+    }
+
+    protected function serverError(string $message = 'Internal Server Error'): never
+    {
+        $this->error($message, 500);
+    }
+
+    // -----------------------------------------------------------------------
+    // Redirects
+    // -----------------------------------------------------------------------
+
+    /**
+     * Redirect to a URL after sanitizing it to prevent open redirects.
+     * Only same-site relative URLs starting with '/' are allowed.
+     */
+    protected function redirect(string $url, int $status = 302): never
+    {
         $sanitizedUrl = Security::sanitizeRedirectUrl($url);
-        
+
         if ($sanitizedUrl === null && $url !== '/') {
-            // Log potential security event
             Security::logEvent('invalid_redirect', ['url' => $url], 'warning');
-            
-            // Don't redirect to invalid URL - go home instead
             $sanitizedUrl = '/';
         }
-        
-        // Build full URL if needed
-        if (!preg_match('/^https?:\/\//i', $sanitizedUrl) && !str_starts_with($sanitizedUrl, '/')) {
-            $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
-            $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
-            $sanitizedUrl = "{$protocol}://{$host}{$sanitizedUrl}";
-        } elseif (str_starts_with($sanitizedUrl, '//')) {
-            // Fix protocol-relative URLs
-            $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
-            $sanitizedUrl = "{$protocol}:{$sanitizedUrl}";
-        }
-        
+
+        // At this point, $sanitizedUrl is either:
+        // - null (shouldn't happen after fallback)
+        // - '/' (root path)
+        // - A relative path starting with '/'
+        // SanitizeRedirectUrl already rejects protocol-relative URLs (//evil.com)
+
         http_response_code($status);
         header('Location: ' . $sanitizedUrl);
         exit;
     }
-    
+
     /**
-     * Redirect back to previous page with safety check
+     * Redirect back to the previous page, falling back to a safe URL.
      */
-    protected function redirectBack($fallback = '/', $status = 302)
+    protected function redirectBack(string $fallback = '/', int $status = 302): never
     {
         $referer = $_SERVER['HTTP_REFERER'] ?? null;
-        
-        if ($referer && self::isValidRedirectUrl($referer)) {
-            return $this->redirect($referer, $status);
+
+        if ($referer !== null && $this->isValidRedirectUrl($referer)) {
+            $this->redirect($referer, $status);
         }
-        
-        return $this->redirect($fallback, $status);
+
+        $this->redirect($fallback, $status);
     }
-    
+
     /**
-     * Check if URL is valid for redirect
+     * Check whether a URL is safe to redirect to (same host or relative).
      */
     protected function isValidRedirectUrl(string $url): bool
     {
-        // Get current host
-        $currentHost = $_SERVER['HTTP_HOST'] ?? '';
-        
-        // Parse the URL
         $parsed = parse_url($url);
-        
-        // Allow relative URLs
+
+        // Relative URLs (no host) are always safe
         if (!isset($parsed['host'])) {
             return true;
         }
-        
-        // Check if host matches current host
+
+        $currentHost = $_SERVER['HTTP_HOST'] ?? '';
         return strtolower($parsed['host']) === strtolower($currentHost);
     }
-    
+
+    // -----------------------------------------------------------------------
+    // Raw response
+    // -----------------------------------------------------------------------
+
     /**
-     * Send response with status
+     * Send a raw response with a custom content type.
      */
-    protected function response($content, $status = 200, $contentType = 'text/html; charset=UTF-8')
+    protected function response(string $content, int $status = 200, string $contentType = 'text/html; charset=UTF-8'): never
     {
         http_response_code($status);
         header('Content-Type: ' . $contentType);
@@ -121,84 +201,131 @@ class Controller
         echo $content;
         exit;
     }
-    
+
+    // -----------------------------------------------------------------------
+    // CSRF helpers
+    // -----------------------------------------------------------------------
+
     /**
-     * Escape HTML for safe output
+     * Get a hidden HTML input field containing the CSRF token.
      */
-    protected function escape($value)
-    {
-        return View::escape($value);
-    }
-    
-    /**
-     * Generate CSRF token for forms
-     */
-    protected function csrfField()
+    protected function csrfField(): string
     {
         return Security::csrfField();
     }
-    
+
     /**
-     * Get CSRF token name for validation
+     * Get the CSRF token field name.
      */
-    protected function csrfTokenName()
+    protected function csrfTokenName(): string
     {
         return Security::getCsrfTokenName();
     }
-    
+
     /**
-     * Validate CSRF token
+     * Verify a CSRF token.
      */
-    protected function verifyCsrf($token)
+    protected function verifyCsrf(?string $token): bool
     {
+        if ($token === null || $token === '') {
+            return false;
+        }
         return Security::verifyCsrfToken($token);
     }
-    
+
+    // -----------------------------------------------------------------------
+    // Input helpers
+    // -----------------------------------------------------------------------
+
     /**
-     * Send error JsonResponse
+     * Get a sanitized input value with optional validation rules.
      */
-    protected function errorJson($message, $status = 400)
+    protected function input(string $key, mixed $default = null, string $type = 'string'): mixed
     {
-        return $this->json(['success' => false, 'message' => $message], $status);
+        $data = $type === 'string' ? $_POST[$key] ?? $_GET[$key] ?? $default : $_POST[$key] ?? $default;
+
+        if ($data === null) {
+            return $default;
+        }
+
+        return Security::sanitizeInput([$key => $data], [$key => $type])[$key] ?? $default;
     }
-    
+
     /**
-     * Send success JsonResponse
+     * Get all sanitized POST input with validation rules.
      */
-    protected function successJson($data = null, $message = 'Success')
+    protected function post(array $rules = []): array
     {
-        return $this->json([
-            'success' => true, 
-            'message' => $message,
-            'data' => $data
-        ], 200);
+        return Security::sanitizeInput($_POST ?? [], $rules);
     }
-    
+
     /**
-     * Common error responses
+     * Get all sanitized GET input with validation rules.
      */
-    protected function badRequest($message = 'Bad Request')
+    protected function get(array $rules = []): array
     {
-        return $this->errorJson($message, 400);
+        return Security::sanitizeInput($_GET ?? [], $rules);
     }
-    
-    protected function unauthorized($message = 'Unauthorized')
+
+    // -----------------------------------------------------------------------
+    // Escaping
+    // -----------------------------------------------------------------------
+
+    /**
+     * Escape a value for safe HTML output.
+     */
+    protected function escape(mixed $value): string
     {
-        return $this->errorJson($message, 401);
+        return View::escape($value);
     }
-    
-    protected function forbidden($message = 'Forbidden')
+
+    // -----------------------------------------------------------------------
+    // Session helpers
+    // -----------------------------------------------------------------------
+
+    /**
+     * Get a session value.
+     */
+    protected function session(string $key, mixed $default = null): mixed
     {
-        return $this->errorJson($message, 403);
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            session_start();
+        }
+        return $_SESSION[$key] ?? $default;
     }
-    
-    protected function notFound($message = 'Not Found')
+
+    /**
+     * Set a session value.
+     */
+    protected function setSession(string $key, mixed $value): void
     {
-        return $this->errorJson($message, 404);
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            session_start();
+        }
+        $_SESSION[$key] = $value;
     }
-    
-    protected function serverError($message = 'Internal Server Error')
+
+    /**
+     * Flash a session value that persists for the next request.
+     */
+    protected function flash(string $key, mixed $value): void
     {
-        return $this->errorJson($message, 500);
+        $this->setSession($key, $value);
+        $this->setSession('_flash_' . $key, $value);
+    }
+
+    /**
+     * Get and remove a flash session value.
+     */
+    protected function getFlash(string $key): mixed
+    {
+        $value = $this->session('_flash_' . $key);
+        if ($value !== null) {
+            if (session_status() !== PHP_SESSION_ACTIVE) {
+                session_start();
+            }
+            unset($_SESSION['_flash_' . $key]);
+        }
+        return $value;
     }
 }

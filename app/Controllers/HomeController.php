@@ -1,112 +1,122 @@
 <?php
-/**
- * Home Controller - Canyon Framework
- *
- * Demonstrating minimal MVC pattern with security features
- */
 
 namespace Canyon\Controllers;
 
-use Canyon\Controllers\Controller;
 use Canyon\Core\Security;
 
+/**
+ * Home Controller — Canyon Framework
+ *
+ * Handles the public pages and the contact form.
+ */
 class HomeController extends Controller
 {
-    public function index()
+    // -----------------------------------------------------------------------
+    // Public pages
+    // -----------------------------------------------------------------------
+
+    public function index(): string
     {
         return $this->view('home.index', [
-            'title' => 'Welcome to Canyon',
-            'message' => 'This is a minimal PHP framework built with Laravel and CodeIgniter inspiration.',
-            'csrf_field' => $this->csrfField(),
+            'title'       => 'Welcome to Canyon',
+            'message'     => 'This is a minimal PHP framework built with Laravel and CodeIgniter inspiration.',
+            'csrf_field'  => $this->csrfField(),
         ]);
     }
 
-    public function about()
+    public function about(): string
     {
         return $this->view('home.about', [
-            'title' => 'About Canyon',
+            'title'       => 'About Canyon',
             'description' => 'Canyon is a lightweight PHP framework.',
         ]);
     }
 
-    public function contact()
+    public function contact(): string
     {
         return $this->view('home.contact', [
-            'title' => 'Contact Us',
+            'title'           => 'Contact Us',
             'csrf_token_name' => $this->csrfTokenName(),
         ]);
     }
 
+    public function features(): string
+    {
+        return $this->view('home.features', [
+            'title' => 'Features',
+        ]);
+    }
+
+    // -----------------------------------------------------------------------
+    // API endpoints
+    // -----------------------------------------------------------------------
+
     /**
-     * API data endpoint with CSRF protection and input validation
+     * API data endpoint with CSRF protection and input validation.
      */
-    public function apiData()
+    public function apiData(): never
     {
         // Verify CSRF token for POST requests
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $token = $_POST[$this->csrfTokenName()] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? null;
 
-            if (!$token || !$this->verifyCsrf($token)) {
-                return $this->unauthorized('Invalid CSRF token');
+            if (!$this->verifyCsrf($token)) {
+                $this->unauthorized('Invalid CSRF token');
             }
         }
 
-        // Validate input with strict bounds
-        $page = (int) ($_GET['page'] ?? 1);
-        $perPage = (int) ($_GET['per_page'] ?? 10);
+        // Validate and clamp pagination parameters
+        $page    = max(1, (int) ($_GET['page'] ?? 1));
+        $perPage = min(100, max(1, (int) ($_GET['per_page'] ?? 10)));
 
-        // Limit maximum values to prevent DoS
-        $page = max(1, $page);
-        $perPage = min(100, max(1, $perPage));
-
-        // Generate response data
         $data = [
-            'page' => $page,
+            'page'     => $page,
             'per_page' => $perPage,
-            'items' => [
-                ['id' => 1, 'name' => 'Item One', 'value' => 'First item'],
-                ['id' => 2, 'name' => 'Item Two', 'value' => 'Second item'],
+            'items'    => [
+                ['id' => 1, 'name' => 'Item One',   'value' => 'First item'],
+                ['id' => 2, 'name' => 'Item Two',   'value' => 'Second item'],
                 ['id' => 3, 'name' => 'Item Three', 'value' => 'Third item'],
             ],
-            'total' => 3,
+            'total'    => 3,
             'has_more' => false,
         ];
 
-        return $this->json($data);
+        $this->json($data);
     }
 
     /**
      * Contact form submission.
      *
-     * Security controls applied here:
+     * Security controls:
      * - CSRF token verification (timing-safe comparison)
      * - Per-session rate limiting
-     * - Strict server-side input validation (never trust the HTML pattern attr)
-     * - Output escaping is handled by the view layer
+     * - Strict server-side input validation
+     * - Honeypot field for basic bot defence
+     * - Output escaping handled by the view layer
      */
-    public function submitContact()
+    public function submitContact(): never
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            return $this->errorJson('Method not allowed', 405);
+            $this->errorJson('Method not allowed', 405);
         }
 
         // CSRF protection
         $token = $_POST[$this->csrfTokenName()] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? null;
 
-        if (!$token || !$this->verifyCsrf($token)) {
+        if (!$this->verifyCsrf($token)) {
             Security::logEvent('csrf_failure', ['route' => 'api.contact'], 'warning');
-            return $this->unauthorized('Invalid CSRF token');
+            $this->unauthorized('Invalid CSRF token');
         }
 
         // Rate limiting: 5 submissions per minute per session
         if (!Security::throttle('contact', 5, 60)) {
             Security::logEvent('rate_limit_exceeded', ['route' => 'api.contact'], 'warning');
-            return Security::rateLimitResponse(60);
+            Security::rateLimitResponse(60);
         }
 
         // Server-side validation
-        $name = trim((string) ($_POST['name'] ?? ''));
-        $email = trim((string) ($_POST['email'] ?? ''));
+        $name    = trim((string) ($_POST['name'] ?? ''));
+        $email   = trim((string) ($_POST['email'] ?? ''));
         $message = trim((string) ($_POST['message'] ?? ''));
 
         $errors = [];
@@ -124,32 +134,36 @@ class HomeController extends Controller
         }
 
         if (!empty($errors)) {
-            return $this->json([
+            $this->json([
                 'success' => false,
                 'message' => 'Validation failed.',
-                'errors' => $errors,
+                'errors'  => $errors,
             ], 422);
         }
 
         // Honeypot: silently accept but ignore if filled (basic bot defence)
         if (!empty($_POST['website'])) {
-            return $this->successJson(null, 'Message sent.');
+            $this->successJson(null, 'Message sent.');
         }
 
-        // Persist the submission safely (escaped on write, never executed)
+        // Log the submission safely (data is escaped on write, never executed)
         Security::logEvent('contact_submitted', [
-            'name' => $name,
-            'email' => $email,
+            'name'          => $name,
+            'email'         => $email,
             'message_length' => strlen($message),
         ], 'info');
 
-        return $this->successJson([
-            'name' => Security::escape($name),
+        $this->successJson([
+            'name'        => Security::escape($name),
             'received_at' => date('c'),
         ], 'Thank you for your message. We will be in touch shortly.');
     }
 
-    public function notFound($message = 'The page you are looking for does not exist.')
+    // -----------------------------------------------------------------------
+    // Error pages
+    // -----------------------------------------------------------------------
+
+    public function notFound(string $message = 'The page you are looking for does not exist.'): string
     {
         http_response_code(404);
         return $this->view('errors.404', [

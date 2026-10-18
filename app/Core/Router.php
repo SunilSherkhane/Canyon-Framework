@@ -2,188 +2,186 @@
 
 namespace Canyon\Core;
 
+use Closure;
+
 /**
  * Canyon Framework Router
- * Inspired by Laravel Router and CodeIgniter Router
  *
- * Security features:
- * - Strict HTTP method allow-list
- * - URI sanitization (control chars / null bytes / length limit)
- * - Route pattern matching with {param} and (.*) catch-all support
- * - Handler validation (class + method must exist)
- * - Content-Type headers on every error response
- * - No information disclosure in error output
+ * Resolves the incoming HTTP request to a registered route handler.
+ * Inspired by Laravel and CodeIgniter routers.
+ *
+ * Security: strict method allow-list, URI sanitization, handler validation,
+ * and sanitized error responses with no information disclosure.
  */
 class Router
 {
-    protected static $routes = [];
-    protected static $groupMiddwares = [];
+    /** @var array<int, array{method: string, uri: string, handler: mixed, name: ?string, middleware: array<int, string>}> */
+    protected static array $routes = [];
 
-    /**
-     * Allowed HTTP methods
-     */
+    /** @var array<int, string> */
+    protected static array $groupMiddleware = [];
+
+    /** @var int Current depth in route group nesting */
+    protected static int $groupDepth = 0;
+
+    /** HTTP methods the router will accept */
     protected const ALLOWED_METHODS = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS', 'HEAD'];
 
-    /**
-     * Maximum allowed URI length (prevents DoS)
-     */
+    /** Maximum URI length to prevent DoS via overly long paths */
     protected const MAX_URI_LENGTH = 2048;
 
-    /**
-     * Register a GET route
-     */
-    public static function get($uri, $handler, $name = null)
+    // -----------------------------------------------------------------------
+    // Route registration
+    // -----------------------------------------------------------------------
+
+    public static function get(string $uri, mixed $handler, ?string $name = null, array $middleware = []): void
     {
-        self::add('GET', $uri, $handler, $name);
+        self::add('GET', $uri, $handler, $name, $middleware);
+    }
+
+    public static function post(string $uri, mixed $handler, ?string $name = null, array $middleware = []): void
+    {
+        self::add('POST', $uri, $handler, $name, 'middleware');
+    }
+
+    public static function put(string $uri, mixed $handler, ?string $name = null, array $middleware = []): void
+    {
+        self::add('PUT', $uri, $handler, $name, $middleware);
+    }
+
+    public static function delete(string $uri, mixed $handler, ?string $name = null, array $middleware = []): void
+    {
+        self::add('DELETE', $uri, $handler, $name, $middleware);
+    }
+
+    public static function patch(string $uri, mixed $handler, ?string $name = null, array $middleware = []): void
+    {
+        self::add('PATCH', $uri, $handler, $name, $middleware);
+    }
+
+    public static function options(string $uri, mixed $handler, ?string $name = null, array $middleware = []): void
+    {
+        self::add('OPTIONS', $uri, $handler, $name, $middleware);
     }
 
     /**
-     * Register a POST route
+     * Register a route that responds to every allowed HTTP method.
      */
-    public static function post($uri, $handler, $name = null)
-    {
-        self::add('POST', $uri, $handler, $name);
-    }
-
-    /**
-     * Register a PUT route
-     */
-    public static function put($uri, $handler, $name = null)
-    {
-        self::add('PUT', $uri, $handler, $name);
-    }
-
-    /**
-     * Register a DELETE route
-     */
-    public static function delete($uri, $handler, $name = null)
-    {
-        self::add('DELETE', $uri, $handler, $name);
-    }
-
-    /**
-     * Register a PATCH route
-     */
-    public static function patch($uri, $handler, $name = null)
-    {
-        self::add('PATCH', $uri, $handler, $name);
-    }
-
-    /**
-     * Register a route that responds to every method
-     */
-    public static function any($uri, $handler, $name = null)
+    public static function any(string $uri, mixed $handler, ?string $name = null, array $middleware = []): void
     {
         foreach (self::ALLOWED_METHODS as $method) {
-            self::add($method, $uri, $handler, $name);
+            self::add($method, $uri, $handler, $name, $middleware);
         }
     }
 
     /**
-     * Add a route with validation
+     * Add a route after validating the method, URI, and handler.
+     * Middleware is merged with group middleware if specified.
      */
-    public static function add($method, $uri, $handler, $name = null)
+    public static function add(string $method, string $uri, mixed $handler, ?string $name = null, array $middleware = []): void
     {
-        // Validate HTTP method
         if (!in_array($method, self::ALLOWED_METHODS, true)) {
             throw new \InvalidArgumentException("Invalid HTTP method: {$method}");
         }
 
-        // Validate URI
         $uri = self::validateUri($uri);
 
-        // Validate handler
-        if (!is_callable($handler) && !is_array($handler) && !is_string($handler)) {
-            throw new \InvalidArgumentException("Invalid route handler");
-        }
+        self::assertValidHandler($handler);
 
-        if (is_array($handler)) {
-            if (count($handler) !== 2 || !is_string($handler[0]) || !is_string($handler[1])) {
-                throw new \InvalidArgumentException("Invalid controller route handler");
-            }
-        }
+        // Merge with any group middleware
+        $allMiddleware = array_merge(self::$groupMiddleware, $middleware);
 
         self::$routes[] = [
-            'method' => $method,
-            'uri' => $uri,
+            'method'  => $method,
+            'uri'     => $uri,
             'handler' => $handler,
-            'name' => $name
+            'name'    => $name,
+            'middleware' => $allMiddleware,
         ];
     }
 
     /**
-     * Validate and sanitize a route URI definition
+     * Group routes under a shared set of middleware.
+     * Middleware is merged into each route's middleware stack.
      */
-    protected static function validateUri($uri): string
+    public static function group(array|string $middleware, callable $callback): void
     {
-        if (!is_string($uri) || $uri === '') {
-            throw new \InvalidArgumentException("URI must be a non-empty string");
-        }
+        // Store current group middleware and depth
+        $previousMiddleware = self::$groupMiddleware;
+        $previousDepth = self::$groupDepth;
 
-        // Must start with /
-        if (!str_starts_with($uri, '/')) {
-            throw new \InvalidArgumentException("URI must start with /");
-        }
+        // Merge new middleware
+        self::$groupMiddleware = array_merge(self::$groupMiddleware, (array) $middleware);
+        self::$groupDepth++;
 
-        // Reject control characters and null bytes
-        if (preg_match('/[\x00-\x1F\x7F]/', $uri) === 1) {
-            throw new \InvalidArgumentException("URI contains invalid characters");
-        }
+        $callback();
 
-        // Remove query string if present
-        $uri = parse_url($uri, PHP_URL_PATH) ?: $uri;
-
-        // Normalize multiple slashes
-        $uri = preg_replace('#/+#', '/', $uri);
-
-        return $uri;
+        // Restore previous state
+        self::$groupMiddleware = $previousMiddleware;
+        self::$groupDepth = $previousDepth;
     }
 
+    // -----------------------------------------------------------------------
+    // Dispatch
+    // -----------------------------------------------------------------------
+
     /**
-     * Group routes with middleware
+     * Match the current request against registered routes and execute the handler.
      */
-    public static function group($middleware, $callback)
+    public static function dispatch(): ?string
     {
-        $previous = self::$groupMiddwares;
-        self::$groupMiddwares = array_merge($previous, (array) $middleware);
+        try {
+            $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 
-        if (is_callable($callback)) {
-            $callback();
+            if (!in_array($method, self::ALLOWED_METHODS, true)) {
+                self::sendErrorResponse(405, 'Method Not Allowed');
+                return null;
+            }
+
+            $uri = self::getCurrentUri();
+
+            // Try specific routes first; catch-all is the last resort
+            foreach (self::$routes as $route) {
+                if ($route['uri'] === '/(.*)') {
+                    continue;
+                }
+
+                $match = self::matchRoute($route, $method, $uri);
+                if ($match !== null) {
+                    return self::handleRoute($match['route'], $match['params']);
+                }
+            }
+
+            // Try catch-all route
+            foreach (self::$routes as $route) {
+                if ($route['uri'] === '/(.*)' && $route['method'] === $method) {
+                    return self::handleRoute($route, []);
+                }
+            }
+
+            self::sendErrorResponse(404, 'Not Found');
+            return null;
+
+        } catch (\Throwable $exception) {
+            Security::logEvent('router_error', [
+                'message' => $exception->getMessage(),
+                'file'    => $exception->getFile(),
+                'line'    => $exception->getLine(),
+            ], 'error');
+
+            self::sendErrorResponse(500, 'Internal Server Error');
+            return null;
         }
-
-        self::$groupMiddwares = $previous;
     }
 
-    /**
-     * Get the current request URI, sanitized
-     */
-    protected static function getCurrentUri(): string
-    {
-        $uri = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
-
-        if ($uri === false || $uri === null || $uri === '') {
-            $uri = '/';
-        }
-
-        // Decode percent-encoding so encoded attacks are visible to the checks below
-        $uri = rawurldecode($uri);
-
-        // Reject control characters and null bytes
-        if (preg_match('/[\x00-\x1F\x7F]/', $uri) === 1) {
-            self::sendErrorResponse(400, 'Bad Request');
-        }
-
-        // Limit URI length to prevent DoS
-        if (strlen($uri) > self::MAX_URI_LENGTH) {
-            self::sendErrorResponse(414, 'URI Too Long');
-        }
-
-        return $uri;
-    }
+    // -----------------------------------------------------------------------
+    // Route matching
+    // -----------------------------------------------------------------------
 
     /**
-     * Match a route against the request method and URI.
-     * Returns ['route' => ..., 'params' => [...]] or null.
+     * Match a single route against the request method and URI.
+     *
+     * @return array{route: array, params: array<string, string>}|null
      */
     protected static function matchRoute(array $route, string $method, string $uri): ?array
     {
@@ -215,115 +213,190 @@ class Router
         return $pattern === $uri ? ['route' => $route, 'params' => []] : null;
     }
 
+    // -----------------------------------------------------------------------
+    // Request URI
+    // -----------------------------------------------------------------------
+
     /**
-     * Dispatch the current request
+     * Get the current request URI, sanitized and length-checked.
      */
-    public static function dispatch()
+    protected static function getCurrentUri(): string
     {
-        try {
-            // Validate request method
-            $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
-            if (!in_array($method, self::ALLOWED_METHODS, true)) {
-                self::sendErrorResponse(405, 'Method Not Allowed');
-                return;
-            }
+        $uri = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
 
-            $uri = self::getCurrentUri();
-
-            // Try specific routes first
-            foreach (self::$routes as $route) {
-                if ($route['uri'] === '/(.*)') {
-                    continue; // Catch-all is the last resort
-                }
-
-                $match = self::matchRoute($route, $method, $uri);
-                if ($match !== null) {
-                    return self::handleRoute($match['route'], $match['params']);
-                }
-            }
-
-            // Try catch-all route
-            foreach (self::$routes as $route) {
-                if ($route['uri'] === '/(.*)' && $route['method'] === $method) {
-                    return self::handleRoute($route, []);
-                }
-            }
-
-            // 404 - no route found
-            self::sendErrorResponse(404, 'Not Found');
-
-        } catch (\Throwable $e) {
-            // Log the error
-            Security::logEvent('router_error', [
-                'message' => $e->getMessage(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine()
-            ], 'error');
-
-            // Don't expose internal error details to users
-            self::sendErrorResponse(500, 'Internal Server Error');
+        if ($uri === false || $uri === null || $uri === '') {
+            $uri = '/';
         }
+
+        // Decode percent-encoding so encoded attacks are visible to the checks below
+        $uri = rawurldecode($uri);
+
+        // Reject control characters and null bytes
+        if (preg_match('/[\x00-\x1F\x7F]/', $uri) === 1) {
+            self::sendErrorResponse(400, 'Bad Request');
+        }
+
+        // Limit URI length to prevent DoS
+        if (strlen($uri) > self::MAX_URI_LENGTH) {
+            self::sendErrorResponse(414, 'URI Too Long');
+        }
+
+        return $uri;
     }
 
+    // -----------------------------------------------------------------------
+    // Handler execution
+    // -----------------------------------------------------------------------
+
     /**
-     * Handle route execution
+     * Execute the matched route's handler.
      */
-    protected static function handleRoute($route, array $params = [])
+    protected static function handleRoute(array $route, array $params = []): ?string
     {
         try {
             $handler = $route['handler'];
 
+            // Controller array syntax: [ControllerClass::class, 'method']
             if (is_array($handler)) {
-                [$class, $method] = $handler;
+                [$controllerClass, $methodName] = $handler;
 
-                if (!class_exists($class)) {
-                    throw new \RuntimeException("Controller not found");
+                if (!class_exists($controllerClass)) {
+                    throw new \RuntimeException('Controller not found');
                 }
 
-                if (!method_exists($class, $method)) {
-                    throw new \RuntimeException("Controller method not found");
+                if (!method_exists($controllerClass, $methodName)) {
+                    throw new \RuntimeException('Controller method not found');
                 }
 
-                $controller = new $class();
-                return $controller->$method(...array_values($params));
+                $controller = new $controllerClass();
+                
+                // Execute middleware pipeline before the handler
+                $middlewareStack = $route['middleware'] ?? [];
+                $response = self::executeMiddlewarePipeline($middlewareStack, $params, function() use ($controller, $methodName, $params) {
+                    return $controller->$methodName(...array_values($params));
+                });
+
+                return $response;
             }
 
+            // Closure handler
             if (is_callable($handler)) {
-                return call_user_func_array($handler, array_values($params));
+                $middlewareStack = $route['middleware'] ?? [];
+                $response = self::executeMiddlewarePipeline($middlewareStack, $params, function() use ($handler, $params) {
+                    return call_user_func_array($handler, array_values($params));
+                });
+                return $response;
             }
 
+            // String controller class — defaults to index()
             if (is_string($handler) && class_exists($handler)) {
                 $controller = new $handler();
 
                 if (!method_exists($controller, 'index')) {
-                    throw new \RuntimeException("Controller method not found");
+                    throw new \RuntimeException('Controller method not found');
                 }
 
-                return $controller->index(...array_values($params));
+                $middlewareStack = $route['middleware'] ?? [];
+                $response = self::executeMiddlewarePipeline($middlewareStack, $params, function() use ($controller, $params) {
+                    return $controller->index(...array_values($params));
+                });
+
+                return $response;
             }
 
-            throw new \RuntimeException("Invalid route handler");
+            throw new \RuntimeException('Invalid route handler');
 
-        } catch (\Throwable $e) {
-            // Log the error
+        } catch (\Throwable $exception) {
             Security::logEvent('route_handler_error', [
-                'route' => $route['uri'] ?? 'unknown',
-                'message' => $e->getMessage(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine()
+                'route'   => $route['uri'] ?? 'unknown',
+                'message' => $exception->getMessage(),
+                'file'    => $exception->getFile(),
+                'line'    => $exception->getLine(),
             ], 'error');
 
-            // Don't expose internal error details to users
             self::sendErrorResponse(500, 'Internal Server Error');
+            return null;
         }
     }
 
     /**
-     * Send sanitized error response
+     * Execute middleware pipeline using the pipeline pattern.
+     * Each middleware can either pass control to the next handler or terminate early.
      */
-    protected static function sendErrorResponse(int $code, string $message = 'Error'): void
+    protected static function executeMiddlewarePipeline(array $middleware, array $params, Closure $finalHandler): ?string
     {
-        http_response_code($code);
+        // Build the pipeline - inner to outer
+        $pipeline = $finalHandler;
+
+        // Reverse middleware to build correct pipeline order
+        foreach (array_reverse($middleware) as $middlewareClass) {
+            $pipeline = function() use ($middlewareClass, $pipeline, $params) {
+                $middleware = new $middlewareClass();
+                return $middleware->handle(null, $pipeline);
+            };
+        }
+
+        return $pipeline();
+    }
+
+    // -----------------------------------------------------------------------
+    // Validation helpers
+    // -----------------------------------------------------------------------
+
+    /**
+     * Validate and sanitize a route URI definition.
+     */
+    protected static function validateUri(string $uri): string
+    {
+        if ($uri === '') {
+            throw new \InvalidArgumentException('URI must be a non-empty string');
+        }
+
+        if (!str_starts_with($uri, '/')) {
+            throw new \InvalidArgumentException('URI must start with /');
+        }
+
+        // Reject control characters and null bytes
+        if (preg_match('/[\x00-\x1F\x7F]/', $uri) === 1) {
+            throw new \InvalidArgumentException('URI contains invalid characters');
+        }
+
+        // Strip query string if present
+        $uri = parse_url($uri, PHP_URL_PATH) ?: $uri;
+
+        // Normalize multiple slashes
+        return preg_replace('#/+#', '/', $uri);
+    }
+
+    /**
+     * Assert that a route handler is a supported type.
+     */
+    protected static function assertValidHandler(mixed $handler): void
+    {
+        if (is_callable($handler) || is_string($handler)) {
+            return;
+        }
+
+        if (is_array($handler)) {
+            if (count($handler) === 2 && is_string($handler[0]) && is_string($handler[1])) {
+                return;
+            }
+            throw new \InvalidArgumentException('Invalid controller route handler');
+        }
+
+        throw new \InvalidArgumentException('Invalid route handler');
+    }
+
+    // -----------------------------------------------------------------------
+    // Error response
+    // -----------------------------------------------------------------------
+
+    /**
+     * Send a sanitized error response and stop execution.
+     */
+    protected static function sendErrorResponse(int $statusCode, string $message = 'Error'): void
+    {
+        http_response_code($statusCode);
 
         if (!headers_sent()) {
             header('Content-Type: text/html; charset=UTF-8');
@@ -331,22 +404,25 @@ class Router
             header('X-Frame-Options: DENY');
         }
 
-        // Sanitized error message (no stack traces)
         $safeMessage = htmlspecialchars($message, ENT_QUOTES, 'UTF-8');
-        echo "<!DOCTYPE html><html><head><meta charset=\"UTF-8\"><title>{$code} Error</title></head><body><h1>{$code} - {$safeMessage}</h1></body></html>";
+        echo "<!DOCTYPE html><html><head><meta charset=\"UTF-8\"><title>{$statusCode} Error</title></head><body><h1>{$statusCode} - {$safeMessage}</h1></body></html>";
         exit;
     }
 
+    // -----------------------------------------------------------------------
+    // Introspection
+    // -----------------------------------------------------------------------
+
     /**
-     * Get all registered routes
+     * Get all registered routes.
      */
-    public static function getRoutes()
+    public static function getRoutes(): array
     {
         return self::$routes;
     }
 
     /**
-     * Get route by name
+     * Find a route by its name.
      */
     public static function getRouteByName(string $name): ?array
     {
