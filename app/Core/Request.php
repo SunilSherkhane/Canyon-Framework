@@ -325,13 +325,25 @@ class Request
 
     /**
      * Validate the request against rules.
+     * @deprecated Use Validation class directly instead.
      */
     public function validate(array $rules): array
     {
         $validator = new Validation($this->all(), $rules);
         if ($validator->fails()) {
-            $this->json(['errors' => $validator->errors()], 422);
+            // Return validation errors for manual handling
+            // Don't auto-respond (that's the controller's job)
+            return ['valid' => false, 'errors' => $validator->errors()];
         }
-        return $validator->validated();
+        return ['valid' => true, 'data' => $validator->validated()];
+    }
+
+    /**
+     * Get validated/validated data.
+     */
+    public function validated(array $rules): array
+    {
+        $result = $this->validate($rules);
+        return $result['valid'] ? $result['data'] : [];
     }
 }

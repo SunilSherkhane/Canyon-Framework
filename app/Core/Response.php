@@ -60,6 +60,20 @@ class Response
 
     public static function redirect(string $url, int $statusCode = 302, array $headers = []): self
     {
+        // Security: Prevent open redirect attacks
+        // Block protocol-relative URLs and absolute URLs to external domains
+        if (str_starts_with($url, '//')) {
+            $url = '/';
+        }
+        
+        // If it's an absolute URL, verify it matches our domain
+        if (str_starts_with($url, 'http://') || str_starts_with($url, 'https://')) {
+            $siteUrl = defined('CANYON_SITE_URL') ? CANYON_SITE_URL : '';
+            if ($siteUrl && !str_starts_with($url, rtrim($siteUrl, '/'))) {
+                $url = '/';
+            }
+        }
+        
         $headers['Location'] = $url;
         return new self('', $statusCode, $headers);
     }
@@ -67,40 +81,72 @@ class Response
     public static function back(int $statusCode = 302): self
     {
         $referer = $_SERVER['HTTP_REFERER'] ?? '/';
+        
+        // Security: Validate referer to prevent open redirect
+        // Only allow relative URLs or URLs to the same domain
+        if (str_starts_with($referer, '//') || str_starts_with($referer, 'http://') || str_starts_with($referer, 'https://')) {
+            // Check if it's the same origin
+            $siteUrl = defined('CANYON_SITE_URL') ? CANYON_SITE_URL : (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http') . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost');
+            $siteUrl = rtrim($siteUrl, '/');
+            if (!str_starts_with($referer, $siteUrl)) {
+                $referer = '/';
+            }
+        }
+        
         return self::redirect($referer, $statusCode);
     }
 
     public static function download(string $filePath, ?string $filename = null, array $headers = []): self
     {
-        if (!file_exists($filePath)) {
+        // Security: Prevent directory traversal
+        $realPath = realpath($filePath);
+        if ($realPath === false || !file_exists($realPath)) {
             return self::json(['error' => 'File not found'], 404);
         }
+        // Only serve files within base path
+        $basePath = realpath(CANYON_BASE_PATH);
+        if ($basePath !== false && !str_starts_with($realPath, $basePath)) {
+            return self::json(['error' => 'Access denied'], 403);
+        }
 
-        $filename = $filename ?? basename($filePath);
-        $mimeType = mime_content_type($filePath) ?? 'application/octet-stream';
+        $filename = $filename !== null ? preg_replace('/[^a-zA-Z0-9._-]/', '_', $filename) : basename($realPath);
+        $mimeType = mime_content_type($realPath);
+        if ($mimeType === false) {
+            $mimeType = 'application/octet-stream';
+        }
 
         $headers['Content-Type'] = $mimeType;
-        $headers['Content-Length'] = (string) filesize($filePath);
+        $headers['Content-Length'] = (string) filesize($realPath);
         $headers['Content-Disposition'] = 'attachment; filename="' . $filename . '"';
         $headers['Cache-Control'] = 'no-cache, must-revalidate';
 
-        return new self(file_get_contents($filePath), 200, $headers);
+        return new self(file_get_contents($realPath), 200, $headers);
     }
 
     public static function file(string $filePath, ?string $filename = null, array $headers = []): self
     {
-        if (!file_exists($filePath)) {
+        // Security: Prevent directory traversal
+        $realPath = realpath($filePath);
+        if ($realPath === false || !file_exists($realPath)) {
             return self::json(['error' => 'File not found'], 404);
         }
+        // Only serve files within base path
+        $basePath = realpath(CANYON_BASE_PATH);
+        if ($basePath !== false && !str_starts_with($realPath, $basePath)) {
+            return self::json(['error' => 'Access denied'], 403);
+        }
 
-        $filename = $filename ?? basename($filePath);
-        $mimeType = mime_content_type($filePath) ?? 'application/octet-stream';
+        $filename = $filename !== null ? preg_replace('/[^a-zA-Z0-9._-]/', '_', $filename) : basename($realPath);
+        $mimeType = mime_content_type($realPath);
+        if ($mimeType === false) {
+            $mimeType = 'application/octet-stream';
+        }
 
         $headers['Content-Type'] = $mimeType;
-        $headers['Content-Length'] = (string) filesize($filePath);
+        $headers['Content-Length'] = (string) filesize($realPath);
         $headers['Content-Disposition'] = 'inline; filename="' . $filename . '"';
 
-        return new self(file_get_contents($filePath), 200, $headers);
+        return new self(file_get_contents($realPath), 200, $headers);
     }
 
     public static function noContent(): self

@@ -43,12 +43,12 @@ if (file_exists($configPath)) {
 // Constants (from config.php or defaults)
 // ============================================================================
 
-define('CANYON_BASE_PATH', defined('CANYON_BASE_PATH') ? CANYON_BASE_PATH : dirname(__DIR__));
-define('CANYON_APP_PATH', CANYON_BASE_PATH . '/app');
-define('CANYON_STORAGE_PATH', defined('CANYON_STORAGE_PATH') ? CANYON_STORAGE_PATH : CANYON_BASE_PATH . '/storage');
-define('CANYON_RESOURCES_PATH', defined('CANYON_RESOURCES_PATH') ? CANYON_RESOURCES_PATH : CANYON_BASE_PATH . '/resources');
-define('CANYON_ROUTES_PATH', CANYON_BASE_PATH . '/routes');
-define('CANYON_PLUGINS_PATH', CANYON_BASE_PATH . '/plugins');
+defined('CANYON_BASE_PATH')      || define('CANYON_BASE_PATH', dirname(__DIR__));
+defined('CANYON_APP_PATH')       || define('CANYON_APP_PATH', CANYON_BASE_PATH . '/app');
+defined('CANYON_STORAGE_PATH')   || define('CANYON_STORAGE_PATH', CANYON_BASE_PATH . '/storage');
+defined('CANYON_RESOURCES_PATH') || define('CANYON_RESOURCES_PATH', CANYON_BASE_PATH . '/resources');
+defined('CANYON_ROUTES_PATH')    || define('CANYON_ROUTES_PATH', CANYON_BASE_PATH . '/routes');
+defined('CANYON_PLUGINS_PATH')   || define('CANYON_PLUGINS_PATH', CANYON_BASE_PATH . '/plugins');
 
 // ============================================================================
 // Lightweight autoloader (no composer required)
@@ -75,7 +75,25 @@ spl_autoload_register(function ($class) {
 // Load helpers (lightweight)
 // ============================================================================
 
+require_once CANYON_APP_PATH . '/Helpers/env.php';
 require_once CANYON_APP_PATH . '/Helpers/functions.php';
+
+// ============================================================================
+// Bridge config.php constants into the env() helper
+// ============================================================================
+// config.php is the single source of truth; env() reads from $_ENV. Copy the
+// core values across so framework classes and views see the same settings.
+
+foreach ([
+    'APP_NAME'  => 'CANYON_APP_NAME',
+    'APP_ENV'   => 'CANYON_ENV',
+    'APP_URL'   => 'CANYON_SITE_URL',
+    'APP_DEBUG' => 'CANYON_DEBUG',
+] as $envKey => $constKey) {
+    if (defined($constKey) && !array_key_exists($envKey, $_ENV)) {
+        $_ENV[$envKey] = constant($constKey);
+    }
+}
 
 // ============================================================================
 // Environment & error reporting
@@ -209,6 +227,13 @@ if (!headers_sent()) {
         }
     }
 }
+
+// ============================================================================
+// Bootstrap: shared application data + view paths
+// ============================================================================
+
+\Canyon\Core\Application::init();
+\Canyon\Core\View::addPath(CANYON_RESOURCES_PATH . '/views');
 
 // ============================================================================
 // Load routes and dispatch (lazy load everything else)

@@ -46,8 +46,8 @@
 
 After successful installation:
 
-1. **Delete** `install.php` from your server
-2. **Delete** `.env` file if it exists (config.php is the main config now)
+1. **Delete** `install.php` from your server (critical for security)
+2. **Keep** `config.php` — the installer generates it automatically with your settings
 3. **Set permissions**:
    - `storage/` → 755
    - `config.php` → 644

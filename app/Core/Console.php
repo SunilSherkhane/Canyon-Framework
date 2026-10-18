@@ -94,10 +94,20 @@ class Console
 
     /**
      * Write error message (red).
+     * Named errorOut to avoid collision with PHP's built-in error() function.
+     */
+    public function errorOut(string $text): void
+    {
+        echo $this->color($text, 'red') . PHP_EOL;
+    }
+
+    /**
+     * Write error message (red).
+     * Alias of errorOut().
      */
     public function error(string $text): void
     {
-        echo $this->color($text, 'red') . PHP_EOL;
+        $this->errorOut($text);
     }
 
     /**

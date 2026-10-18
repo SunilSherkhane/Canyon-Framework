@@ -118,7 +118,15 @@ class Controller
         $this->error($message, 403);
     }
 
-    protected function notFound(string $message = 'Not Found'): never
+    /**
+     * Send a JSON 404 response.
+     *
+     * No return type is declared (instead of `never`) so that application
+     * controllers may override this with an HTML 404 page that returns a
+     * rendered string to the router. The body still terminates the request
+     * via error().
+     */
+    protected function notFound(string $message = 'Not Found')
     {
         $this->error($message, 404);
     }

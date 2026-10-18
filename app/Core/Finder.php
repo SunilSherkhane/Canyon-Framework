@@ -543,7 +543,7 @@ class Finder
         // Include patterns
         if (!empty($this->pathPatterns)) {
             $matched = false;
-            foreach ($this->pattern as $pattern) {
+            foreach ($this->pathPatterns as $pattern) {
                 if (fnmatch($pattern, $path) || preg_match($pattern, $path)) {
                     $matched = true;
                     break;
