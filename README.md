@@ -1,6 +1,6 @@
 # 🌊 Canyon Framework
 
-**A modular, secure PHP framework inspired by Laravel, CodeIgniter, and Elgg — designed for building anything from APIs to social networks.**
+**A modular, secure PHP framework inspired by Laravel, CodeIgniter - designed for building anything from APIs to social networks.**
 
 > Version: 0.4.0 | PHP: 8.1+ | License: MIT
 
