@@ -204,7 +204,7 @@ my-project/
 │   ├── views/           # PHP templates
 │   ├── lang/            # Translations
 │   └── themes/          # Theme files
-├── config.php           # ← MAIN CONFIG (WordPress-style)
+├── config.php           # ← MAIN CONFIG
 ├── storage/             # Sessions, cache, logs
 ├── plugins/             # Plugin directory
 ├── canyon               # CLI tool
