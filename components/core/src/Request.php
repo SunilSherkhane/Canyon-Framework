@@ -3,7 +3,7 @@
 namespace Canyon\Core;
 
 /**
- * Canyon Framework - Request (Symfony HTTP Foundation Inspired)
+ * Canyon Framework - Request (Symfony HTTP Foundation)
  *
  * Wraps PHP superglobals into a clean, immutable request object.
  */

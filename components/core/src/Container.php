@@ -6,7 +6,7 @@ namespace Canyon\Core;
  * Canyon Framework - Service Container
  *
  * Simple dependency injection container with binding, singleton, and contextual resolution.
- * Inspired by Laravel's service container.
+ * based on Laravel's service container.
  */
 class Container
 {

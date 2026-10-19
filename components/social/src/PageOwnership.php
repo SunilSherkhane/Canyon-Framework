@@ -6,7 +6,7 @@ namespace Canyon\Core;
  * Canyon Framework - Page Ownership
  *
  * Tracks page owners and context for access control.
- * Inspired by Elgg's page ownership system.
+ * based on Elgg's page ownership system.
  */
 class PageOwnership
 {

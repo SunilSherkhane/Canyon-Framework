@@ -6,7 +6,7 @@ namespace Canyon\Core;
  * Canyon Framework - Event Dispatcher
  *
  * Simple event system for dispatching and listening to events.
- * Inspired by Laravel's Events and Symfony's EventDispatcher.
+ * based on Laravel's Events and Symfony's EventDispatcher.
  */
 class EventDispatcher
 {

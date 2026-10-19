@@ -6,7 +6,7 @@ namespace Canyon\Core;
  * Canyon Framework - Permissions
  *
  * Entity-level permissions check system.
- * Inspired by Elgg's permissions system.
+ * based on Elgg's permissions system.
  */
 class Permissions
 {

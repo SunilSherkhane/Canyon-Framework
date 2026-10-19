@@ -3,7 +3,7 @@
 namespace Canyon\Core;
 
 /**
- * Canyon Framework - Response (Symfony HTTP Foundation Inspired)
+ * Canyon Framework - Response (Symfony HTTP Foundation)
  *
  * Clean response object with chainable methods for JSON, views, redirects.
  */

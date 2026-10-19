@@ -3,7 +3,7 @@
 namespace Canyon\Core;
 
 /**
- * Canyon Framework - Progress Bar (Symfony Console Inspired)
+ * Canyon Framework - Progress Bar (Symfony Console)
  */
 class ProgressBar
 {

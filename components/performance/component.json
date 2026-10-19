@@ -1,7 +1,7 @@
 {
     "name": "performance",
     "title": "Canyon Performance",
-    "description": "QUIC.cloud-inspired optimisation: asset/image minification, database query optimisation, OPcache management, preload crawling and a heartbeat monitor.",
+    "description": "QUIC.cloud-based optimisation: asset/image minification, database query optimisation, OPcache management, preload crawling and a heartbeat monitor.",
     "version": "1.0.0",
     "type": "addon",
     "enabled": true,

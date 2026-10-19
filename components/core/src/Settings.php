@@ -6,7 +6,7 @@ namespace Canyon\Core;
  * Canyon Framework - Settings
  *
  * Plugin and user settings management.
- * Inspired by Elgg's settings system.
+ * based on Elgg's settings system.
  */
 class Settings
 {

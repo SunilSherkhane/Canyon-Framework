@@ -6,7 +6,7 @@ namespace Canyon\Core;
  * Canyon Framework - Internationalization (i18n)
  *
  * Simple translation system with locale support.
- * Inspired by Elgg's i18n and Laravel's translation.
+ * based on Elgg's i18n and Laravel's translation.
  */
 class I18n
 {

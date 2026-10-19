@@ -1,7 +1,7 @@
 {
     "name": "social",
     "title": "Canyon Social",
-    "description": "Elgg-inspired community layer: activity river, groups, messaging, notifications, profiles, widgets, menus, page ownership and search.",
+    "description": "Elgg-based community layer: activity river, groups, messaging, notifications, profiles, widgets, menus, page ownership and search.",
     "version": "1.0.0",
     "type": "addon",
     "enabled": true,

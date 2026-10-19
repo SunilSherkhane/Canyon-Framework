@@ -6,7 +6,7 @@ namespace Canyon\Core;
  * Canyon Framework - Image Optimizer
  *
  * Image optimization with lossless/lossy compression, AVIF/WebP support,
- * and responsive image generation. Inspired by QUIC.cloud image optimization.
+ * and responsive image generation. based on QUIC.cloud image optimization.
  */
 class ImageOptimizer
 {

@@ -6,7 +6,7 @@ namespace Canyon\Core;
  * Canyon Framework - Widget Dashboard
  *
  * Widget-based dashboard system for customizable layouts.
- * Inspired by Elgg's dashboard widgets.
+ * based on Elgg's dashboard widgets.
  */
 class Widget
 {

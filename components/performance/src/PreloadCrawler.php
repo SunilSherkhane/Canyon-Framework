@@ -6,7 +6,7 @@ namespace Canyon\Core;
  * Canyon Framework - Preload Crawler
  *
  * Smart preload crawler for warming cache with SEO-friendly sitemap support.
- * Inspired by QUIC.cloud smart preload crawler.
+ * based on QUIC.cloud smart preload crawler.
  */
 class PreloadCrawler
 {

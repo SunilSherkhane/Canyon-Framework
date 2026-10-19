@@ -5,7 +5,7 @@ namespace Canyon\Core;
 /**
  * Canyon Framework - Access Control
  *
- * Role-based and group-based access control, inspired by Elgg's access system.
+ * Role-based and group-based access control, based on Elgg's access system.
  * Supports granular content access policies, private networks, and intranets.
  */
 class AccessControl

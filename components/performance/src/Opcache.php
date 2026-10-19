@@ -6,7 +6,7 @@ namespace Canyon\Core;
  * Canyon Framework - OPcache Manager
  *
  * OPcache monitoring and management.
- * Inspired by QUIC.cloud OPcache support.
+ * based on QUIC.cloud OPcache support.
  */
 class Opcache
 {

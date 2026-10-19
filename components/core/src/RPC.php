@@ -6,7 +6,7 @@ namespace Canyon\Core;
  * Canyon Framework - RPC Service
  *
  * JSON-RPC 2.0 web service for external integrations and mobile clients.
- * Inspired by Elgg's RPC web services.
+ * based on Elgg's RPC web services.
  */
 class RPC
 {

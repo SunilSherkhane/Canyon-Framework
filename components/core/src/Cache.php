@@ -5,7 +5,7 @@ namespace Canyon\Core;
 /**
  * Canyon Framework - File Cache System
  *
- * Simple file-based cache with TTL support, inspired by Laravel's cache.
+ * Simple file-based cache with TTL support, based on Laravel's cache.
  */
 class Cache
 {

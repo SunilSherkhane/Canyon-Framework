@@ -3,7 +3,7 @@
 namespace Canyon\Core;
 
 /**
- * Canyon Framework - Lock (Symfony Lock Inspired)
+ * Canyon Framework - Lock (Symfony Lock)
  *
  * Distributed locking with file, database, and memory stores.
  */

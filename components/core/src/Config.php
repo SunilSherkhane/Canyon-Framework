@@ -5,7 +5,7 @@ namespace Canyon\Core;
 /**
  * Canyon Framework - Configuration
  *
- * Dot-notation config access, inspired by CodeIgniter's Config class.
+ * Dot-notation config access, based on CodeIgniter's Config class.
  * Supports config files in config/ directory and environment overrides.
  */
 class Config

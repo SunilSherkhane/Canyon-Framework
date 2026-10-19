@@ -26,7 +26,7 @@
             </div>
             <div class="card-body">
                 <h2>Built for Modern PHP</h2>
-                <p>Canyon is a lightweight PHP framework inspired by Laravel's elegance and CodeIgniter's simplicity. It provides minimal yet powerful tools for building web applications.</p>
+                <p>Canyon is a lightweight PHP framework based on Laravel's elegance and CodeIgniter's simplicity. It provides minimal yet powerful tools for building web applications.</p>
                 
                 <h3>Features</h3>
                 <ul class="list-unstyled">

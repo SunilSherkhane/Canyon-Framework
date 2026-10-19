@@ -9,7 +9,7 @@ one flat pile of classes.
 components/
   core/          # kernel — routing, view, database, config, security   (required)
   ai/            # multi-provider LLM integration, chatbot widget
-  social/        # Elgg-inspired community layer (river, groups, profiles, widgets…)
+  social/        # Elgg-based community layer (river, groups, profiles, widgets…)
   security/      # web application firewall + RBAC / access control
   performance/   # asset & image optimisation, OPcache, preload, heartbeat
 ```
@@ -22,7 +22,7 @@ Every component is described by `components/<name>/component.json`:
 {
     "name": "social",
     "title": "Canyon Social",
-    "description": "Elgg-inspired community layer: activity river, groups, messaging, …",
+    "description": "Elgg-based community layer: activity river, groups, messaging, …",
     "version": "1.0.0",
     "type": "addon",
     "enabled": true,

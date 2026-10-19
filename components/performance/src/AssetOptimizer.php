@@ -6,7 +6,7 @@ namespace Canyon\Core;
  * Canyon Framework - Asset Optimization
  *
  * Handles minification, combining, lazy-loading, CDN URLs, critical CSS,
- * and browser cache headers. Inspired by QUIC.cloud performance features.
+ * and browser cache headers. based on QUIC.cloud performance features.
  */
 class AssetOptimizer
 {

@@ -5,7 +5,7 @@ namespace Canyon\Core;
 /**
  * Canyon Framework - Validation
  *
- * Input validation with rule parsing, inspired by Laravel's validator.
+ * Input validation with rule parsing, based on Laravel's validator.
  */
 class Validation
 {

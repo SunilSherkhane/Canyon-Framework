@@ -3,7 +3,7 @@
 namespace Canyon\Core;
 
 /**
- * Canyon Framework - Console (Symfony Console Inspired)
+ * Canyon Framework - Console (Symfony Console)
  *
  * CLI command system with arguments, options, and styled output.
  */

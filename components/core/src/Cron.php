@@ -6,7 +6,7 @@ namespace Canyon\Core;
  * Canyon Framework - Cron System
  *
  * Scheduled task runner with interval-based execution.
- * Inspired by Elgg's cron system.
+ * based on Elgg's cron system.
  */
 class Cron
 {

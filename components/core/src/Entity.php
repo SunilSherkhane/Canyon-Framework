@@ -6,7 +6,7 @@ namespace Canyon\Core;
  * Canyon Framework - Entity System
  *
  * Flexible entity system for prototyping content types and interactions.
- * Inspired by Elgg's entity architecture.
+ * based on Elgg's entity architecture.
  */
 class Entity
 {

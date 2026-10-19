@@ -6,7 +6,7 @@ namespace Canyon\Core;
  * Canyon Framework - HMAC Signatures
  *
  * HMAC message authentication for signed URLs and data integrity.
- * Inspired by Elgg's HMAC implementation.
+ * based on Elgg's HMAC implementation.
  */
 class Hmac
 {

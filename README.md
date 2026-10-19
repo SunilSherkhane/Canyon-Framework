@@ -1,6 +1,6 @@
 # 🌊 Canyon Framework
 
-**A lightweight, secure PHP framework inspired by Laravel, CodeIgniter - works on any shared hosting.**
+**A lightweight, secure PHP framework based on Laravel, CodeIgniter - works on any shared hosting.**
 
 > Version: 0.5.0 | PHP: 8.1+ | License: MIT
 
@@ -89,7 +89,7 @@ addons. Each component is a self-contained directory under `components/` with a
 components/
   core/          # kernel: routing, view, database, config, security   (required)
   ai/            # multi-provider LLM integration, chatbot widget
-  social/        # Elgg-inspired community layer (river, groups, profiles…)
+  social/        # Elgg-based community layer (river, groups, profiles…)
   security/      # web application firewall + RBAC / access control
   performance/   # asset & image optimisation, OPcache, preload, heartbeat
 ```
@@ -116,11 +116,11 @@ shared Canyon checkout (`CANYON_SHARED_PATH`).
 | **DI Container** | `Container` | `bind()`, `singleton()`, `resolve()`, `when()` contextual bindings |
 | **Application** | `Application` | `set()`, `get()`, `isProduction()`, `isDebug()` |
 | **Config** | `Config` | `get('app.debug')`, `set()`, `has()` - dot notation |
-| **Request** | `Request` | `createFromGlobals()`, `input()`, `file()`, `validate()` - Symfony HTTP Foundation inspired |
+| **Request** | `Request` | `createFromGlobals()`, `input()`, `file()`, `validate()` - Symfony HTTP Foundation |
 | **Response** | `Response` | `json()`, `view()`, `redirect()`, `download()` - chainable |
 | **Router** | `Router` | `get/post/put/delete/patch/any()`, `group()`, `{param}`, named routes |
 | **Validation** | `Validation` | Rule strings, `passes()`, `fails()`, `errors()` |
-| **Console** | `Console` | `run()`, `info()`, `error()`, `table()`, `ask()` - Symfony Console inspired |
+| **Console** | `Console` | `run()`, `info()`, `error()`, `table()`, `ask()` - Symfony Console |
 | **ProgressBar** | `ProgressBar` | `start()`, `advance()`, `finish()` - CLI progress indicator |
 | **Plugin System** | `Plugin` | `loadAll()`, `isActive()`, `getSetting()` |
 | **Cron** | `Cron` | `register()`, `run()`, `runDue()`, `isDue()` |
@@ -140,12 +140,12 @@ shared Canyon checkout (`CANYON_SHARED_PATH`).
 |---|---|---|
 | **Security** | `Security` | `csrfField()`, `verifyCsrfToken()`, `throttle()`, `sanitizeInput()` |
 | **AccessControl** | `AccessControl` | `addRole()`, `addGroup()`, `canAccess()` |
-| **RBAC** | `Rbac` | `assign()`, `can()`, `getPermissionsByRole()` - Yii2 inspired |
+| **RBAC** | `Rbac` | `assign()`, `can()`, `getPermissionsByRole()` - Yii2 |
 | **Permissions** | `Permissions` | `can()`, `canEdit()`, `canDelete()`, `require()` |
 | **HMAC** | `Hmac` | `generate()`, `validate()`, `signedUrl()` |
 | **PageOwnership** | `PageOwnership` | `setOwner()`, `getOwner()`, `pushContext()` |
 
-### Symfony-Inspired Components
+### Symfony Components
 | Module | Class | Key Methods |
 |---|---|---|
 | **Finder** | `Finder` | `in()`, `name()`, `files()`, `size()`, `sortByName()` - file search |
@@ -173,7 +173,7 @@ shared Canyon checkout (`CANYON_SHARED_PATH`).
 | **Menu** | `Menu` | `add()`, `remove()`, `render()` |
 | **Themes** | `Themes` | `register()`, `activate()`, `addCss()`, `addJs()` |
 
-### Performance (QUIC.cloud Inspired)
+### Performance (QUIC.cloud)
 | Module | Class | Key Methods |
 |---|---|---|
 | **AssetOptimizer** | `AssetOptimizer` | `minifyCss()`, `minifyJs()`, `lazyImage()`, `generateCriticalCss()` |

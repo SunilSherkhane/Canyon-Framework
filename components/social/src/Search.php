@@ -6,7 +6,7 @@ namespace Canyon\Core;
  * Canyon Framework - Search
  *
  * Entity search with filtering, sorting, and pagination.
- * Inspired by Elgg's search system.
+ * based on Elgg's search system.
  */
 class Search
 {

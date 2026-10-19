@@ -6,7 +6,7 @@ namespace Canyon\Core;
  * Canyon Framework - Email Service
  *
  * Email sending service with template support.
- * Inspired by Laravel's Mail and Symfony Mailer.
+ * based on Laravel's Mail and Symfony Mailer.
  */
 class Email
 {

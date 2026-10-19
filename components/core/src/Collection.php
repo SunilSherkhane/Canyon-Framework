@@ -6,7 +6,7 @@ namespace Canyon\Core;
  * Canyon Framework - Collection
  *
  * A helper collection class for working with arrays of entities/models.
- * Inspired by Laravel's Collection.
+ * based on Laravel's Collection.
  */
 class Collection implements \Countable, \IteratorAggregate
 {

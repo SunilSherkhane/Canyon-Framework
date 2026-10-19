@@ -3,7 +3,7 @@
 namespace Canyon\Core;
 
 /**
- * Canyon Framework - Finder (Symfony Finder Inspired)
+ * Canyon Framework - Finder (Symfony Finder)
  *
  * File and directory finder with fluent interface.
  */
