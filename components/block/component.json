@@ -1,0 +1,16 @@
+{
+    "name": "block",
+    "version": "1.0.0",
+    "type": "module",
+    "description": "Content regions and blocks with placement, visibility, and rendering",
+    "enabled": true,
+    "requires": ["core"],
+    "autoload": {
+        "psr-4": {
+            "Canyon\\Core\\Block\\": "src/"
+        }
+    },
+    "classes": [
+        "Canyon\\Core\\Block\\BlockModule"
+    ]
+}

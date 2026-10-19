@@ -1,0 +1,16 @@
+{
+    "name": "content",
+    "version": "1.0.0",
+    "type": "module",
+    "description": "Core content management with types, fields, and CRUD operations",
+    "enabled": true,
+    "requires": ["core"],
+    "autoload": {
+        "psr-4": {
+            "Canyon\\Core\\Content\\": "src/"
+        }
+    },
+    "classes": [
+        "Canyon\\Core\\Content\\ContentModule"
+    ]
+}

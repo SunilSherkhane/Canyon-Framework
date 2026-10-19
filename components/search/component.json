@@ -1,0 +1,16 @@
+{
+    "name": "search",
+    "version": "1.0.0",
+    "type": "module",
+    "description": "Full-text search with indexing, snippets, and facets",
+    "enabled": true,
+    "requires": ["core", "content"],
+    "autoload": {
+        "psr-4": {
+            "Canyon\\Core\\Search\\": "src/"
+        }
+    },
+    "classes": [
+        "Canyon\\Core\\Search\\SearchModule"
+    ]
+}

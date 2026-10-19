@@ -1,0 +1,16 @@
+{
+    "name": "taxonomy",
+    "version": "1.0.0",
+    "type": "module",
+    "description": "Content classification with vocabularies, terms, and hierarchical taxonomies",
+    "enabled": true,
+    "requires": ["core", "content"],
+    "autoload": {
+        "psr-4": {
+            "Canyon\\Core\\Taxonomy\\": "src/"
+        }
+    },
+    "classes": [
+        "Canyon\\Core\\Taxonomy\\TaxonomyModule"
+    ]
+}

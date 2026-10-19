@@ -1,0 +1,16 @@
+{
+    "name": "field",
+    "version": "1.0.0",
+    "type": "module",
+    "description": "Custom field system with field types, widgets, and entity field support",
+    "enabled": true,
+    "requires": ["core", "content"],
+    "autoload": {
+        "psr-4": {
+            "Canyon\\Core\\Field\\": "src/"
+        }
+    },
+    "classes": [
+        "Canyon\\Core\\Field\\FieldModule"
+    ]
+}

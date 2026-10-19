@@ -1,0 +1,16 @@
+{
+    "name": "contact",
+    "version": "1.0.0",
+    "type": "module",
+    "description": "Contact forms with email delivery and submission tracking",
+    "enabled": true,
+    "requires": ["core"],
+    "autoload": {
+        "psr-4": {
+            "Canyon\\Core\\Contact\\": "src/"
+        }
+    },
+    "classes": [
+        "Canyon\\Core\\Contact\\ContactModule"
+    ]
+}

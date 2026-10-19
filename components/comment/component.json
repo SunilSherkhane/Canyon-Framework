@@ -1,0 +1,16 @@
+{
+    "name": "comment",
+    "version": "1.0.0",
+    "type": "module",
+    "description": "Threaded comments on any entity with notifications",
+    "enabled": true,
+    "requires": ["core", "content"],
+    "autoload": {
+        "psr-4": {
+            "Canyon\\Core\\Comment\\": "src/"
+        }
+    },
+    "classes": [
+        "Canyon\\Core\\Comment\\CommentModule"
+    ]
+}
