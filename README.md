@@ -29,6 +29,35 @@ php -S localhost:8000 -t public
 
 ---
 
+## 🧩 Components
+
+Canyon is assembled from **components**: a mandatory `core` kernel plus optional
+addons. Each component is a self-contained directory under `components/` with a
+`component.json` manifest:
+
+```
+components/
+  core/          # kernel: routing, view, database, config, security   (required)
+  ai/            # multi-provider LLM integration, chatbot widget
+  social/        # Elgg-inspired community layer (river, groups, profiles…)
+  security/      # web application firewall + RBAC / access control
+  performance/   # asset & image optimisation, OPcache, preload, heartbeat
+```
+
+```bash
+./canyon component list              # what is installed and enabled
+./canyon component show social       # manifest detail
+./canyon component disable social    # persisted to components.json
+./canyon info                        # includes the component summary
+```
+
+`core` can never be disabled, and disabling a component also disables anything
+that depends on it. See **[docs/COMPONENTS.md](docs/COMPONENTS.md)** for the
+manifest format, the loader, and how to run many applications off a single
+shared Canyon checkout (`CANYON_SHARED_PATH`).
+
+---
+
 ## 📦 Feature Matrix (40+ Classes)
 
 ### Core Architecture
