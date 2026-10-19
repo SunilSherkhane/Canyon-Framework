@@ -351,4 +351,14 @@ class Migration
     {
         self::$activeDriver = strtolower((string) env('DB_CONNECTION', 'mysql'));
     }
+    /**
+     * Return the INSERT statement prefix that silently ignores duplicate-key errors.
+     *
+     * MySQL uses INSERT IGNORE INTO; SQLite uses INSERT OR IGNORE INTO.
+     */
+    public static function insertIgnorePrefix(\PDO $pdo): string
+    {
+        return self::isSqlite($pdo) ? 'INSERT OR IGNORE INTO' : 'INSERT IGNORE INTO';
+    }
+
 }

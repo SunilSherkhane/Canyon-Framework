@@ -636,6 +636,9 @@ class Waf
 
     /**
      * Permanently deny an IP for $seconds (0 = forever).
+     *
+     * Cache::put() treats a null TTL as "use default" (1 h), so a true
+     * "forever" block is stored with an explicit 1-year TTL instead.
      */
     public static function blockIp(string $ip, int $seconds = 0, string $reason = ''): void
     {
@@ -648,7 +651,20 @@ class Waf
             'reason' => $reason,
             'blocked_at' => time(),
             'expires_at' => $seconds > 0 ? time() + $seconds : null,
-        ], $seconds > 0 ? $seconds : null);
+        ], $seconds > 0 ? $seconds : 31536000);
+    }
+
+    /**
+     * Clear every block (static and cached) — useful in tests and admin panels.
+     *
+     * Cache files are stored under an MD5-hashed name, so they cannot be globbed
+     * by key prefix. Instead we flush the whole cache namespace; this is only
+     * ever called from admin panels or tests, never on the request hot path.
+     */
+    public static function clearBlocks(): void
+    {
+        self::$blockedIps = [];
+        Cache::flush();
     }
 
     /**

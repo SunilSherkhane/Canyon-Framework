@@ -535,7 +535,8 @@ class ActivityFeed
         }
 
         $db = (new Database())->getConnection();
-        $stmt = $db->prepare("INSERT IGNORE INTO `post_likes` (post_id, user_id) VALUES (?, ?)");
+        $ignoreSql = Migration::insertIgnorePrefix($db);
+        $stmt = $db->prepare($ignoreSql . " `post_likes` (post_id, user_id) VALUES (?, ?)");
 
         if (!$stmt->execute([$postId, $userId]) || $stmt->rowCount() === 0) {
             return self::hasLiked($postId, $userId);

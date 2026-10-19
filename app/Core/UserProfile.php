@@ -588,8 +588,9 @@ class UserProfile
         }
 
         $db = (new Database())->getConnection();
+        $ignoreSql = Migration::insertIgnorePrefix($db);
         $stmt = $db->prepare(
-            "INSERT IGNORE INTO `user_friends` (user_id, friend_id, status) VALUES (?, ?, ?)"
+            $ignoreSql . " `user_friends` (user_id, friend_id, status) VALUES (?, ?, ?)"
         );
         $stmt->execute([$userId, $friendId, self::FRIEND_PENDING]);
 
@@ -623,8 +624,9 @@ class UserProfile
         }
 
         // The friendship is stored in both directions so either side can list it.
+        $ignoreSql = Migration::insertIgnorePrefix($db);
         $db->prepare(
-            "INSERT IGNORE INTO `user_friends` (user_id, friend_id, status) VALUES (?, ?, ?)"
+            $ignoreSql . " `user_friends` (user_id, friend_id, status) VALUES (?, ?, ?)"
         )->execute([$userId, $friendId, self::FRIEND_ACCEPTED]);
 
         $db->prepare(
@@ -856,9 +858,12 @@ class UserProfile
 
         $db = (new Database())->getConnection();
 
+        // Portable upsert — SQLite has no ON DUPLICATE KEY UPDATE.
         $db->prepare(
-            "INSERT INTO `user_blocks` (user_id, blocked_user_id, reason) VALUES (?, ?, ?)
-             ON DUPLICATE KEY UPDATE reason = VALUES(reason)"
+            "DELETE FROM `user_blocks` WHERE user_id = ? AND blocked_user_id = ?"
+        )->execute([$userId, $blockedUserId]);
+        $db->prepare(
+            "INSERT INTO `user_blocks` (user_id, blocked_user_id, reason) VALUES (?, ?, ?)"
         )->execute([$userId, $blockedUserId, substr($reason, 0, 255)]);
 
         $db->prepare(
