@@ -5,7 +5,7 @@ namespace Canyon\Controllers;
 use Canyon\Core\Security;
 
 /**
- * Home Controller — Canyon Framework
+ * Home Controller - Canyon Framework
  *
  * Handles the public pages and the contact form.
  */

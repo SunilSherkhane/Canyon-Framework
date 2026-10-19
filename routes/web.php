@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Canyon Framework — Web Routes
+ * Canyon Framework - Web Routes
  */
 
 use Canyon\Core\Router;

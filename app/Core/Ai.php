@@ -9,7 +9,14 @@ namespace Canyon\Core;
  * - OpenAI (GPT-4, GPT-3.5)
  * - Anthropic (Claude)
  * - Google (Gemini)
+ * - OpenRouter (multi-model router: GPT-4, Claude, Llama, Mistral, etc.)
+ * - OpenCode (AI coding agent - CLI or OpenAI-compatible endpoint)
  * - Local models (Ollama)
+ *
+ * Provider-specific header support:
+ * - OpenRouter: HTTP-Referer, X-Title (optional ranking headers)
+ * - OpenCode: X-OpenCode-Mode (plan, edit, debug)
+ * - Anthropic: x-api-key, anthropic-version
  *
  * Features:
  * - Chat/completions
@@ -17,6 +24,7 @@ namespace Canyon\Core;
  * - Token counting
  * - Cost estimation
  * - Fallback providers
+ * - Provider-specific extensions
  */
 class Ai
 {
@@ -126,13 +134,20 @@ class Ai
 
     /**
      * Send a message with streaming.
+     *
+     * Note: This collects the full response then yields chunks.
+     * For true streaming, implement a provider-specific stream handler
+     * that reads from the curl handle incrementally.
      */
     public static function stream(string $message, callable $callback, array $options = []): void
     {
         $provider = self::getProvider($options['provider'] ?? null);
         $response = self::sendRequest($provider, $message, array_merge($options, ['stream' => true]));
 
-        foreach ($response->content as $chunk) {
+        // Split content into chunks for callback consumption
+        $content = $response->content;
+        $chunks = str_split($content, 80); // ~80 char chunks
+        foreach ($chunks as $chunk) {
             $callback($chunk);
         }
     }
@@ -424,10 +439,31 @@ class Ai
     {
         $ch = curl_init($endpoint);
 
-        $headers = array_merge([
-            'Content-Type: application/json',
-            'Authorization: Bearer ' . $provider['api_key'],
-        ], $provider['headers'] ?? []);
+        // Provider-specific authentication
+        $authStyle = $provider['auth_style'] ?? 'bearer';
+        $authHeader = $provider['auth_header'] ?? 'Authorization';
+
+        $headers = ['Content-Type: application/json'];
+
+        // Build authentication headers based on provider type
+        switch ($authStyle) {
+            case 'query_param':
+                // Google: append key as query parameter
+                $endpoint .= (str_contains($endpoint, '?') ? '&' : '?') . 'key=' . urlencode($provider['api_key']);
+                break;
+            case 'x-api-key':
+                // Anthropic: use x-api-key header
+                $headers[] = 'x-api-key: ' . $provider['api_key'];
+                break;
+            default:
+                // OpenAI, OpenRouter, Ollama: use Bearer token
+                $headers[] = 'Authorization: Bearer ' . $provider['api_key'];
+        }
+
+        // Add provider-specific headers (OpenRouter ranking headers, OpenCode mode headers, etc.)
+        foreach ($provider['headers'] ?? [] as $header) {
+            $headers[] = $header;
+        }
 
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,

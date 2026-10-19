@@ -42,14 +42,83 @@ return [
             'cost_per_token' => 0.000001,
         ],
 
-        // Local models via Ollama
+        // ---------------------------------------------------------------
+        // OpenRouter - Access 100+ models through a single API
+        // Models: openai/gpt-4o, anthropic/claude-3.5-sonnet,
+        //         meta-llama/llama-3.1-70b, mistralai/mistral-large,
+        //         google/gemini-pro, deepseek/deepseek-chat, etc.
+        // Docs: https://openrouter.ai/docs
+        // ---------------------------------------------------------------
+        'openrouter' => [
+            'api_key' => 'sk-or-your-openrouter-key-here',
+            'endpoint' => 'https://openrouter.ai/api/v1/chat/completions',
+            'model' => 'openai/gpt-4o',
+            'embedding_endpoint' => 'https://openrouter.ai/api/v1/embeddings',
+            'max_tokens' => 4096,
+            'temperature' => 0.7,
+            'cost_per_token' => 0.000005,
+            // OpenRouter optional headers for model ranking
+            'headers' => [
+                'HTTP-Referer: https://yourdomain.com',
+                'X-Title: Canyon Framework',
+            ],
+            // Popular model choices available on OpenRouter
+            'available_models' => [
+                'openai/gpt-4o',
+                'openai/gpt-4o-mini',
+                'anthropic/claude-3.5-sonnet',
+                'anthropic/claude-3-haiku',
+                'google/gemini-pro',
+                'google/gemini-flash-1.5',
+                'meta-llama/llama-3.1-70b-instruct',
+                'mistralai/mistral-large',
+                'mistralai/mistral-7b-instruct',
+                'deepseek/deepseek-chat',
+                'deepseek/deepseek-coder',
+            ],
+        ],
+
+        // ---------------------------------------------------------------
+        // OpenCode - AI Coding Agent
+        // OpenCode provides an AI-powered coding assistant that can
+        // generate code, review changes, debug issues, and plan features.
+        //
+        // API mode: Point endpoint to your OpenCode server URL
+        // CLI mode: Use AiOpenCodeCli class for terminal-based usage
+        //
+        // Code modes:
+        //   chat   - General Q&A and code generation
+        //   edit   - Inline code editing with context
+        //   debug  - Analyze errors and suggest fixes
+        //   plan   - Architecture and implementation planning
+        // ---------------------------------------------------------------
+        'opencode' => [
+            'api_key' => 'your-opencode-api-key-here',
+            'endpoint' => 'http://localhost:3000/v1/chat/completions',
+            'model' => 'opencode/auto',
+            'max_tokens' => 8192,
+            'temperature' => 0.2,
+            'cost_per_token' => 0.0,
+            'headers' => [
+                'X-OpenCode-Mode: chat',
+                'X-OpenCode-Client: canyon-framework',
+            ],
+            // OpenCode-specific settings
+            'code_mode' => 'chat',
+            'auto_detect_language' => true,
+            'include_context' => true,
+            'stream_responses' => true,
+        ],
+
+        // Ollama - Local models (free, private)
         'ollama' => [
-            'api_key' => 'ollama', // Not used but required
+            'api_key' => 'ollama',
             'endpoint' => 'http://localhost:11434/api/chat',
-            'model' => 'llama3',
+            'model' => 'llama3.1',
             'max_tokens' => 2048,
             'temperature' => 0.7,
-            'cost_per_token' => 0.0, // Free - local model
+            'cost_per_token' => 0.0,
+            'headers' => [],
         ],
     ],
 

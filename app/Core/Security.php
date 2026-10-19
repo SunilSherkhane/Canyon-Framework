@@ -46,7 +46,7 @@ class Security
     // -----------------------------------------------------------------------
 
     /**
-     * Sanitize a URL for redirect — prevents open-redirect vulnerabilities.
+     * Sanitize a URL for redirect - prevents open-redirect vulnerabilities.
      *
      * Only same-site relative URLs are allowed. Protocol-relative URLs
      * (//evil.com), absolute URLs, and URLs carrying a scheme are rejected.
@@ -330,7 +330,7 @@ class Security
      *
      * Note: 'unsafe-inline' is intentionally kept for style-src because the
      * bundled views use inline <style> blocks. script-src is locked down to
-     * 'self' plus the pinned CDN — there are no inline <script> blocks.
+     * 'self' plus the pinned CDN - there are no inline <script> blocks.
      */
     public static function sendSecurityHeaders(): void
     {

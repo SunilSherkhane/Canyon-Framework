@@ -248,4 +248,107 @@ class Migration
             'total' => count($executed) + count($pending),
         ];
     }
+
+    // -----------------------------------------------------------------------
+    // Cross-driver schema helpers
+    // -----------------------------------------------------------------------
+
+    /**
+     * Detect the driver of an open PDO connection.
+     */
+    public static function driver(\PDO $pdo): string
+    {
+        try {
+            $name = (string) $pdo->getAttribute(\PDO::ATTR_DRIVER_NAME);
+        } catch (\Throwable) {
+            $name = 'mysql';
+        }
+
+        return strtolower($name);
+    }
+
+    /**
+     * Whether the connection is SQLite (the shared-hosting-friendly default).
+     */
+    public static function isSqlite(\PDO $pdo): bool
+    {
+        return self::driver($pdo) === 'sqlite';
+    }
+
+    /**
+     * DDL fragment for an auto-incrementing integer primary key.
+     *
+     * MySQL needs AUTO_INCREMENT on an INT column; SQLite only allows it on an
+     * INTEGER PRIMARY KEY, so the two are spelled differently.
+     */
+    public static function autoIncrementPrimaryKey(string $column = 'id'): string
+    {
+        return self::$activeDriver === 'sqlite'
+            ? "{$column} INTEGER PRIMARY KEY AUTOINCREMENT"
+            : "{$column} INT UNSIGNED AUTO_INCREMENT PRIMARY KEY";
+    }
+
+    /**
+     * DDL fragment for a nullable timestamp with a default.
+     *
+     * SQLite has no TIMESTAMP storage class with CURRENT_TIMESTAMP-on-update
+     * semantics; CURRENT_TIMESTAMP defaults are supported but ON UPDATE is not.
+     */
+    public static function timestampColumn(string $column, bool $nullable = false, bool $defaultNow = true, bool $updateNow = false): string
+    {
+        if (self::$activeDriver === 'sqlite') {
+            $ddl = "{$column} DATETIME";
+            if (!$nullable) {
+                $ddl .= ' NOT NULL';
+            }
+            if ($defaultNow) {
+                $ddl .= ' DEFAULT CURRENT_TIMESTAMP';
+            }
+            return $ddl;
+        }
+
+        $ddl = "{$column} TIMESTAMP";
+        if (!$nullable) {
+            $ddl .= ' NOT NULL';
+        }
+        if ($defaultNow) {
+            $ddl .= ' DEFAULT CURRENT_TIMESTAMP';
+        }
+        if ($updateNow) {
+            $ddl .= ' ON UPDATE CURRENT_TIMESTAMP';
+        }
+
+        return $ddl;
+    }
+
+    /**
+     * Table options clause. SQLite rejects ENGINE/CHARSET entirely.
+     */
+    public static function tableOptions(string $charset = 'utf8mb4'): string
+    {
+        return self::$activeDriver === 'sqlite'
+            ? ''
+            : " ENGINE=InnoDB DEFAULT CHARSET={$charset} COLLATE={$charset}_unicode_ci";
+    }
+
+    /**
+     * Driver used by the helpers above; set from a connection or env().
+     */
+    protected static string $activeDriver = '';
+
+    /**
+     * Bind the helpers to a connection's driver.
+     */
+    public static function useDriver(\PDO $pdo): void
+    {
+        self::$activeDriver = self::driver($pdo);
+    }
+
+    /**
+     * Bind the helpers to the configured connection without opening one.
+     */
+    public static function useEnvironmentDriver(): void
+    {
+        self::$activeDriver = strtolower((string) env('DB_CONNECTION', 'mysql'));
+    }
 }

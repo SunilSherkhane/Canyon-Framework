@@ -54,7 +54,7 @@ class Cache
             return $default;
         }
 
-        $data = unserialize(file_get_contents($file));
+        $data = unserialize(file_get_contents($file), ['allowed_classes' => false]);
 
         if (!is_array($data) || !isset($data['expires_at'])) {
             unlink($file);
@@ -82,7 +82,7 @@ class Cache
             return false;
         }
 
-        $data = unserialize(file_get_contents($file));
+        $data = unserialize(file_get_contents($file), ['allowed_classes' => false]);
         return is_array($data) && isset($data['expires_at']) && time() <= $data['expires_at'];
     }
 

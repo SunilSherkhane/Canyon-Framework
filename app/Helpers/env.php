@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Canyon Framework — Environment Helper Functions
+ * Canyon Framework - Environment Helper Functions
  *
  * Provides secure environment variable access with type coercion,
  * default value handling, and URL/path helpers.

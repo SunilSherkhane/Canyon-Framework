@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Canyon Framework — Application Configuration
+ * Canyon Framework - Application Configuration
  */
 
 return [

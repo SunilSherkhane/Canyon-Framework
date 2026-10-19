@@ -315,7 +315,7 @@ class Router
                 return $response;
             }
 
-            // String controller class — defaults to index()
+            // String controller class - defaults to index()
             if (is_string($handler) && class_exists($handler)) {
                 $controller = new $handler();
 

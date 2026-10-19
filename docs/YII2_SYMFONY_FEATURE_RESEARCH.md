@@ -28,7 +28,7 @@
 | Testing | `tests/bootstrap.php` (empty suites) | no framework-level helpers | no `TestCase`, no browser kit, no fixture support, no assertions library |
 
 ### Highest-value gaps to close first
-1. `Entity` static API inconsistency (docs vs. code) — fix signature or fix docs.
+1. `Entity` static API inconsistency (docs vs. code) - fix signature or fix docs.
 2. No `Request`/`Response` value objects → every other feature (negotiation, caching, security, console) is harder.
 3. No console `Command` abstraction → CLI can't scale past ~10 commands.
 4. Validation rule semantics + nested-field support → required by Forms and REST.
@@ -38,7 +38,7 @@
 
 ## 1. Yii2 Feature Set → Canyon
 
-### 1.1 Gii — Code Generator
+### 1.1 Gii - Code Generator
 
 **What it is.** A web module (`yii\gii\Module`) exposing generators behind `?r=gii`, IP-locked with `allowedIPs`, that introspect DB schema and writes AR classes, CRUD controllers, and search models from templates.
 
@@ -53,7 +53,7 @@ app/Generators/MigrationGenerator.php
 app/Generators/FormGenerator.php
 ```
 
-- **Template engine**: PHP-based stub templates in `resources/stubs/{model,crud,controller}.stub` with `{{placeholders}}` replaced by `str_replace`. Do not invent a template DSL — reuse the `View` renderer with a `data` array.
+- **Template engine**: PHP-based stub templates in `resources/stubs/{model,crud,controller}.stub` with `{{placeholders}}` replaced by `str_replace`. Do not invent a template DSL - reuse the `View` renderer with a `data` array.
 - **Schema introspection**: add `Database::getSchema()` returning `['table' => ['columns' => [name => ['type','length','nullable','default','pk','autoIncrement']], 'indexes' => []]]`. Read from `information_schema` for MySQL, `PRAGMA table_info` for SQLite.
 - **Dev gating**: `Generator::guard()` throws `RuntimeException` unless `env('APP_DEBUG')` is true **and** `Generator::isAllowedIp()` matches `allowedIPs` (default `127.0.0.1, ::1`). Mirror Yii's `allowedIPs` config exactly.
 - **Generation flow**: `Generator::model($table, $class)` → `ModelGenerator::generate()` → write file to `app/Models/`. Track generated files in `storage/generated.log` so regeneration is idempotent and can be diffed.
@@ -179,13 +179,13 @@ abstract class Entity
 
 **Key implementation points:**
 - **`save()` must wrap in a transaction** and call `validate()` first; on failure return `false` and populate `$errors` (from `Validation`).
-- **Dirty tracking**: snapshot `$attributes` on `fill()`/`find()`; `getDirty()` diffs against `$original`. This is what makes `update()` write only changed columns — currently `update()` writes every attribute including unchanged ones.
+- **Dirty tracking**: snapshot `$attributes` on `fill()`/`find()`; `getDirty()` diffs against `$original`. This is what makes `update()` write only changed columns - currently `update()` writes every attribute including unchanged ones.
 - **`__get()` relation proxy**: if `$name` matches a declared relation method (`public function comments(): Relation`), instantiate and cache it in `$relations[$name]`. Otherwise return the attribute.
 - **Eager loading**: `Post::query()->with('comments', 'author')->get()` → collect foreign keys, run one query per relation, then `link()` results back. This is the single biggest performance win over the current N+1-prone lazy loading.
-- **Query builder `Query`**: `select/from/where/whereIn/whereBetween/orderBy/limit/offset/with/join/leftJoin/groupBy/having/count/sum/avg/min/max/exists/get/all/first/paginate` — all returning `Entity` instances by default, arrays with `asArray()`.
+- **Query builder `Query`**: `select/from/where/whereIn/whereBetween/orderBy/limit/offset/with/join/leftJoin/groupBy/having/count/sum/avg/min/max/exists/get/all/first/paginate` - all returning `Entity` instances by default, arrays with `asArray()`.
 - **Fix the existing broken signature**: change `find(string $className, int $id)` → `find(int|string $id)`. Every caller (`Entity::find(1)`) and the skill/README already assume the one-arg form.
 
-**Code sketch — Query + relations:**
+**Code sketch - Query + relations:**
 ```php
 class Query
 {
@@ -257,7 +257,7 @@ class QueryBuilder
     public function first(): ?array;
     public function column(string $column = null): array;
     public function paginate(int $perPage, int $page = 1): array; // ['items'=>, 'total'=>, 'last_page'=>]
-    public function toSql(): array;          // [sql, bindings] — critical for debugging
+    public function toSql(): array;          // [sql, bindings] - critical for debugging
 }
 ```
 
@@ -317,7 +317,7 @@ CREATE TABLE auth_rule ( name VARCHAR(64) PRIMARY KEY, data TEXT, created_at INT
 
 **Implementation rules:**
 - `checkAccess()` walks the permission's ancestors; for each, if a `rule_name` is set, instantiate `auth_rule.data` (serialized class) and call `execute()`. Rules must implement `Rule::execute($user, $item, $params): bool`.
-- Cache the resolved role graph per request (`Cache::remember('rbac.'.$userId, ...)`) — RBAC lookups are hot-path.
+- Cache the resolved role graph per request (`Cache::remember('rbac.'.$userId, ...)`) - RBAC lookups are hot-path.
 - **Migrate `AccessControl`'s existing API** (`addRole`, `hasRole`, `inGroup`, `canAccess`) to delegate to `RbacManager` so plugins keep working, then deprecate.
 - Persist groups as roles prefixed `group:` so `inGroup()` and RBAC share one store.
 
@@ -406,7 +406,7 @@ abstract class BaseWidget
 }
 ```
 
-**Key wins for Canyon:** `ActiveForm::begin()`/`end()` gives CSRF-injected forms with model binding and validation error rendering (`$form->field($model, 'title')`), which the current `Security::csrfField()` + manual `<form>` does not provide. `GridView` + `Pagination` give sortable, paginated tables — currently missing entirely.
+**Key wins for Canyon:** `ActiveForm::begin()`/`end()` gives CSRF-injected forms with model binding and validation error rendering (`$form->field($model, 'title')`), which the current `Security::csrfField()` + manual `<form>` does not provide. `GridView` + `Pagination` give sortable, paginated tables - currently missing entirely.
 
 ---
 
@@ -448,9 +448,9 @@ class RestController extends Controller
 
 **Canyon implementation: extend `I18n`**
 - **Pluralization:** implement `I18n::choice($key, int $number, array $replace = [])` with ICU-style categories (`one`, `few`, `many`, `other`) and per-locale rule functions (`resources/lang/<locale>/plurals.php` returning a callable). Required for real apps; the current `I18n` has no plural support at all.
-- **Fallback chain:** `I18n::setFallbacks(['en'])` — on miss, walk the chain before returning the key.
+- **Fallback chain:** `I18n::setFallbacks(['en'])` - on miss, walk the chain before returning the key.
 - **Category support:** `I18n::get('validation.required', [...], 'validation')` → `resources/lang/en/validation.php`.
-- **Formatter:** `I18n::format()->date($ts, 'long')`, `->number($n)`, `->currency($n, 'USD')`, `->percent($n)` — locale-aware, no `IntlDateFormatter` dependency if `ext-intl` is absent (fall back to `strftime`-style tables).
+- **Formatter:** `I18n::format()->date($ts, 'long')`, `->number($n)`, `->currency($n, 'USD')`, `->percent($n)` - locale-aware, no `IntlDateFormatter` dependency if `ext-intl` is absent (fall back to `strftime`-style tables).
 - **Message extraction:** `Generator::messages()` scans views for `I18n::get(` / `{{t}}` and emits a POT-ish PHP file so translators have a source of truth.
 - **Vue/JS parity:** expose `I18n::js($locale)` returning a JSON object for client-side strings.
 
@@ -469,7 +469,7 @@ app/Core/Cache/TagSet.php        # tag -> key index for invalidation
 ```
 
 - **Tag invalidation:** `Cache::tags(['posts', 'user:1'])->put(...)`; `Cache::tags('posts')->flush()` deletes every key recorded under that tag (store the mapping in a separate index key).
-- **Stampede prevention (mutex):** `Cache::remember()` must, on miss, attempt to acquire a lock key `lock:<key>` (atomic `setnx`); if acquired, compute and store with an extended TTL; if not, sleep 50–200 ms and re-read. Without this, a hot key expiry triggers a thundering herd — the classic cache stampede.
+- **Stampede prevention (mutex):** `Cache::remember()` must, on miss, attempt to acquire a lock key `lock:<key>` (atomic `setnx`); if acquired, compute and store with an extended TTL; if not, sleep 50–200 ms and re-read. Without this, a hot key expiry triggers a thundering herd - the classic cache stampede.
 - **PSR-16:** `get/set/has/delete/clear/getMultiple/setMultiple/deleteMultiple`.
 - **Page cache:** `Cache::rememberPage($key, $ttl, fn() => ...)` storing rendered HTML in `storage/cache/pages/` with `Cache-Control` headers; invalidate via tags.
 
@@ -495,9 +495,9 @@ app/Core/Auth/LoginThrottle.php       # per-user+IP, sliding window, lockout
 ```
 
 **Concrete additions:**
-- `Hash::make($pw)` → `password_hash($pw, PASSWORD_ARGON2ID)` when available, else bcrypt cost 12; `Hash::check()`; `Hash::needsRehash()`. The current `Entity::encrypt()` uses a raw `AES-256-CBC` with a derived key and **no MAC** — replace with `Encrypter` using `hash_hmac` Encrypt-then-MAC.
-- `Csrf::token()`, `Csrf::field()` (hidden input), `Csrf::meta()` (for SPA fetch), `Csrf::verify()` (already exists — keep `hash_equals`), plus **per-request rotation** option and SameSite cookie attributes.
-- `LoginThrottle::tooManyAttempts($key, $max = 5, $decay = 900)` + `hit()` + `availableIn()` — sliding window, keyed by `user|ip`, persisted in `Cache` (not session, which is cookie-rotatable — noted in the skill as a known weakness).
+- `Hash::make($pw)` → `password_hash($pw, PASSWORD_ARGON2ID)` when available, else bcrypt cost 12; `Hash::check()`; `Hash::needsRehash()`. The current `Entity::encrypt()` uses a raw `AES-256-CBC` with a derived key and **no MAC** - replace with `Encrypter` using `hash_hmac` Encrypt-then-MAC.
+- `Csrf::token()`, `Csrf::field()` (hidden input), `Csrf::meta()` (for SPA fetch), `Csrf::verify()` (already exists - keep `hash_equals`), plus **per-request rotation** option and SameSite cookie attributes.
+- `LoginThrottle::tooManyAttempts($key, $max = 5, $decay = 900)` + `hit()` + `availableIn()` - sliding window, keyed by `user|ip`, persisted in `Cache` (not session, which is cookie-rotatable - noted in the skill as a known weakness).
 - `Authenticator::login($provider, $credentials)` returns an identity or throws `AuthenticationException`; on failure, `LoginThrottle::hit()`.
 - **Session hardening:** `session.cookie_httponly`, `secure`, `samesite=Lax`, `session.use_strict_mode=1`, `session_regenerate_id(true)` on login, `session.gc_probability/divisor` (already flagged in the skill as missing).
 
@@ -558,7 +558,7 @@ app/Core/Debug/Panels/LogPanel.php, DbPanel.php, TimelinePanel.php, RoutePanel.p
 
 - **Collect points:** `Database` records every query (sql, bindings, duration, trace) into `DebugBar`; `Router` records matched route + middleware; `EventDispatcher` records dispatched events; `Cache` records hits/misses.
 - **Render:** inject a `<div id="canyon-debug">` before `</body>` when `APP_DEBUG=true` and the request accepts HTML; store the full payload to `storage/debug/<id>.json` and load it from the toolbar's own route.
-- **Dev gating:** reuse `Generator::guard()`'s IP allow-list pattern. Never render in production — check `env('APP_DEBUG')` first.
+- **Dev gating:** reuse `Generator::guard()`'s IP allow-list pattern. Never render in production - check `env('APP_DEBUG')` first.
 - **Timeline panel:** merge events from a shared `Timeline` collector (`start($label)`, `end($label)`) so `DebugBar` can draw a waterfall.
 
 ---
@@ -569,7 +569,7 @@ app/Core/Debug/Panels/LogPanel.php, DbPanel.php, TimelinePanel.php, RoutePanel.p
 
 **Symfony model.** `Request` with `ParameterBag` bags: `query` ($_GET), `request` ($_POST), `cookies`, `attributes` (app data), `files`, `server`, `headers`; helpers `getPathInfo`, `getMethod`, `getRealMethod`, `getContentType`, `getLanguages`, `getPreferredLanguage`, `isXmlHttpRequest`, `isSecure`, `getUri`, `getSchemeAndHttpHost`, `duplicate`, `createFromGlobals`, `overrideGlobals`. `Response` with `Content-Type`, `setStatusCode`, `setPublic/setPrivate/setMaxAge/setSharedMaxAge`, `setEtag`, `setLastModified`, `isNotModified(Request)`, `prepare(Request)`, `send()`, plus `JsonResponse`, `RedirectResponse`, `BinaryFileResponse`, `StreamedResponse`, `ResponseHeaderBag`.
 
-**Canyon implementation — the single highest-leverage addition**
+**Canyon implementation - the single highest-leverage addition**
 ```
 app/Core/Http/Request.php
 app/Core/Http/Response.php
@@ -661,7 +661,7 @@ class Container
 }
 ```
 
-**Implementation:** `make()` uses `ReflectionClass` on the target constructor; for each parameter, if it has a class type-hint, recursively `make()` it; if scalar, look in `$params` then `$this->parameters` (from `Config`). Cache the resolved singleton. `call()` does the same for arbitrary callables — this is what makes controller actions with typed dependencies work. **Compile & cache**: `ContainerBuilder::compile()` writes a PHP file returning a `Container` with closures; `Application::init()` loads it if `storage/cache/container.php` is newer than `config/`. Add `CompilerPassInterface` for plugin-provided service registration.
+**Implementation:** `make()` uses `ReflectionClass` on the target constructor; for each parameter, if it has a class type-hint, recursively `make()` it; if scalar, look in `$params` then `$this->parameters` (from `Config`). Cache the resolved singleton. `call()` does the same for arbitrary callables - this is what makes controller actions with typed dependencies work. **Compile & cache**: `ContainerBuilder::compile()` writes a PHP file returning a `Container` with closures; `Application::init()` loads it if `storage/cache/container.php` is newer than `config/`. Add `CompilerPassInterface` for plugin-provided service registration.
 
 ---
 
@@ -669,7 +669,7 @@ class Container
 
 **Symfony model.** `Application` + `Command` with `setName/setDescription/setHelp/addArgument/addOption/setCode`, `InputInterface` (`Argument`, `Option`, `ArgvInput`, `ArrayInput`), `OutputInterface` (`Output`, `ConsoleOutput`, `BufferedOutput`, `Table`, `ProgressBar`, `QuestionHelper`, `FormatterHelper`), `#[AsCommand]`, `ContainerCommandLoader`, `Tester` (`CommandTester`, `ApplicationTester`), events (`ConsoleEvents::COMMAND/TERMINATE/ERROR`), `--env`, `--no-interaction`, `--verbose`, `--quiet`.
 
-**Canyon implementation — required, the current `canyon` binary is a `switch`**
+**Canyon implementation - required, the current `canyon` binary is a `switch`**
 ```
 app/Core/Console/Application.php
 app/Core/Console/Command.php
@@ -718,7 +718,7 @@ abstract class Command
 
 **Symfony model.** `SecurityBundle` config: `providers` (user source), `firewalls` (pattern, `form_login`, `json_login`, `logout`, `remember_me`, `access_token`, `custom_authenticators`, `entry_point`), `access_control` rules, `encoders`/`password_hashers`, `UserInterface` / `UserPasswordHasherInterface`, `AuthenticationTrustResolver`, `AuthorizationChecker::isGranted`, `VoterInterface` + `Voter` with `supports()`/`voteOnAttribute()`, strategies `affirmative|consensus|unanimous|priority`, `AccessDeniedException` → `ExceptionListener` → `access_denied_handler`, `#[IsGranted]`, `Security::getUser()`, `TokenInterface`, `AuthenticationManager`, `AuthenticationProviderManager`, `SwitchUserListener`, `LogoutListener`, `SessionLogoutListener`.
 
-**Canyon implementation — merge Symfony voters with Yii RBAC**
+**Canyon implementation - merge Symfony voters with Yii RBAC**
 ```
 app/Core/Security/Firewall.php          # pattern -> authenticators -> access rules
 app/Core/Security/AuthenticatorInterface.php
@@ -782,7 +782,7 @@ Firewall::register('main', [
 
 **Symfony model.** `FormFactoryInterface` + `FormBuilderInterface`, `Form` with `createForm()`, `handleRequest()`, `isSubmitted()`, `isValid()`, `getData()`, `getErrors(true)`, `FormView` + Twig templates, types (`TextType`, `ChoiceType`, `EntityType`, `CollectionType`, `FileType`, `RepeatedType`, `SubmitType`), data mappers (`DataMapperInterface`), transformers (`TransformerInterface`), validators as event subscribers, `FormEvents::PRE_SET_DATA/POST_SET_DATA/PRE_SUBMIT/SUBMIT/POST_SUBMIT`, `#[Assert]` constraints on the model, CSRF via `CsrfExtension`, themes.
 
-**Canyon implementation — the missing layer between `Validation` and HTML**
+**Canyon implementation - the missing layer between `Validation` and HTML**
 ```
 app/Core/Form/FormFactory.php
 app/Core/Form/FormBuilder.php
@@ -813,8 +813,8 @@ class Form
 ```
 
 **Data flow (Symfony's three layers, simplified):**
-1. **Model data** — the `Entity` (or array).
-2. **View data** — strings from `Request`.
+1. **Model data** - the `Entity` (or array).
+2. **View data** - strings from `Request`.
 3. `Form::handleRequest()` maps view → model using transformers, then runs `Validation` (or constraint validators) on the model; `isValid()` is false if violations exist.
 
 **Value for Canyon:** `Validation` alone cannot render a form, show field-level errors, or handle file uploads. `Form` + `FormView` + `Themes/default.php` gives `ActiveForm`-style rendering with per-field error display and CSRF injection, closing the gap between `Security::csrfField()` and a real form.
@@ -845,7 +845,7 @@ class Serializer implements SerializerInterface
 }
 ```
 
-**Groups:** `Entity` declares `public array $groups = ['read' => [...], 'write' => [...]]`; `Serializer::serialize($post, 'json', ['groups' => ['post:read']])` emits only those fields. This is what makes the REST layer safe — without groups, `toArray()` leaks `password`/`deleted_at`. Add `EntityNormalizer` that respects `$hidden`/`$appends` (already present) plus groups.
+**Groups:** `Entity` declares `public array $groups = ['read' => [...], 'write' => [...]]`; `Serializer::serialize($post, 'json', ['groups' => ['post:read']])` emits only those fields. This is what makes the REST layer safe - without groups, `toArray()` leaks `password`/`deleted_at`. Add `EntityNormalizer` that respects `$hidden`/`$appends` (already present) plus groups.
 
 ---
 
@@ -853,7 +853,7 @@ class Serializer implements SerializerInterface
 
 **Symfony model.** `ValidatorInterface::validate($value, $constraints, $groups)`, constraints (`NotBlank`, `Length`, `Email`, `Url`, `Regex`, `Range`, `Choice`, `Date`, `Callback`, `EqualTo`, `IdenticalTo`, `Type`, `UniqueEntity`, `Expression`, `Count`, `File`, `Image`, `Ip`, `Uuid`, `Currency`, `Language`, `Locale`, `Timezone`, `Traverse`, `All`, `Collection`, `Count`, `DivisibleBy`, `Positive`, `Negative`, `LessThan`, `GreaterThan`, `LessThanOrEqual`, `GreaterThanOrEqual`, `IsNull`, `IsTrue`, `IsFalse`, `IsInstanceOf`, `Json`), `ConstraintViolationList` with `getMessage()`, `getPropertyPath()`, `getInvalidValue()`, `getConstraint()`, `getPropertyPath()`, `GroupSequence`, `Validation::createValidatorBuilder()`, metadata from attributes/YAML/XML, `RecursiveContextualValidator`.
 
-**Canyon implementation — replace the `match`-based `Validation` with a constraint-object model**
+**Canyon implementation - replace the `match`-based `Validation` with a constraint-object model**
 ```
 app/Core/Validation/Validator.php          # validate($value, $constraints, $groups)
 app/Core/Validation/Constraint.php          # abstract: message, groups, payload, validatedBy()
@@ -888,7 +888,7 @@ class Validator
 }
 ```
 
-**Why replace rather than extend:** the current `Validation` uses `match ($rule)` with `default => true`, which silently passes unknown rules (a security hazard — `'title' => 'required|bogus'` validates as true). Constraint objects make unknown rules impossible, support nested arrays (`new Collection(['title' => new NotBlank()])` → `posts.*.title`), and support groups/sequences. Keep `Validation` as a façade: `Validation::make($data, $rules)` builds constraints from the existing pipe syntax for BC.
+**Why replace rather than extend:** the current `Validation` uses `match ($rule)` with `default => true`, which silently passes unknown rules (a security hazard - `'title' => 'required|bogus'` validates as true). Constraint objects make unknown rules impossible, support nested arrays (`new Collection(['title' => new NotBlank()])` → `posts.*.title`), and support groups/sequences. Keep `Validation` as a façade: `Validation::make($data, $rules)` builds constraints from the existing pipe syntax for BC.
 
 ---
 
@@ -927,8 +927,8 @@ class MessageBus
 ```
 
 **Improvements over the current `Queue`:**
-- **Envelopes + stamps** replace the flat `$job` array — `DelayStamp` gives per-message delay, `RedeliveryStamp` gives retry count, `HandledStamp` records the handler result.
-- **Multiple transports**: `SyncTransport` (immediate, for tests), `FileTransport` (current behaviour, renamed), `DatabaseTransport` (the `queue_jobs` table — atomic `SELECT ... FOR UPDATE` claim), `RedisTransport` (BRPOPLPUSH).
+- **Envelopes + stamps** replace the flat `$job` array - `DelayStamp` gives per-message delay, `RedeliveryStamp` gives retry count, `HandledStamp` records the handler result.
+- **Multiple transports**: `SyncTransport` (immediate, for tests), `FileTransport` (current behaviour, renamed), `DatabaseTransport` (the `queue_jobs` table - atomic `SELECT ... FOR UPDATE` claim), `RedisTransport` (BRPOPLPUSH).
 - **Retry strategy**: `max_retries=3`, `delay=1000ms`, `multiplier=2`, `max_delay=10000ms` → exponential backoff. Current `Queue` increments `attempts` but never retries.
 - **Worker**: `messenger:consume` with `--limit`, `--time-limit`, `--memory-limit`, `--sleep`, graceful `SIGTERM` handling. Current `Queue::work()` loops until empty with no limit or signal handling.
 - **Handler resolution**: scan `#[AsMessageHandler]` attributes (or a `handler` config array) to map message class → handler; multiple handlers per message supported.
@@ -940,7 +940,7 @@ class MessageBus
 
 **Symfony model.** `LockFactory::createLock(string $resource, ?float $ttl = 300.0, bool $autoRelease = true): LockInterface`; `LockInterface` (`acquire(bool $blocking = false): bool`, `release(): void`, `isAcquired(): bool`, `refresh(?float $ttl = null): void`, `isExpired(): bool`); stores `FlockStore`, `SemaphoreStore`, `RedisStore`, `DoctrineDbalStore`, `MemcachedStore`, `PdoStore`, `ZookeeperStore`, `CompositeStore`, `InMemoryStore`, `NullStore`; `ExpiringStoreInterface`; `FlockStore` scoped by `kernel.project_id`; `Lock` auto-release on destruct; `RetryTillSaveStore`.
 
-**Canyon implementation — currently Canyon has no locking at all (a real hole for cron + queue workers)**
+**Canyon implementation - currently Canyon has no locking at all (a real hole for cron + queue workers)**
 ```
 app/Core/Lock/LockFactory.php
 app/Core/Lock/LockInterface.php, Lock.php
@@ -1023,7 +1023,7 @@ class Process
 }
 ```
 
-**Safety:** never pass user input to `fromShellCommandline()` — always use the array form with `proc_open` (no shell). Canyon should add `Process::shell()` that throws if the command contains shell metacharacters, to force the safe path.
+**Safety:** never pass user input to `fromShellCommandline()` - always use the array form with `proc_open` (no shell). Canyon should add `Process::shell()` that throws if the command contains shell metacharacters, to force the safe path.
 
 ---
 
@@ -1045,12 +1045,12 @@ class Expression
 ```
 
 **Where Canyon needs it:**
-- **Access rules** — store `'post.author_id == user.id or "admin" in user.roles'` in `auth_item.description` or a `rules` table, evaluate per request.
-- **Settings conditions** — `Settings::get()` with a conditional expression.
-- **Validator** — the `Expression` constraint (`#[Assert\Expression("value > 0")]`).
-- **Route conditions** — `Router::get('/admin', ...)->when('user.role == "admin"')`.
-- **Widget visibility** — `Widget::register(..., ['when' => 'user.isLoggedIn'])`.
-- **Security:** never `eval()` raw user strings — always run through `Expression::evaluate()` with an explicit `$values` whitelist. This is the whole point of the component.
+- **Access rules** - store `'post.author_id == user.id or "admin" in user.roles'` in `auth_item.description` or a `rules` table, evaluate per request.
+- **Settings conditions** - `Settings::get()` with a conditional expression.
+- **Validator** - the `Expression` constraint (`#[Assert\Expression("value > 0")]`).
+- **Route conditions** - `Router::get('/admin', ...)->when('user.role == "admin"')`.
+- **Widget visibility** - `Widget::register(..., ['when' => 'user.isLoggedIn'])`.
+- **Security:** never `eval()` raw user strings - always run through `Expression::evaluate()` with an explicit `$values` whitelist. This is the whole point of the component.
 
 ---
 
@@ -1058,7 +1058,7 @@ class Expression
 
 **Symfony model.** `RateLimiterFactory`, `Limit` (`getLimit(): int`, `getInterval(): string`, `getRetryAfter(): \DateTimeImmutable`, `accept(): bool`, `reserve()`, `isAccepted()`, `getRemainingTokens()`, `getRetryAfter()`); policies `FixedWindow`, `SlidingWindow`, `TokenBucket`; `RateLimit` attribute; `RateLimiterInterface::consume(int $tokens = 1): Limit`; `NoLimiter`; `ResettableRateLimiterInterface`; storage in cache.
 
-**Canyon implementation — the current `Security::throttle()` is session-only and cookie-rotatable**
+**Canyon implementation - the current `Security::throttle()` is session-only and cookie-rotatable**
 ```
 app/Core/RateLimit/RateLimiter.php
 app/Core/RateLimit/Limit.php
@@ -1087,9 +1087,9 @@ class Limit
 ```
 
 **Three policies (implement all three):**
-- **FixedWindow** — `limit` per `interval`; reset on window boundary; simple, bursty at edges.
-- **SlidingWindow** — weighted sum of current + previous window; removes edge bursts.
-- **TokenBucket** — `rate` tokens/sec, `burst` capacity; best for smoothing.
+- **FixedWindow** - `limit` per `interval`; reset on window boundary; simple, bursty at edges.
+- **SlidingWindow** - weighted sum of current + previous window; removes edge bursts.
+- **TokenBucket** - `rate` tokens/sec, `burst` capacity; best for smoothing.
 
 **Canyon wiring:** `Security::throttle()` → `RateLimiter::consume('ip:'.ip, 1)`; login → `consume('login:'.$user.'|'.ip, 1)`; REST → `consume('api:'.$userId)` returning `429` + `Retry-After`. Always key by **both** user and IP (the skill already flags session-only throttling as a bypass).
 
@@ -1110,14 +1110,14 @@ app/Core/Cache/Adapter/TagAwareAdapter.php
 ```
 
 ```php
-interface CacheInterface  // Contracts — the one to type-hint
+interface CacheInterface  // Contracts - the one to type-hint
 {
     public function get(string $key, callable $callback, ?float $beta = null, ?array &$metadata = null): mixed;
     public function delete(string $key): bool;
 }
 ```
 
-**Stampede prevention via `$beta`:** `Cache::get('key', $callback, beta: 1.0)` — when the remaining TTL < `beta * TTL`, the callback runs in the background (or inline) to refresh while the stale value is still served. Combined with `Lock` (§2.9) this is the correct stampede defence; the current `Cache::remember()` has none.
+**Stampede prevention via `$beta`:** `Cache::get('key', $callback, beta: 1.0)` - when the remaining TTL < `beta * TTL`, the callback runs in the background (or inline) to refresh while the stale value is still served. Combined with `Lock` (§2.9) this is the correct stampede defence; the current `Cache::remember()` has none.
 
 **Tags:** `TagAwareAdapter::invalidateTags(['posts'])` → clears every item tagged. Required for the `Entity` cache and page cache invalidation.
 
@@ -1145,7 +1145,7 @@ class AssetManager
 }
 ```
 
-**Canyon specifics:** `AssetOptimizer` already minifies CSS/JS/HTML and versions assets — keep it. Add: (1) a `manifest.json` writer that maps logical names to content-hashed files (so cache-busting is automatic), (2) `integrity` SRI hashes for `script-src`/`style-src`, (3) an `ImportMap` for bare-specifier ES module imports (`import 'lodash'` → `/assets/vendor/lodash.js`), (4) a `canyon build-assets` command that runs the optimizer and writes the manifest. This is the piece that makes `AssetOptimizer` usable in production rather than only in dev.
+**Canyon specifics:** `AssetOptimizer` already minifies CSS/JS/HTML and versions assets - keep it. Add: (1) a `manifest.json` writer that maps logical names to content-hashed files (so cache-busting is automatic), (2) `integrity` SRI hashes for `script-src`/`style-src`, (3) an `ImportMap` for bare-specifier ES module imports (`import 'lodash'` → `/assets/vendor/lodash.js`), (4) a `canyon build-assets` command that runs the optimizer and writes the manifest. This is the piece that makes `AssetOptimizer` usable in production rather than only in dev.
 
 ---
 
@@ -1174,36 +1174,36 @@ class AssetManager
 
 ## 4. Recommended Build Order
 
-### Phase 1 — Foundations (unblocks everything)
-1. **`Http\Request` / `Http\Response`** (Symfony §2.1) — value objects, `createFromGlobals()`, `prepare()`, `isNotModified()`.
-2. **`Container` autowiring + compiled cache** (Symfony §2.2) — reflection-based `make()`, `call()`, tags, `ContainerBuilder`.
-3. **`Console\Command` base** (Symfony §2.3) — replace the `canyon` `switch`; add `ArgvInput`, `ConsoleOutput`, `Table`, `ProgressBar`, `QuestionHelper`.
-4. **Fix `Entity::find()` signature** — `find(int|string $id)`, add `findOrFail`, `hydrate`, dirty tracking.
-5. **`Validation` constraint objects** (Symfony §2.7) — add `Constraint` hierarchy; keep pipe syntax as façade.
+### Phase 1 - Foundations (unblocks everything)
+1. **`Http\Request` / `Http\Response`** (Symfony §2.1) - value objects, `createFromGlobals()`, `prepare()`, `isNotModified()`.
+2. **`Container` autowiring + compiled cache** (Symfony §2.2) - reflection-based `make()`, `call()`, tags, `ContainerBuilder`.
+3. **`Console\Command` base** (Symfony §2.3) - replace the `canyon` `switch`; add `ArgvInput`, `ConsoleOutput`, `Table`, `ProgressBar`, `QuestionHelper`.
+4. **Fix `Entity::find()` signature** - `find(int|string $id)`, add `findOrFail`, `hydrate`, dirty tracking.
+5. **`Validation` constraint objects** (Symfony §2.7) - add `Constraint` hierarchy; keep pipe syntax as façade.
 
-### Phase 2 — Data & Domain
-6. **`Query` builder + `Entity` relations** (Yii2 §1.2/§1.3) — `with()`, eager loading, `hasOne/hasMany/belongsTo`.
-7. **`RbacManager`** (Yii2 §1.4) — persistent roles/permissions/assignments; migrate `AccessControl` to delegate.
-8. **`VoterInterface` + `AuthorizationChecker`** (Symfony §2.4) — merge with RBAC; `denyAccessUnlessGranted()`.
+### Phase 2 - Data & Domain
+6. **`Query` builder + `Entity` relations** (Yii2 §1.2/§1.3) - `with()`, eager loading, `hasOne/hasMany/belongsTo`.
+7. **`RbacManager`** (Yii2 §1.4) - persistent roles/permissions/assignments; migrate `AccessControl` to delegate.
+8. **`VoterInterface` + `AuthorizationChecker`** (Symfony §2.4) - merge with RBAC; `denyAccessUnlessGranted()`.
 9. **`Behavior` + `TimestampBehavior`/`SoftDeleteBehavior`** (Yii2 §1.5).
 10. **`Form` + `FormView` + `ActiveForm` widget** (Symfony §2.5 + Yii2 §1.6).
 
-### Phase 3 — Infrastructure
-11. **`Messenger`** (Symfony §2.8) — replace `Queue`; transports, envelopes, retry.
-12. **`Lock`** (Symfony §2.9) — wrap cron + workers.
-13. **`RateLimiter`** (Symfony §2.13) — replace session-only throttling.
+### Phase 3 - Infrastructure
+11. **`Messenger`** (Symfony §2.8) - replace `Queue`; transports, envelopes, retry.
+12. **`Lock`** (Symfony §2.9) - wrap cron + workers.
+13. **`RateLimiter`** (Symfony §2.13) - replace session-only throttling.
 14. **`Cache` contracts + tags + stampede** (Symfony §2.14 + Yii2 §1.9).
-15. **`Serializer` + groups** (Symfony §2.6) — required for REST.
+15. **`Serializer` + groups** (Symfony §2.6) - required for REST.
 
-### Phase 4 — API & UI
+### Phase 4 - API & UI
 16. **`RestController` + `Router::resource()` + content negotiation** (Yii2 §1.7).
-17. **`Generator` (Gii)** (Yii2 §1.1) — model/CRUD/migration generators from schema.
+17. **`Generator` (Gii)** (Yii2 §1.1) - model/CRUD/migration generators from schema.
 18. **`Widget` class layer + `GridView`/`Pagination`/`Menu`** (Yii2 §1.6).
 19. **`AssetManager` + manifest + SRI** (Symfony §2.15).
 20. **`DebugBar`** (Yii2 §1.12).
 
-### Phase 5 — Cross-cutting
-21. **`Expression`** (Symfony §2.12) — access rules, widget conditions, validation.
+### Phase 5 - Cross-cutting
+21. **`Expression`** (Symfony §2.12) - access rules, widget conditions, validation.
 22. **`Finder`** (Symfony §2.10) + **`Process`** (Symfony §2.11).
 23. **`I18n` pluralization + fallback + formatter** (Yii2 §1.8).
 24. **`TestCase` + `BrowserKit` + fixtures** (Symfony/ Yii2 testing).
@@ -1213,13 +1213,13 @@ class AssetManager
 
 ## 5. Implementation Rules (Canyon-specific)
 
-1. **One class per file, PSR-4, `namespace Canyon\Core\...`** — no exceptions; the existing 30 classes set the pattern.
-2. **Static façade over instance object** — `Cache::get()` internally does `Container::make(CacheStore::class)->get()`. Never `new` inside a façade.
-3. **Never `eval()` or raw `shell_exec`** — generators write files; `Process` uses `proc_open` with an array command.
-4. **Parameterize all SQL** — `QueryBuilder` always returns `[sql, bindings]`; `toSql()` must be available for the debug toolbar.
-5. **Unknown validation rules must fail loudly** — the current `default => true` in `Validation::applyRule()` is a hazard; replace with `throw new InvalidArgumentException("Unknown rule: {$rule}")`.
-6. **Every cross-cutting feature gets a `guard()`** — `Generator::guard()`, `DebugBar::guard()`, `RateLimiter` — checking `APP_DEBUG` and IP allow-lists.
-7. **Cache everything that is hot and expensive** — RBAC graph, container, route table, config, schema introspection. All have a `clear-cache` path.
-8. **Keep the plugin contract stable** — `canyon-plugin.php` returning an array; new features (services, tags, voters, generators) are additive keys.
+1. **One class per file, PSR-4, `namespace Canyon\Core\...`** - no exceptions; the existing 30 classes set the pattern.
+2. **Static façade over instance object** - `Cache::get()` internally does `Container::make(CacheStore::class)->get()`. Never `new` inside a façade.
+3. **Never `eval()` or raw `shell_exec`** - generators write files; `Process` uses `proc_open` with an array command.
+4. **Parameterize all SQL** - `QueryBuilder` always returns `[sql, bindings]`; `toSql()` must be available for the debug toolbar.
+5. **Unknown validation rules must fail loudly** - the current `default => true` in `Validation::applyRule()` is a hazard; replace with `throw new InvalidArgumentException("Unknown rule: {$rule}")`.
+6. **Every cross-cutting feature gets a `guard()`** - `Generator::guard()`, `DebugBar::guard()`, `RateLimiter` - checking `APP_DEBUG` and IP allow-lists.
+7. **Cache everything that is hot and expensive** - RBAC graph, container, route table, config, schema introspection. All have a `clear-cache` path.
+8. **Keep the plugin contract stable** - `canyon-plugin.php` returning an array; new features (services, tags, voters, generators) are additive keys.
 9. **Type-hint everything** (PHP 8.1+): `string`, `int`, `bool`, `array`, `void`, `?string`, `mixed` sparingly; `never` for terminal response methods.
-10. **Test every new feature with `TestCase` + `BrowserKit`** before merging — the empty `tests/` directory is the gap to close first.
+10. **Test every new feature with `TestCase` + `BrowserKit`** before merging - the empty `tests/` directory is the gap to close first.

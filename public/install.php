@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Canyon Framework — Web Installer
+ * Canyon Framework - Web Installer
  * 
  * Secure, simplified installation for any shared hosting.
  */

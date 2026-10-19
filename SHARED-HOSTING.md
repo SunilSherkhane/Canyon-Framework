@@ -1,4 +1,4 @@
-# 🚀 Canyon Framework — Shared Hosting Deployment Guide
+# 🚀 Canyon Framework - Shared Hosting Deployment Guide
 
 ## Deploy to Any Shared Host (Like WordPress)
 
@@ -47,7 +47,7 @@
 After successful installation:
 
 1. **Delete** `install.php` from your server (critical for security)
-2. **Keep** `config.php` — the installer generates it automatically with your settings
+2. **Keep** `config.php` - the installer generates it automatically with your settings
 3. **Set permissions**:
    - `storage/` → 755
    - `config.php` → 644

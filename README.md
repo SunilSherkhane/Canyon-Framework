@@ -14,7 +14,7 @@
 2. **Create a MySQL database** in your hosting control panel
 3. **Visit** `http://yourdomain.com/install.php` in your browser
 4. **Fill in** your database details and site URL
-5. **Delete** `install.php` — done!
+5. **Delete** `install.php` - done!
 
 **See [SHARED-HOSTING.md](SHARED-HOSTING.md) for detailed instructions.**
 
@@ -36,13 +36,13 @@ php -S localhost:8000 -t public
 |---|---|---|
 | **DI Container** | `Container` | `bind()`, `singleton()`, `resolve()`, `when()` contextual bindings |
 | **Application** | `Application` | `set()`, `get()`, `isProduction()`, `isDebug()` |
-| **Config** | `Config` | `get('app.debug')`, `set()`, `has()` — dot notation |
-| **Request** | `Request` | `createFromGlobals()`, `input()`, `file()`, `validate()` — Symfony HTTP Foundation inspired |
-| **Response** | `Response` | `json()`, `view()`, `redirect()`, `download()` — chainable |
+| **Config** | `Config` | `get('app.debug')`, `set()`, `has()` - dot notation |
+| **Request** | `Request` | `createFromGlobals()`, `input()`, `file()`, `validate()` - Symfony HTTP Foundation inspired |
+| **Response** | `Response` | `json()`, `view()`, `redirect()`, `download()` - chainable |
 | **Router** | `Router` | `get/post/put/delete/patch/any()`, `group()`, `{param}`, named routes |
 | **Validation** | `Validation` | Rule strings, `passes()`, `fails()`, `errors()` |
-| **Console** | `Console` | `run()`, `info()`, `error()`, `table()`, `ask()` — Symfony Console inspired |
-| **ProgressBar** | `ProgressBar` | `start()`, `advance()`, `finish()` — CLI progress indicator |
+| **Console** | `Console` | `run()`, `info()`, `error()`, `table()`, `ask()` - Symfony Console inspired |
+| **ProgressBar** | `ProgressBar` | `start()`, `advance()`, `finish()` - CLI progress indicator |
 | **Plugin System** | `Plugin` | `loadAll()`, `isActive()`, `getSetting()` |
 | **Cron** | `Cron` | `register()`, `run()`, `runDue()`, `isDue()` |
 
@@ -61,7 +61,7 @@ php -S localhost:8000 -t public
 |---|---|---|
 | **Security** | `Security` | `csrfField()`, `verifyCsrfToken()`, `throttle()`, `sanitizeInput()` |
 | **AccessControl** | `AccessControl` | `addRole()`, `addGroup()`, `canAccess()` |
-| **RBAC** | `Rbac` | `assign()`, `can()`, `getPermissionsByRole()` — Yii2 inspired |
+| **RBAC** | `Rbac` | `assign()`, `can()`, `getPermissionsByRole()` - Yii2 inspired |
 | **Permissions** | `Permissions` | `can()`, `canEdit()`, `canDelete()`, `require()` |
 | **HMAC** | `Hmac` | `generate()`, `validate()`, `signedUrl()` |
 | **PageOwnership** | `PageOwnership` | `setOwner()`, `getOwner()`, `pushContext()` |
@@ -69,9 +69,9 @@ php -S localhost:8000 -t public
 ### Symfony-Inspired Components
 | Module | Class | Key Methods |
 |---|---|---|
-| **Finder** | `Finder` | `in()`, `name()`, `files()`, `size()`, `sortByName()` — file search |
-| **Process** | `Process` | `run()`, `start()`, `stop()` — execute system commands |
-| **Lock** | `Lock` | `acquire()`, `release()`, `synchronize()` — distributed locking |
+| **Finder** | `Finder` | `in()`, `name()`, `files()`, `size()`, `sortByName()` - file search |
+| **Process** | `Process` | `run()`, `start()`, `stop()` - execute system commands |
+| **Lock** | `Lock` | `acquire()`, `release()`, `synchronize()` - distributed locking |
 
 ### Services
 | Module | Class | Key Methods |
@@ -81,14 +81,14 @@ php -S localhost:8000 -t public
 | **Notification** | `Notification` | `send()`, `markRead()`, `subscribe()` |
 | **FileStorage** | `FileStorage` | `store()`, `get()`, `delete()`, `stream()` |
 | **I18n** | `I18n` | `get()`, `trans()`, `setLocale()` |
-| **RPC** | `RPC` | `register()`, `handle()` — JSON-RPC 2.0 |
+| **RPC** | `RPC` | `register()`, `handle()` - JSON-RPC 2.0 |
 | **Settings** | `Settings` | `get()`, `set()`, `getUser()` |
 | **Queue** | `Queue` | `push()`, `pop()`, `work()` |
 
 ### UI & Presentation
 | Module | Class | Key Methods |
 |---|---|---|
-| **View** | `View` | `make()`, `render()`, `escape()` — auto-escaping |
+| **View** | `View` | `make()`, `render()`, `escape()` - auto-escaping |
 | **Partial** | `Partial` | `section()`, `yield()`, `include()`, `extend()` |
 | **Widget** | `Widget` | `register()`, `render()`, `byPosition()` |
 | **Menu** | `Menu` | `add()`, `remove()`, `render()` |
@@ -261,4 +261,4 @@ Cron::register('daily', function () {
 
 ## 📄 License
 
-MIT — free for personal and commercial use.
+MIT - free for personal and commercial use.

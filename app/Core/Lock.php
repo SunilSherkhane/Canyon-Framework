@@ -181,8 +181,10 @@ class Lock
 
         // Check if lock exists and is valid
         if (file_exists($file)) {
-            $data = unserialize(file_get_contents($file));
-            if ($data['expires_at'] > time()) {
+            $data = unserialize(file_get_contents($file), ['allowed_classes' => false]);
+            if (!is_array($data) || !isset($data['expires_at'])) {
+                unlink($file);
+            } elseif ($data['expires_at'] > time()) {
                 return false;
             }
             // Lock expired, remove it
@@ -217,8 +219,8 @@ class Lock
             return true;
         }
 
-        $data = unserialize(file_get_contents($file));
-        if ($data['token'] !== $this->token) {
+        $data = unserialize(file_get_contents($file), ['allowed_classes' => false]);
+        if (!is_array($data) || ($data['token'] ?? '') !== $this->token) {
             return false; // Not our lock
         }
 
@@ -232,8 +234,8 @@ class Lock
             return false;
         }
 
-        $data = unserialize(file_get_contents($file));
-        return $data['expires_at'] > time();
+        $data = unserialize(file_get_contents($file), ['allowed_classes' => false]);
+        return is_array($data) && isset($data['expires_at']) && $data['expires_at'] > time();
     }
 
     protected function getLockFile(): string
@@ -379,8 +381,10 @@ class Lock
         $file = $this->getLockFile();
         if (!file_exists($file)) return false;
 
-        $data = unserialize(file_get_contents($file));
-        if ($data['token'] !== $this->token) return false;
+        $data = unserialize(file_get_contents($file), ['allowed_classes' => false]);
+        if (!is_array($data) || ($data['token'] ?? '') !== $this->token) {
+            return false;
+        }
 
         $data['expires_at'] = time() + $ttl;
         return file_put_contents($file, serialize($data)) !== false;

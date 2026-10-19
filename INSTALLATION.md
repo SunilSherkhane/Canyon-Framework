@@ -1,4 +1,4 @@
-# 🏗️ Canyon Framework — Installation & Configuration Guide
+# 🏗️ Canyon Framework - Installation & Configuration Guide
 
 ## Table of Contents
 
@@ -754,7 +754,7 @@ tail -f storage/logs/access.log
 
 - **Documentation**: See README.md for full API reference
 - **GitHub Issues**: https://github.com/SunilSherkhane/Canyon-Framework/issues
-- **License**: MIT — free for personal and commercial use
+- **License**: MIT - free for personal and commercial use
 
 ---
 

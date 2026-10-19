@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Canyon Framework — Application Entry Point (Shared Hosting Optimized)
+ * Canyon Framework - Application Entry Point (Shared Hosting Optimized)
  *
  * Changes for shared hosting:
  * 1. Uses WordPress-style config.php (single file configuration)

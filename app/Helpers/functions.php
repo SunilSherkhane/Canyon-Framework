@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Canyon Framework — Global Helper Functions
+ * Canyon Framework - Global Helper Functions
  */
 
 if (!function_exists('asset')) {

@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Canyon Framework — Master Configuration (WordPress-style)
+ * Canyon Framework - Master Configuration (WordPress-style)
  * 
  * This is the ONLY file you need to edit to configure your Canyon application.
  * Like WordPress wp-config.php, everything is in one place.
