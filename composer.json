@@ -1,6 +1,6 @@
 {
     "name": "canyon/framework",
-    "description": "A minimal PHP framework inspired by Laravel and CodeIgniter",
+    "description": "A minimal PHP framework inspired by Laravel and CodeIgniter, assembled from components",
     "type": "library",
     "require": {
         "php": "^8.1",
@@ -9,6 +9,13 @@
     },
     "autoload": {
         "psr-4": {
+            "Canyon\\Core\\": [
+                "components/core/src",
+                "components/ai/src",
+                "components/social/src",
+                "components/security/src",
+                "components/performance/src"
+            ],
             "Canyon\\": "app/"
         },
         "files": [

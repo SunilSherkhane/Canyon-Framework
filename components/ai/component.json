@@ -1,0 +1,22 @@
+{
+    "name": "ai",
+    "title": "Canyon AI",
+    "description": "Multi-provider LLM integration (OpenAI, Anthropic, OpenRouter, OpenCode), a chatbot widget and a helper trait for AI-assisted features.",
+    "version": "1.0.0",
+    "type": "addon",
+    "enabled": true,
+    "requires": [
+        "core"
+    ],
+    "autoload": {
+        "psr-4": {
+            "Canyon\\Core\\": "src"
+        }
+    },
+    "classes": [
+        "Ai",
+        "AiChatbot",
+        "AiHelper",
+        "AiResponse"
+    ]
+}

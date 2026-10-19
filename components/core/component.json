@@ -1,0 +1,22 @@
+{
+    "name": "core",
+    "title": "Canyon Core",
+    "description": "The framework kernel: routing, request/response, view rendering, the database layer, config, container, security primitives and the extension systems (plugins, components, events). Always enabled.",
+    "version": "1.0.0",
+    "type": "core",
+    "enabled": true,
+    "requires": [],
+    "autoload": {
+        "psr-4": {
+            "Canyon\\Core\\": "src"
+        }
+    },
+    "classes": [
+        "Application", "Cache", "Collection", "Component", "Config", "Console",
+        "Container", "Cron", "Database", "Email", "Entity", "EventDispatcher",
+        "FileStorage", "Finder", "Hmac", "I18n", "Lock", "Middleware", "Migration",
+        "Partial", "Plugin", "Process", "ProgressBar", "Queue", "Request",
+        "Response", "Router", "RPC", "Security", "Settings", "Themes",
+        "Validation", "View"
+    ]
+}

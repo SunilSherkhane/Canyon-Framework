@@ -232,6 +232,33 @@ define('CANYON_BASE_PATH', __DIR__);
 define('CANYON_APP_PATH', CANYON_BASE_PATH . '/app');
 
 /**
+ * Path to the Canyon framework itself (components, helpers, base controller).
+ *
+ * Leave this commented out to use the framework code inside this checkout.
+ * An application that consumes a single shared Canyon install uncomments it and
+ * points at that checkout, for example:
+ *
+ *   define('CANYON_SHARED_PATH', '/home/user/htdocs/shared/canyon');
+ *
+ * Everything framework-owned is then read from there, so one `git pull` in the
+ * shared checkout updates every application that points at it.
+ */
+// define('CANYON_SHARED_PATH', '/path/to/shared/canyon');
+
+/**
+ * Path to the framework's components directory.
+ */
+define('CANYON_COMPONENTS_PATH', (defined('CANYON_SHARED_PATH') ? CANYON_SHARED_PATH : CANYON_BASE_PATH) . '/components');
+
+/**
+ * Addon components to switch off, e.g. ['social', 'ai'].
+ *
+ * The `core` component is mandatory and is always loaded, as is any component
+ * another enabled component depends on.
+ */
+define('CANYON_COMPONENTS_DISABLED', []);
+
+/**
  * Path to the 'storage' directory (outside web root if possible).
  */
 define('CANYON_STORAGE_PATH', CANYON_BASE_PATH . '/storage');
