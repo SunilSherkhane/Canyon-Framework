@@ -10,94 +10,94 @@ namespace Canyon\Core;
  */
 class Partial
 {
-    /** @var array<string, array<string, mixed>> Partial data storage */
-    protected static array $sections = [];
+  /** @var array<string, array<string, mixed>> Partial data storage */
+  protected static array $sections = [];
 
-    /** @var string Current section name */
-    protected static string $currentSection = '';
+  /** @var string Current section name */
+  protected static string $currentSection = '';
 
-    /**
-     * Render a partial view.
-     *
-     * @param string $view View name (dot notation)
-     * @param array $data Data to pass to the partial
-     * @param bool $return Whether to return the rendered output
-     * @return string|null
-     */
-    public static function render(string $view, array $data = [], bool $return = false): ?string
-    {
-        $output = View::make($view, $data);
+  /**
+   * Render a partial view.
+   *
+   * @param string $view View name (dot notation)
+   * @param array $data Data to pass to the partial
+   * @param bool $return Whether to return the rendered output
+   * @return string|null
+   */
+  public static function render(string $view, array $data = [], bool $return = false): ?string
+  {
+    $output = View::make($view, $data);
 
-        if ($return) {
-            return $output;
-        }
-
-        echo $output;
-        return null;
+    if ($return) {
+      return $output;
     }
 
-    /**
-     * Start a section.
-     */
-    public static function section(string $name): void
-    {
-        self::$currentSection = $name;
-        ob_start();
-    }
+    echo $output;
+    return null;
+  }
 
-    /**
-     * End a section and store its content.
-     */
-    public static function endSection(): void
-    {
-        if (self::$currentSection === '') {
-            throw new \RuntimeException('No section started.');
-        }
-        self::$sections[self::$currentSection] = ob_get_clean();
-        self::$currentSection = '';
-    }
+  /**
+   * Start a section.
+   */
+  public static function section(string $name): void
+  {
+    self::$currentSection = $name;
+    ob_start();
+  }
 
-    /**
-     * Yield a section's content.
-     */
-    public static function yield(string $name, string $default = ''): void
-    {
-        echo (string) (self::$sections[$name] ?? $default);
+  /**
+   * End a section and store its content.
+   */
+  public static function endSection(): void
+  {
+    if (self::$currentSection === '') {
+      throw new \RuntimeException('No section started.');
     }
+    self::$sections[self::$currentSection] = ob_get_clean();
+    self::$currentSection = '';
+  }
 
-    /**
-     * Check if a section has been defined.
-     */
-    public static function has(string $name): bool
-    {
-        return isset(self::$sections[$name]);
-    }
+  /**
+   * Yield a section's content.
+   */
+  public static function yield(string $name, string $default = ''): void
+  {
+    echo (string) (self::$sections[$name] ?? $default);
+  }
 
-    /**
-     * Include a partial view with isolated data.
-     *
-     * @param string $view View name
-     * @param array $data Data for this partial only
-     */
-    public static function include(string $view, array $data = []): void
-    {
-        echo View::make($view, $data);
-    }
+  /**
+   * Check if a section has been defined.
+   */
+  public static function has(string $name): bool
+  {
+    return isset(self::$sections[$name]);
+  }
 
-    /**
-     * Extend a layout with sections.
-     */
-    public static function extend(string $layout): void
-    {
-        echo View::make($layout);
-    }
+  /**
+   * Include a partial view with isolated data.
+   *
+   * @param string $view View name
+   * @param array $data Data for this partial only
+   */
+  public static function include(string $view, array $data = []): void
+  {
+    echo View::make($view, $data);
+  }
 
-    /**
-     * Clear all sections.
-     */
-    public static function clear(): void
-    {
-        self::$sections = [];
-        self::$currentSection = '';
-    }
+  /**
+   * Extend a layout with sections.
+   */
+  public static function extend(string $layout): void
+  {
+    echo View::make($layout);
+  }
+
+  /**
+   * Clear all sections.
+   */
+  public static function clear(): void
+  {
+    self::$sections = [];
+    self::$currentSection = '';
+  }
 }

@@ -56,8 +56,8 @@ define('CANYON_DB_CHARSET', 'utf8mb4');
 /**
  * Your site URL. Include http:// or https:// but NO trailing slash.
  * Examples:
- *   define('CANYON_SITE_URL', 'https://example.com');
- *   define('CANYON_SITE_URL', 'https://example.com/myapp');
+ * define('CANYON_SITE_URL', 'https://example.com');
+ * define('CANYON_SITE_URL', 'https://example.com/myapp');
  */
 define('CANYON_SITE_URL', 'http://localhost');
 
@@ -86,10 +86,10 @@ define('CANYON_LOCALE', 'en');
  * Generate one at: https://yourdomain.com/install.php
  * 
  * To generate manually, run this in terminal:
- *   php -r "echo bin2hex(random_bytes(32));"
+ * php -r "echo bin2hex(random_bytes(32));"
  * 
  * Or use this quick generator:
- *   echo md5(uniqid(mt_rand(), true));
+ * echo md5(uniqid(mt_rand(), true));
  */
 define('CANYON_APP_KEY', 'CHANGE_ME_TO_A_RANDOM_STRING');
 
@@ -98,8 +98,8 @@ define('CANYON_APP_KEY', 'CHANGE_ME_TO_A_RANDOM_STRING');
  * Your domain MUST be in this list or the site won't load.
  * 
  * Examples:
- *   define('CANYON_ALLOWED_HOSTS', 'example.com,www.example.com');
- *   define('CANYON_ALLOWED_HOSTS', '*'); // Allow all (not recommended for production)
+ * define('CANYON_ALLOWED_HOSTS', 'example.com,www.example.com');
+ * define('CANYON_ALLOWED_HOSTS', '*'); // Allow all (not recommended for production)
  */
 define('CANYON_ALLOWED_HOSTS', 'localhost,127.0.0.1');
 
@@ -238,7 +238,7 @@ define('CANYON_APP_PATH', CANYON_BASE_PATH . '/app');
  * An application that consumes a single shared Canyon install uncomments it and
  * points at that checkout, for example:
  *
- *   define('CANYON_SHARED_PATH', '/home/user/htdocs/shared/canyon');
+ * define('CANYON_SHARED_PATH', '/home/user/htdocs/shared/canyon');
  *
  * Everything framework-owned is then read from there, so one `git pull` in the
  * shared checkout updates every application that points at it.
@@ -289,48 +289,48 @@ define('CANYON_PLUGINS_PATH', CANYON_BASE_PATH . '/plugins');
 
 // Detect if we're on shared hosting
 $canyonSharedHosting = (
-    strpos($_SERVER['SERVER_SOFTWARE'] ?? '', 'Apache') !== false &&
-    file_exists(__DIR__ . '/.cpanel') ||
-    file_exists(__DIR__ . '/.plesk') ||
-    strpos($_SERVER['DOCUMENT_ROOT'] ?? '', 'public_html') !== false ||
-    strpos($_SERVER['DOCUMENT_ROOT'] !== false, 'htdocs') !== false ||
-    strpos($_SERVER['DOCUMENT_ROOT'] ?? '', 'www') !== false
+ strpos($_SERVER['SERVER_SOFTWARE'] ?? '', 'Apache') !== false &&
+ file_exists(__DIR__ . '/.cpanel') ||
+ file_exists(__DIR__ . '/.plesk') ||
+ strpos($_SERVER['DOCUMENT_ROOT'] ?? '', 'public_html') !== false ||
+ strpos($_SERVER['DOCUMENT_ROOT'] !== false, 'htdocs') !== false ||
+ strpos($_SERVER['DOCUMENT_ROOT'] ?? '', 'www') !== false
 );
 
 // Shared hosting compatibility mode
 if ($canyonSharedHosting || CANYON_ENV === 'production') {
-    // Disable features that may cause issues on shared hosts
-    if (!defined('CANYON_DISABLE_HTTPS_REDIRECT')) {
-        define('CANYON_DISABLE_HTTPS_REDIRECT', true);
-    }
-    
-    // Reduce memory usage
-    if (!defined('CANYON_LOW_MEMORY_MODE')) {
-        define('CANYON_LOW_MEMORY_MODE', true);
-    }
-    
-    // Use simpler caching
-    if (!defined('CANYON_SIMPLE_CACHE')) {
-        define('CANYON_SIMPLE_CACHE', true);
-    }
+ // Disable features that may cause issues on shared hosts
+ if (!defined('CANYON_DISABLE_HTTPS_REDIRECT')) {
+  define('CANYON_DISABLE_HTTPS_REDIRECT', true);
+ }
+ 
+ // Reduce memory usage
+ if (!defined('CANYON_LOW_MEMORY_MODE')) {
+  define('CANYON_LOW_MEMORY_MODE', true);
+ }
+ 
+ // Use simpler caching
+ if (!defined('CANYON_SIMPLE_CACHE')) {
+  define('CANYON_SIMPLE_CACHE', true);
+ }
 }
 
 // Set timezone
 if (defined('CANYON_TIMEZONE')) {
-    date_default_timezone_set(CANYON_TIMEZONE);
+ date_default_timezone_set(CANYON_TIMEZONE);
 }
 
 // Set error reporting
 if (CANYON_DEBUG) {
-    error_reporting(E_ALL);
-    ini_set('display_errors', '1');
+ error_reporting(E_ALL);
+ ini_set('display_errors', '1');
 } else {
-    error_reporting(0);
-    ini_set('display_errors', '0');
+ error_reporting(0);
+ ini_set('display_errors', '0');
 }
 
 // Set error logging
 if (CANYON_LOG_ERRORS) {
-    ini_set('log_errors', '1');
-    ini_set('error_log', CANYON_STORAGE_PATH . '/logs/php_errors.log');
+ ini_set('log_errors', '1');
+ ini_set('error_log', CANYON_STORAGE_PATH . '/logs/php_errors.log');
 }

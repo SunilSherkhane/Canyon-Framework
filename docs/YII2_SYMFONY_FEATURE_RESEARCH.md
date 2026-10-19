@@ -232,7 +232,7 @@ class Query
 
 ---
 
-### 1.3 Query Builder (Yii2 `yii\db\Query`)
+### 1.3 Query Builder
 
 Currently `Database` exposes only raw PDO + `select/insert/update/delete` helpers. Add a fluent builder on top so generators, search, and pagination share one SQL path.
 
@@ -1182,10 +1182,10 @@ class AssetManager
 5. **`Validation` constraint objects** (Symfony §2.7) - add `Constraint` hierarchy; keep pipe syntax as façade.
 
 ### Phase 2 - Data & Domain
-6. **`Query` builder + `Entity` relations** (Yii2 §1.2/§1.3) - `with()`, eager loading, `hasOne/hasMany/belongsTo`.
-7. **`RbacManager`** (Yii2 §1.4) - persistent roles/permissions/assignments; migrate `AccessControl` to delegate.
+6. **`Query` builder + `Entity` relations** - `with()`, eager loading, `hasOne/hasMany/belongsTo`.
+7. **`RbacManager`** - persistent roles/permissions/assignments; migrate `AccessControl` to delegate.
 8. **`VoterInterface` + `AuthorizationChecker`** (Symfony §2.4) - merge with RBAC; `denyAccessUnlessGranted()`.
-9. **`Behavior` + `TimestampBehavior`/`SoftDeleteBehavior`** (Yii2 §1.5).
+9. **`Behavior` + `TimestampBehavior`/`SoftDeleteBehavior`**.
 10. **`Form` + `FormView` + `ActiveForm` widget** (Symfony §2.5 + Yii2 §1.6).
 
 ### Phase 3 - Infrastructure
@@ -1196,16 +1196,16 @@ class AssetManager
 15. **`Serializer` + groups** (Symfony §2.6) - required for REST.
 
 ### Phase 4 - API & UI
-16. **`RestController` + `Router::resource()` + content negotiation** (Yii2 §1.7).
-17. **`Generator` (Gii)** (Yii2 §1.1) - model/CRUD/migration generators from schema.
-18. **`Widget` class layer + `GridView`/`Pagination`/`Menu`** (Yii2 §1.6).
+16. **`RestController` + `Router::resource()` + content negotiation**.
+17. **`Generator` (Gii)** - model/CRUD/migration generators from schema.
+18. **`Widget` class layer + `GridView`/`Pagination`/`Menu`**.
 19. **`AssetManager` + manifest + SRI** (Symfony §2.15).
-20. **`DebugBar`** (Yii2 §1.12).
+20. **`DebugBar`**.
 
 ### Phase 5 - Cross-cutting
 21. **`Expression`** (Symfony §2.12) - access rules, widget conditions, validation.
 22. **`Finder`** (Symfony §2.10) + **`Process`** (Symfony §2.11).
-23. **`I18n` pluralization + fallback + formatter** (Yii2 §1.8).
+23. **`I18n` pluralization + fallback + formatter**.
 24. **`TestCase` + `BrowserKit` + fixtures** (Symfony/ Yii2 testing).
 25. **Plugin lifecycle hooks** (`activate`/`deactivate`/`uninstall`) + DI tags.
 

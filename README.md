@@ -1,6 +1,6 @@
 # 🌊 Canyon Framework
 
-**A lightweight, secure PHP framework Laravel, CodeIgniter - works on any shared hosting.**
+**A lightweight, secure PHP framework built on Laravel, CodeIgniter - works on any shared hosting.**
 
 > Version: 0.5.0 | PHP: 8.1+ | License: MIT
 
@@ -173,7 +173,7 @@ shared Canyon checkout (`CANYON_SHARED_PATH`).
 | **Menu** | `Menu` | `add()`, `remove()`, `render()` |
 | **Themes** | `Themes` | `register()`, `activate()`, `addCss()`, `addJs()` |
 
-### Performance (QUIC.cloud)
+### Performance
 | Module | Class | Key Methods |
 |---|---|---|
 | **AssetOptimizer** | `AssetOptimizer` | `minifyCss()`, `minifyJs()`, `lazyImage()`, `generateCriticalCss()` |
@@ -201,6 +201,7 @@ my-project/
 ├── routes/
 │ └── web.php # URL routes
 ├── resources/
+<<<<<<< HEAD
 │ ├── views/ # PHP templates
 │ ├── lang/ # Translations
 │ └── themes/ # Theme files
@@ -211,6 +212,18 @@ my-project/
 ├── SHARED-HOSTING.md # Shared hosting guide
 ├── INSTALLATION.md # Full installation guide
 └── README.md # This file
+=======
+│ ├── views/   # PHP templates
+│ ├── lang/   # Translations
+│ └── themes/   # Theme files
+├── config.php   # ← MAIN CONFIG
+├── storage/    # Sessions, cache, logs
+├── plugins/    # Plugin directory
+├── canyon    # CLI tool
+├── SHARED-HOSTING.md # Shared hosting guide
+├── INSTALLATION.md  # Full installation guide
+└── README.md   # This file
+>>>>>>> 9977e424f3d4ae1db9ae26ec0e0c98a94cd1434b
 ```
 
 ---

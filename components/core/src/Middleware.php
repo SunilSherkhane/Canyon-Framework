@@ -10,8 +10,8 @@ use Closure;
  */
 abstract class Middleware
 {
-    /**
-     * Handle incoming request
-     */
-    abstract public function handle($request, Closure $next);
+  /**
+   * Handle incoming request
+   */
+  abstract public function handle($request, Closure $next);
 }

@@ -18,26 +18,26 @@
 
 $configPath = dirname(__DIR__) . '/config.php';
 if (file_exists($configPath)) {
-    require_once $configPath;
+ require_once $configPath;
 } elseif (file_exists(dirname(__DIR__) . '/.env')) {
-    // Fallback to .env if config.php doesn't exist
-    $envLines = file(dirname(__DIR__) . '/.env', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-    foreach ($envLines as $line) {
-        $line = trim($line);
-        if ($line === '' || str_starts_with($line, '#') || !str_contains($line, '=')) continue;
-        $separatorPos = strpos($line, '=');
-        $key = trim(substr($line, 0, $separatorPos));
-        $value = trim(substr($line, $separatorPos + 1));
-        $commentPos = strpos($value, ' #');
-        if ($commentPos !== false) $value = trim(substr($value, 0, $commentPos));
-        if ((str_starts_with($value, '"') && str_ends_with($value, '"')) ||
-            (str_starts_with($value, "'") && str_ends_with($value, "'"))) {
-            $value = substr($value, 1, -1);
-        }
-        if (preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/', $key)) {
-            $_ENV[$key] = $value;
-        }
-    }
+ // Fallback to .env if config.php doesn't exist
+ $envLines = file(dirname(__DIR__) . '/.env', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+ foreach ($envLines as $line) {
+  $line = trim($line);
+  if ($line === '' || str_starts_with($line, '#') || !str_contains($line, '=')) continue;
+  $separatorPos = strpos($line, '=');
+  $key = trim(substr($line, 0, $separatorPos));
+  $value = trim(substr($line, $separatorPos + 1));
+  $commentPos = strpos($value, ' #');
+  if ($commentPos !== false) $value = trim(substr($value, 0, $commentPos));
+  if ((str_starts_with($value, '"') && str_ends_with($value, '"')) ||
+   (str_starts_with($value, "'") && str_ends_with($value, "'"))) {
+   $value = substr($value, 1, -1);
+  }
+  if (preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/', $key)) {
+   $_ENV[$key] = $value;
+  }
+ }
 }
 
 // ---------------------------------------------------------------------------
@@ -53,11 +53,11 @@ require $canyonFrameworkPath . '/bootstrap.php';
 // ---------------------------------------------------------------------------
 
 if (file_exists(CANYON_ROUTES_PATH . '/web.php')) {
-    require CANYON_ROUTES_PATH . '/web.php';
+ require CANYON_ROUTES_PATH . '/web.php';
 }
 
 $response = \Canyon\Core\Router::dispatch();
 
 if (is_string($response)) {
-    echo $response;
+ echo $response;
 }
