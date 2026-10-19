@@ -151,7 +151,7 @@ Router::group(AuthMiddleware::class, function () {
 });
 ```
 
-### Request & Response (Symfony-inspired)
+### Request & Response
 ```php
 // In a controller
 $request = \Canyon\Core\Request::createFromGlobals();
@@ -170,7 +170,7 @@ return \Canyon\Core\Response::json([
 return \Canyon\Core\Response::view('posts.index', ['posts' => $posts]);
 ```
 
-### Console Commands (Symfony-inspired)
+### Console Commands
 ```php
 \Canyon\Core\Console::register('g:model', function($console, $argv) {
     $console->info('Generating model...');
@@ -182,7 +182,7 @@ return \Canyon\Core\Response::view('posts.index', ['posts' => $posts]);
 }, 'Generate a new model');
 ```
 
-### RBAC (Yii2-inspired)
+### RBAC
 ```php
 \Canyon\Core\Rbac::assign('admin', $userId);
 \Canyon\Core\Rbac::assign('editor', $userId);
@@ -192,7 +192,7 @@ if (\Canyon\Core\Rbac::can($userId, 'posts.publish')) {
 }
 ```
 
-### Finder (Symfony-inspired)
+### Finde
 ```php
 $files = \Canyon\Core\Finder::create()
     ->in('/path/to/uploads')
