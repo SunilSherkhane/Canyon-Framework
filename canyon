@@ -2,18 +2,21 @@
 <?php
 /**
  * Canyon CLI - Command line tool for the Canyon Framework
- * Supports: serve, routes, test, clear-cache, info, migrate, queue, config
+ * Supports: serve, routes, test, clear-cache, info, migrate, queue, config, component
  */
 
-// Find the project root
+// Find the project root (a Canyon checkout: config.php + the core component).
+// The CLI normally sits at the project root, but also works from a bin/ or
+// vendor/bin/ directory.
 $paths = [
-    __DIR__ . '/..',
+    __DIR__,
     dirname(__DIR__),
+    dirname(__DIR__, 2),
 ];
 
 $basePath = null;
 foreach ($paths as $p) {
-    if (file_exists($p . '/app/Core/Router.php')) {
+    if (file_exists($p . '/config.php') && file_exists($p . '/components/core/src/Router.php')) {
         $basePath = realpath($p);
         break;
     }
@@ -30,13 +33,81 @@ define('CANYON_CONFIG_PATH', $basePath . '/config');
 define('CANYON_ROUTES_PATH', $basePath . '/routes');
 define('CANYON_RESOURCES_PATH', $basePath . '/resources');
 define('CANYON_STORAGE_PATH', $basePath . '/storage');
+define('CANYON_FRAMEWORK_PATH', $basePath);
+define('CANYON_COMPONENTS_PATH', $basePath . '/components');
 
-require $basePath . '/vendor/autoload.php';
-require $basePath . '/app/Helpers/env.php';
-require $basePath . '/app/Core/Application.php';
-require $basePath . '/app/Core/Config.php';
+// ---------------------------------------------------------------------------
+// Components + autoloader (mirrors public/index.php, without the HTTP bits).
+// ---------------------------------------------------------------------------
+
+require_once CANYON_FRAMEWORK_PATH . '/app/Helpers/components.php';
+
+$disabledComponents = [];
+$componentsConfigFile = $basePath . '/components.json';
+if (is_file($componentsConfigFile)) {
+    $decoded = json_decode((string) file_get_contents($componentsConfigFile), true);
+    if (is_array($decoded) && isset($decoded['disabled'])) {
+        $disabledComponents = array_values(array_map('strval', (array) $decoded['disabled']));
+    }
+}
+
+$componentManifests = canyon_discover_components(CANYON_COMPONENTS_PATH);
+$enabledComponents = canyon_resolve_components($componentManifests, $disabledComponents);
+$componentPsr4 = canyon_component_psr4($enabledComponents);
+
+spl_autoload_register(function ($class) use ($componentPsr4) {
+    if (!str_starts_with($class, 'Canyon\\')) {
+        return;
+    }
+
+    $relativeClass = str_replace('\\', '/', substr($class, strlen('Canyon\\'))) . '.php';
+
+    $appFile = CANYON_APP_PATH . '/' . $relativeClass;
+    if (is_file($appFile)) {
+        require $appFile;
+        return;
+    }
+
+    foreach ($componentPsr4 as $prefix => $directories) {
+        if (!str_starts_with($class, $prefix)) {
+            continue;
+        }
+
+        $componentRelative = str_replace('\\', '/', substr($class, strlen($prefix))) . '.php';
+
+        foreach ($directories as $directory) {
+            $file = $directory . '/' . $componentRelative;
+            if (is_file($file)) {
+                require $file;
+                return;
+            }
+        }
+    }
+
+    $frameworkFile = CANYON_FRAMEWORK_PATH . '/app/' . $relativeClass;
+    if (is_file($frameworkFile)) {
+        require $frameworkFile;
+    }
+});
+
+require_once CANYON_FRAMEWORK_PATH . '/app/Helpers/env.php';
+require_once CANYON_FRAMEWORK_PATH . '/app/Helpers/functions.php';
+
+foreach (canyon_component_files($enabledComponents) as $componentFile) {
+    require_once $componentFile;
+}
+
+if (is_file(CANYON_APP_PATH . '/Helpers/app.php')) {
+    require_once CANYON_APP_PATH . '/Helpers/app.php';
+}
+
+// Composer's autoloader last, so the component map above wins for Canyon\Core\*.
+if (is_file($basePath . '/vendor/autoload.php')) {
+    require_once $basePath . '/vendor/autoload.php';
+}
 
 use Canyon\Core\Application;
+use Canyon\Core\Component;
 use Canyon\Core\Router;
 use Canyon\Core\Config;
 use Canyon\Core\Migration;
@@ -44,6 +115,7 @@ use Canyon\Core\Queue;
 
 Application::init();
 Config::init();
+Component::boot(CANYON_COMPONENTS_PATH, $disabledComponents);
 
 // Load .env if exists
 if (file_exists($basePath . '/.env')) {
@@ -62,7 +134,7 @@ if (file_exists($basePath . '/.env')) {
 
 $command = $argv[1] ?? 'help';
 
-echo "Canyon Framework CLI v0.3.0\n";
+echo "Canyon Framework CLI v0.4.0\n";
 echo "Project: " . env('APP_NAME', 'Canyon Framework') . "\n";
 echo "Environment: " . env('APP_ENV', 'production') . "\n\n";
 
@@ -117,6 +189,66 @@ switch ($command) {
             }
         }
         echo "Cache cleared.\n";
+        break;
+
+    case 'component':
+    case 'components':
+        $action = $argv[2] ?? 'list';
+        $name = $argv[3] ?? null;
+
+        switch ($action) {
+            case 'list':
+                echo "Components:\n\n";
+                printf("  %-13s %-9s %-8s %-7s %s\n", 'NAME', 'VERSION', 'TYPE', 'CLASSES', 'STATUS');
+                foreach (Component::info() as $row) {
+                    $status = $row['enabled'] ? 'enabled' : 'DISABLED';
+                    if ($row['required']) {
+                        $status .= ' (required)';
+                    }
+                    printf("  %-13s %-9s %-8s %-7d %s\n",
+                        $row['name'], $row['version'], $row['type'], $row['classes'], $status);
+                }
+                echo "\n  Components live in " . CANYON_COMPONENTS_PATH . "\n";
+                echo "  Enable/disable decisions are stored in " . Component::configPath() . "\n";
+                break;
+
+            case 'show':
+                if ($name === null || !Component::exists($name)) {
+                    echo "Usage: canyon component show <name>\n";
+                    break;
+                }
+                $manifest = Component::manifest($name);
+                echo "Component: {$manifest['name']}\n";
+                echo "  Title:       " . ($manifest['title'] ?? '-') . "\n";
+                echo "  Version:     " . ($manifest['version'] ?? '-') . "\n";
+                echo "  Type:        " . ($manifest['type'] ?? '-') . "\n";
+                echo "  Enabled:     " . (Component::isEnabled($name) ? 'yes' : 'no') . "\n";
+                echo "  Requires:    " . (implode(', ', (array) ($manifest['requires'] ?? [])) ?: 'none') . "\n";
+                echo "  Path:        " . ($manifest['__path'] ?? '-') . "\n";
+                echo "  Description: " . ($manifest['description'] ?? '-') . "\n";
+                $classes = (array) ($manifest['classes'] ?? []);
+                echo "  Classes (" . count($classes) . "):\n";
+                foreach ($classes as $class) {
+                    echo "    - {$class}\n";
+                }
+                break;
+
+            case 'enable':
+            case 'disable':
+                if ($name === null || !Component::exists($name)) {
+                    echo "Usage: canyon component {$action} <name>\n";
+                    break;
+                }
+                if (Component::setEnabled($name, $action === 'enable')) {
+                    echo "Component '{$name}' " . ($action === 'enable' ? 'enabled' : 'disabled') . ".\n";
+                } else {
+                    echo "Could not {$action} '{$name}' — it may be the mandatory core component.\n";
+                }
+                break;
+
+            default:
+                echo "Usage: canyon component [list|show <name>|enable <name>|disable <name>]\n";
+        }
         break;
 
     case 'migrate':
@@ -242,18 +374,24 @@ switch ($command) {
 
     case 'info':
         echo "Framework: Canyon\n";
-        echo "Version: 0.3.0\n";
+        echo "Version: 0.4.0\n";
         echo "PHP: " . PHP_VERSION . "\n";
         echo "Base Path: $basePath\n";
         echo "Debug: " . (env('APP_DEBUG') ? 'yes' : 'no') . "\n";
         echo "Environment: " . env('APP_ENV', 'production') . "\n";
         echo "Database: " . env('DB_CONNECTION', 'mysql') . "\n";
+        echo "Components: " . count(Component::enabledNames()) . " enabled / " . count(Component::all()) . " installed\n";
+        echo "  enabled: " . (implode(', ', Component::enabledNames()) ?: 'none') . "\n";
+        if (Component::disabledNames()) {
+            echo "  disabled: " . implode(', ', Component::disabledNames()) . "\n";
+        }
         break;
 
     default:
         echo "Available commands:\n";
-        echo "  serve [port] [host]   Start development server\n";
+        echo "  serve [port] [host]    Start development server\n";
         echo "  routes                 List registered routes\n";
+        echo "  component [action]     Manage components (list|show|enable|disable)\n";
         echo "  migrate [action]       Run migrations (migrate|rollback|reset|status)\n";
         echo "  queue [action]         Queue operations (work|status|clear|clear-failed)\n";
         echo "  config                 Show configuration\n";
