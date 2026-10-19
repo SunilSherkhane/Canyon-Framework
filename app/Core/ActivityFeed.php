@@ -11,7 +11,7 @@ namespace Canyon\Core;
  *
  * Inspired by Facebook's newsfeed and Elgg's river.
  */
-class ActivityFeed
+class ActivityFeed implements \Canyon\Contracts\ActivityInterface
 {
     // -----------------------------------------------------------------------
     // Constants

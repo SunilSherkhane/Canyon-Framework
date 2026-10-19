@@ -651,7 +651,7 @@ class Waf
             'reason' => $reason,
             'blocked_at' => time(),
             'expires_at' => $seconds > 0 ? time() + $seconds : null,
-        ], $seconds > 0 ? $seconds : 31536000);
+        ], $seconds > 0 ? $seconds : 2592000);
     }
 
     /**

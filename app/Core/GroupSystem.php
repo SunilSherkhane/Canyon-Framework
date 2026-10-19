@@ -11,7 +11,7 @@ namespace Canyon\Core;
  *
  * Inspired by Facebook Groups and Elgg's group containers.
  */
-class GroupSystem
+class GroupSystem implements \Canyon\Contracts\GroupInterface
 {
     // -----------------------------------------------------------------------
     // Constants

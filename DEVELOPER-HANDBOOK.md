@@ -859,6 +859,117 @@ $groups = \GroupSystem::getUserGroups($userId);
 
 ---
 
+## Plugin Architecture (Modular Design)
+
+The Canyon Framework follows a **modular and core-first principle**. The core framework provides minimal essential functionality, and features like social networking are delivered as **optional plugins**.
+
+### Using the Social Plugin
+
+```bash
+# The social features are bundled as a plugin in /plugins/social/
+# Enable it by copying to your app:
+cp -r plugins/social/ your-app/plugins/
+
+# Or use Composer:
+composer require canyon/social-plugin
+```
+
+### Building Your Own Social Feature
+
+Don't want the built-in social plugin? Build your own:
+
+```php
+<?php
+// In your plugin's canyon-plugin.php
+return [
+    'plugin' => [
+        'name' => 'Custom Social',
+        'version' => '1.0.0',
+        'active' => true,
+    ],
+    'services' => [
+        'social' => CustomSocialService::class,
+    ],
+    'routes' => [
+        'custom_profile' => [
+            'path' => '/profile/{id}',
+            'handler' => [ProfileController::class, 'show'],
+        ],
+    ],
+];
+```
+
+### Core vs Plugin Classes
+
+| Class | Location | Replaceable |
+|-------|----------|-------------|
+| `Router`, `Controller`, `Database`, `Security` | `app/Core/` | ❌ Core framework |
+| `Waf` | `app/Core/` | ✅ Extend via middleware |
+| `UserProfile`, `MessageSystem`, `ActivityFeed`, `GroupSystem` | `plugins/social/src/` | ✅ Full plugin |
+| Your models/controllers | `app/Models/`, `app/Controllers/` | ✅ Yes |
+
+### Extending Without Modifying Core
+
+```php
+<?php
+// Create middleware in app/Middleware/
+class AuthMiddleware extends Middleware
+{
+    public function handle($request, $next) {
+        // Your auth logic
+        return $next($request);
+    }
+}
+
+// Register in routes/web.php
+Router::group([AuthMiddleware::class], function () {
+    // Protected routes
+});
+
+// Create services in app/Services/
+class PaymentService {
+    public function process($amount, $user) {
+        // Your payment logic
+    }
+}
+```
+
+**Key Principle**: Never modify `app/Core/` for business logic. Use `app/Models/`, `app/Controllers/`, `app/Middleware/`, `app/Services/` for application code.
+
+### Contracts (Interfaces)
+
+The framework provides interfaces for all major features, allowing you to swap implementations without changing your application code:
+
+| Interface | Location | Default Implementation |
+|-----------|----------|----------------------|
+| `ProfileInterface` | `app/Contracts/ProfileInterface.php` | `UserProfile` |
+| `MessagingInterface` | `app/Contracts/MessagingInterface.php` | `MessageSystem` |
+| `ActivityInterface` | `app/Contracts/ActivityInterface.php` | `ActivityFeed` |
+| `GroupInterface` | `app/Contracts/GroupInterface.php` | `GroupSystem` |
+
+**Custom Implementation Example:**
+
+```php
+<?php
+// app/Services/CustomProfileService.php
+namespace App\Services;
+
+use Canyon\Contracts\ProfileInterface;
+
+class CustomProfileService implements ProfileInterface
+{
+    public function create(int $userId, array $data): bool { /* ... */ }
+    public function get(int $userId): ?array { /* ... */ }
+    public function update(int $userId, array $data): bool { /* ... */ }
+    // ... implement all interface methods
+}
+
+// Register in a service provider or public/index.php
+\Container::singleton(ProfileInterface::class, CustomProfileService::class);
+```
+
+---
+
 ## Performance Optimization
 
 ### Caching

@@ -12,7 +12,7 @@ namespace Canyon\Core;
  *
  * Inspired by Elgg's messages plugin and Laravel's notification channels.
  */
-class MessageSystem
+class MessageSystem implements \Canyon\Contracts\MessagingInterface
 {
     // -----------------------------------------------------------------------
     // Constants
@@ -233,11 +233,21 @@ class MessageSystem
         [$a, $b] = self::orderPair($userOne, $userTwo);
 
         $db = (new Database())->getConnection();
-        $stmt = $db->prepare(
-            "INSERT INTO `conversations` (user_one, user_two) VALUES (?, ?)
-             ON DUPLICATE KEY UPDATE id = LAST_INSERT_ID(id)"
+
+        // Portable upsert — SQLite has no ON DUPLICATE KEY UPDATE.
+        $existing = $db->prepare(
+            "SELECT id FROM `conversations` WHERE user_one = ? AND user_two = ?"
         );
-        $stmt->execute([$a, $b]);
+        $existing->execute([$a, $b]);
+        $row = $existing->fetch(PDO::FETCH_ASSOC);
+
+        if ($row !== false) {
+            return (int) $row['id'];
+        }
+
+        $db->prepare(
+            "INSERT INTO `conversations` (user_one, user_two) VALUES (?, ?)"
+        )->execute([$a, $b]);
 
         return (int) $db->lastInsertId();
     }

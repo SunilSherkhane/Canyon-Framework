@@ -11,7 +11,7 @@ namespace Canyon\Core;
  *
  * Inspired by Elgg's user entities and Facebook-style social graphs.
  */
-class UserProfile
+class UserProfile implements \Canyon\Contracts\ProfileInterface
 {
     // -----------------------------------------------------------------------
     // Constants
@@ -530,7 +530,7 @@ class UserProfile
             return [];
         }
 
-        $fields = json_decode((string) $profile['fields'], true);
+        $fields = is_array($profile['fields']) ? $profile['fields'] : json_decode((string) $profile['fields'], true);
         return is_array($fields) ? $fields : [];
     }
 

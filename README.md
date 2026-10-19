@@ -6,7 +6,57 @@
 
 ---
 
-## ⚡ Quick Start (5 Minutes)
+## Core vs Plugin Architecture
+
+The Canyon Framework follows a **modular and core-first principle**. The core framework provides minimal essential functionality, and additional features are delivered as **optional plugins**.
+
+### Core Framework (Always Included)
+- **HTTP Layer**: `Request`, `Response`, `Router`, `Middleware`, `Partial`
+- **Dependency Injection**: `Container`, `Application`, `Config`
+- **Data Layer**: `Database`, `Entity`, `Collection`, `Migration`
+- **Security**: `Security`, `Rbac`, `Hmac`, `Permissions`, `AccessControl`
+- **Validation**: `Validation`
+- **Events**: `EventDispatcher`, `Queue`, `Cron`
+- **Services**: `Cache`, `Email`, `Notification`, `FileStorage`, `I18n`, `RPC`, `Settings`
+- **UI**: `View`, `Widget`, `Menu`, `Themes`
+- **Performance**: `AssetOptimizer`, `ImageOptimizer`, `DatabaseOptimizer`, `Opcache`
+- **Symfony Components**: `Finder`, `Process`, `Lock`
+- **AI**: `Ai`, `AiResponse`, `AiHelper`, `AiChatbot`
+
+### Plugins (Optional, Install as Needed)
+| Plugin | Features | Location |
+|--------|----------|----------|
+| **Social System** | `UserProfile`, `MessageSystem`, `ActivityFeed`, `GroupSystem`, `Waf` | `plugins/social/` |
+| **Custom Features** | Your own social/payment/etc. | `plugins/<name>/` |
+
+### Building Without Modifying Core
+
+```php
+<?php
+// 1. Create middleware in app/Middleware/
+class AuthMiddleware extends Middleware {
+    public function handle($request, $next) { /* ... */ }
+}
+
+// 2. Register routes in routes/web.php
+Router::group([AuthMiddleware::class], function () {
+    Router::get('/dashboard', [DashboardController::class, 'index']);
+});
+
+// 3. Create services in app/Services/
+class PaymentService {
+    public function process($amount, $user) { /* ... */ }
+}
+
+// 4. Create plugins in plugins/<name>/
+// plugins/my-plugin/canyon-plugin.php
+return [
+    'plugin' => ['name' => 'My Plugin', 'active' => true],
+    'routes' => ['my_route' => ['path' => '/custom', 'handler' => [MyController::class, 'index']]],
+];
+```
+
+**Key Principle**: Never modify `app/Core/` for business logic. Extend via `app/Controllers/`, `app/Models/`, `app/Middleware/`, `app/Services/`, and `plugins/`.
 
 ### On Shared Hosting (cPanel, GoDaddy, HostGator, etc.)
 
