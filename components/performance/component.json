@@ -1,24 +1,24 @@
 {
-    "name": "performance",
-    "title": "Canyon Performance",
-    "description": "QUIC.cloud-based optimisation: asset/image minification, database query optimisation, OPcache management, preload crawling and a heartbeat monitor.",
-    "version": "1.0.0",
-    "type": "addon",
-    "enabled": true,
-    "requires": [
-        "core"
-    ],
-    "autoload": {
-        "psr-4": {
-            "Canyon\\Core\\": "src"
-        }
-    },
-    "classes": [
-        "AssetOptimizer",
-        "DatabaseOptimizer",
-        "Heartbeat",
-        "ImageOptimizer",
-        "Opcache",
-        "PreloadCrawler"
-    ]
+ "name": "performance",
+ "title": "Canyon Performance",
+ "description": "QUIC.cloud-based optimisation: asset/image minification, database query optimisation, OPcache management, preload crawling and a heartbeat monitor.",
+ "version": "1.0.0",
+ "type": "addon",
+ "enabled": true,
+ "requires": [
+ "core"
+ ],
+ "autoload": {
+ "psr-4": {
+ "Canyon\\Core\\": "src"
+ }
+ },
+ "classes": [
+ "AssetOptimizer",
+ "DatabaseOptimizer",
+ "Heartbeat",
+ "ImageOptimizer",
+ "Opcache",
+ "PreloadCrawler"
+ ]
 }

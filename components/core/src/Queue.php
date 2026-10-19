@@ -5,7 +5,7 @@ namespace Canyon\Core;
 /**
  * Canyon Framework - Job Queue System
  *
- * Simple file-based job queue based on Laravel's queue.
+ * Simple file-based job queue Laravel's queue.
  * Supports dispatching jobs, workers, and delayed jobs.
  */
 class Queue

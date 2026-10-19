@@ -78,7 +78,7 @@ class Plugin
     }
 
     /**
-     * Register plugin components based on config.
+     * Register plugin components config.
      */
     protected static function registerComponents(string $name, array $config, string $path): void
     {

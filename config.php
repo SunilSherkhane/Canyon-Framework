@@ -284,7 +284,7 @@ define('CANYON_PLUGINS_PATH', CANYON_BASE_PATH . '/plugins');
 
 /**
  * Shared Hosting Auto-Detection
- * Automatically adjusts settings based on hosting environment.
+ * Automatically adjusts settings hosting environment.
  */
 
 // Detect if we're on shared hosting

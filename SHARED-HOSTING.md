@@ -15,9 +15,9 @@
 1. **Download** Canyon Framework from GitHub: https://github.com/SunilSherkhane/Canyon-Framework
 2. **Extract** the ZIP file on your computer
 3. **Upload** all files to your hosting account:
-   - **cPanel**: Use File Manager → Upload to `public_html/`
-   - **FTP**: Upload to `public_html/` or `www/`
-   - **Plesk**: Use File Manager → Upload to `httpdocs/`
+ - **cPanel**: Use File Manager → Upload to `public_html/`
+ - **FTP**: Upload to `public_html/` or `www/`
+ - **Plesk**: Use File Manager → Upload to `httpdocs/`
 
 #### Step 2: Create Database
 
@@ -33,13 +33,13 @@
 1. Open your browser and go to: `http://yourdomain.com/install.php`
 2. You'll see a welcome screen checking your server requirements
 3. Click **Continue** and fill in:
-   - **Database Host**: Usually `localhost` (check your hosting panel)
-   - **Database Name**: The database you created
-   - **Database User**: The user you created
-   - **Database Password**: The password you set
-   - **Site URL**: Your domain (e.g., `https://yourdomain.com`)
-   - **Application Name**: Your site name
-   - **Timezone**: Your timezone
+ - **Database Host**: Usually `localhost` (check your hosting panel)
+ - **Database Name**: The database you created
+ - **Database User**: The user you created
+ - **Database Password**: The password you set
+ - **Site URL**: Your domain (e.g., `https://yourdomain.com`)
+ - **Application Name**: Your site name
+ - **Timezone**: Your timezone
 4. Click **Install Canyon Framework**
 
 #### Step 4: Clean Up
@@ -49,9 +49,9 @@ After successful installation:
 1. **Delete** `install.php` from your server (critical for security)
 2. **Keep** `config.php` - the installer generates it automatically with your settings
 3. **Set permissions**:
-   - `storage/` → 755
-   - `config.php` → 644
-   - `public/uploads/` → 755
+ - `storage/` → 755
+ - `config.php` → 644
+ - `public/uploads/` → 755
 
 #### Step 5: Start Building!
 
@@ -62,27 +62,27 @@ Your site is now live at `http://yourdomain.com/`
 ## Directory Structure (Shared Hosting)
 
 ```
-public_html/                 # Your web root (or httpdocs/, www/)
-├── public/                  # Upload CONTENTS of this folder
-│   ├── index.php           # Main entry point
-│   ├── .htaccess           # Apache rules
-│   ├── install.php         # DELETE AFTER INSTALL
-│   └── uploads/            # User uploads
-├── app/                    # Framework core (outside web root ideally)
-│   ├── Core/               # 30+ framework classes
-│   ├── Controllers/        # Your controllers
-│   └── Helpers/            # Helper functions
-├── config.php              # ← MAIN CONFIG FILE (edit this)
+public_html/ # Your web root (or httpdocs/, www/)
+├── public/ # Upload CONTENTS of this folder
+│ ├── index.php # Main entry point
+│ ├── .htaccess # Apache rules
+│ ├── install.php # DELETE AFTER INSTALL
+│ └── uploads/ # User uploads
+├── app/ # Framework core (outside web root ideally)
+│ ├── Core/ # 30+ framework classes
+│ ├── Controllers/ # Your controllers
+│ └── Helpers/ # Helper functions
+├── config.php # ← MAIN CONFIG FILE (edit this)
 ├── routes/
-│   └── web.php             # URL routes
+│ └── web.php # URL routes
 ├── resources/
-│   ├── views/              # Page templates
-│   └── lang/               # Translations
-├── storage/                # Cache, logs, sessions
-│   ├── cache/
-│   ├── logs/
-│   └── sessions/
-└── plugins/                # Plugin directory
+│ ├── views/ # Page templates
+│ └── lang/ # Translations
+├── storage/ # Cache, logs, sessions
+│ ├── cache/
+│ ├── logs/
+│ └── sessions/
+└── plugins/ # Plugin directory
 ```
 
 ---
@@ -103,7 +103,7 @@ define('CANYON_SITE_URL', 'https://yourdomain.com');
 
 // App Settings
 define('CANYON_APP_NAME', 'My Canyon Site');
-define('CANYON_ENV', 'production');  // production | development
+define('CANYON_ENV', 'production'); // production | development
 define('CANYON_DEBUG', false);
 
 // Security
@@ -127,27 +127,27 @@ use Canyon\Core\Router;
 
 // Home page
 Router::get('/', function() {
-    return view('home', ['title' => 'Welcome']);
+ return view('home', ['title' => 'Welcome']);
 }, 'home');
 
 // About page
 Router::get('/about', function() {
-    return view('about', ['title' => 'About Us']);
+ return view('about', ['title' => 'About Us']);
 }, 'about');
 
 // Dynamic route
 Router::get('/posts/{id}', function($id) {
-    return view('post', ['id' => $id]);
+ return view('post', ['id' => $id]);
 }, 'posts.show');
 
 // Admin area (with protection)
 Router::group('auth', function() {
-    Router::get('/admin', function() {
-        return view('admin.dashboard');
-    });
-    Router::post('/admin/save', function() {
-        // Handle form
-    });
+ Router::get('/admin', function() {
+ return view('admin.dashboard');
+ });
+ Router::post('/admin/save', function() {
+ // Handle form
+ });
 });
 ```
 
@@ -185,13 +185,13 @@ Create PHP files in `resources/views/`:
 <!DOCTYPE html>
 <html>
 <head>
-    <title><?= $title ?? 'My Site' ?></title>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title><?= $title ?? 'My Site' ?></title>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
-    <h1>Welcome to <?= $title ?? 'My Site' ?></h1>
-    <p>This is your first Canyon page!</p>
+ <h1>Welcome to <?= $title ?? 'My Site' ?></h1>
+ <p>This is your first Canyon page!</p>
 </body>
 </html>
 ```
@@ -209,26 +209,26 @@ namespace Canyon\Controllers;
 
 class PostController extends Controller
 {
-    public function index(): string
-    {
-        // Get posts from database
-        $posts = $this->db()->select('posts', ['*'], [], 10);
-        
-        return $this->view('posts.index', [
-            'posts' => $posts
-        ]);
-    }
-    
-    public function show(int $id): string
-    {
-        $post = $this->db()->select('posts', ['*'], ['id' => $id])[0] ?? null;
-        
-        if (!$post) {
-            return $this->notFound();
-        }
-        
-        return $this->view('posts.show', ['post' => $post]);
-    }
+ public function index(): string
+ {
+ // Get posts from database
+ $posts = $this->db()->select('posts', ['*'], [], 10);
+ 
+ return $this->view('posts.index', [
+ 'posts' => $posts
+ ]);
+ }
+ 
+ public function show(int $id): string
+ {
+ $post = $this->db()->select('posts', ['*'], ['id' => $id])[0] ?? null;
+ 
+ if (!$post) {
+ return $this->notFound();
+ }
+ 
+ return $this->view('posts.show', ['post' => $post]);
+ }
 }
 ```
 
@@ -274,11 +274,11 @@ class PostController extends Controller
 1. **Backup** your `config.php`, `routes/`, `resources/`, and `app/Controllers/`
 2. **Download** the latest version from GitHub
 3. **Upload** all files EXCEPT:
-   - `config.php` (keep yours)
-   - `routes/` (keep yours)
-   - `resources/` (keep yours)
-   - `storage/` (keep yours)
-   - `plugins/` (keep yours)
+ - `config.php` (keep yours)
+ - `routes/` (keep yours)
+ - `resources/` (keep yours)
+ - `storage/` (keep yours)
+ - `plugins/` (keep yours)
 4. **Delete** `install.php` if it reappears
 5. **Clear cache** by deleting `storage/cache/` contents
 
@@ -307,6 +307,6 @@ class PostController extends Controller
 
 ---
 
-**Framework Version**: 0.5.0  
-**PHP Compatibility**: 8.1, 8.2, 8.3  
+**Framework Version**: 0.5.0 
+**PHP Compatibility**: 8.1, 8.2, 8.3 
 **License**: MIT

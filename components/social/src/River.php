@@ -6,7 +6,7 @@ namespace Canyon\Core;
  * Canyon Framework - River (Activity Stream)
  *
  * Activity stream for tracking user actions and events.
- * based on Elgg's River system.
+ * Elgg's River system.
  */
 class River
 {

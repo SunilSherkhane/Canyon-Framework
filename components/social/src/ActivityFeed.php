@@ -9,7 +9,7 @@ namespace Canyon\Core;
  * an audience (public, friends, private), optional attachments, and moderation
  * flags; interactions are idempotent so a double-click never double-counts.
  *
- * based on Facebook's newsfeed and Elgg's river.
+ * Facebook's newsfeed and Elgg's river.
  */
 class ActivityFeed implements \Canyon\Contracts\ActivityInterface
 {

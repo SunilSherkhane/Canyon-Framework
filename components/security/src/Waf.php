@@ -14,7 +14,7 @@ namespace Canyon\Core;
  * buckets, counters) lives in Cache files keyed by the threat namespace so the
  * firewall keeps working in CLI queue/cron workers where $_SESSION is absent.
  *
- * based on Symfony's HttpKernel firewall and CodeIgniter's security filters.
+ * Symfony's HttpKernel firewall and CodeIgniter's security filters.
  */
 class Waf
 {

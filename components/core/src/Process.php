@@ -3,7 +3,7 @@
 namespace Canyon\Core;
 
 /**
- * Canyon Framework - Process (Symfony Process)
+ * Canyon Framework - Process 
  *
  * Execute system commands with timeout, environment variables, and async support.
  */

@@ -45,7 +45,7 @@
 **Canyon implementation: `Canyon\Core\Generator` + `Canyon\Generators\*`**
 
 ```
-app/Core/Generator.php          # registry + runner (static facade, dev-gated)
+app/Core/Generator.php # registry + runner (static facade, dev-gated)
 app/Generators/ModelGenerator.php
 app/Generators/CrudGenerator.php
 app/Generators/ControllerGenerator.php
@@ -66,37 +66,37 @@ namespace Canyon\Core;
 
 class Generator
 {
-    public const STUB_DIR = CANYON_RESOURCES_PATH . '/stubs';
+ public const STUB_DIR = CANYON_RESOURCES_PATH . '/stubs';
 
-    public static function guard(): void
-    {
-        if (!env('APP_DEBUG', false)) {
-            throw new \RuntimeException('Code generation is disabled outside debug mode.');
-        }
-        if (!self::isAllowedIp()) {
-            throw new \RuntimeException('Your IP is not allowed to use the generator.');
-        }
-    }
+ public static function guard(): void
+ {
+ if (!env('APP_DEBUG', false)) {
+ throw new \RuntimeException('Code generation is disabled outside debug mode.');
+ }
+ if (!self::isAllowedIp()) {
+ throw new \RuntimeException('Your IP is not allowed to use the generator.');
+ }
+ }
 
-    public static function model(string $table, string $class, string $namespace = 'App\\Models'): string
-    {
-        self::guard();
-        $schema = (new Database())->getSchema();
-        if (!isset($schema[$table])) {
-            throw new \InvalidArgumentException("Unknown table: {$table}");
-        }
-        return ModelGenerator::generate($table, $class, $namespace, $schema[$table]);
-    }
+ public static function model(string $table, string $class, string $namespace = 'App\\Models'): string
+ {
+ self::guard();
+ $schema = (new Database())->getSchema();
+ if (!isset($schema[$table])) {
+ throw new \InvalidArgumentException("Unknown table: {$table}");
+ }
+ return ModelGenerator::generate($table, $class, $namespace, $schema[$table]);
+ }
 
-    public static function renderStub(string $stub, array $vars): string
-    {
-        $template = file_get_contents(self::STUB_DIR . '/' . $stub . '.stub');
-        return str_replace(
-            array_map(fn($k) => "{{{$k}}}", array_keys($vars)),
-            array_values($vars),
-            $template
-        );
-    }
+ public static function renderStub(string $stub, array $vars): string
+ {
+ $template = file_get_contents(self::STUB_DIR . '/' . $stub . '.stub');
+ return str_replace(
+ array_map(fn($k) => "{{{$k}}}", array_keys($vars)),
+ array_values($vars),
+ $template
+ );
+ }
 }
 ```
 
@@ -111,69 +111,69 @@ class Generator
 **Canyon implementation: rework `Canyon\Core\Entity` into a real AR**
 
 ```
-app/Core/Entity.php                 # ActiveRecord base (instance API)
-app/Core/Query.php                  # Query builder (fluent, immutable-ish)
+app/Core/Entity.php # ActiveRecord base (instance API)
+app/Core/Query.php # Query builder (fluent, immutable-ish)
 app/Core/Relations/
-    HasOne.php, HasMany.php, BelongsTo.php, BelongsToMany.php
-app/Core/Relations/Relation.php     # base: one/many, eager/lazy, constraints
+ HasOne.php, HasMany.php, BelongsTo.php, BelongsToMany.php
+app/Core/Relations/Relation.php # base: one/many, eager/lazy, constraints
 ```
 
 **Class structure:**
 ```php
 abstract class Entity
 {
-    protected string $table = '';
-    protected array $primaryKey = ['id'];
-    protected array $fillable = [];
-    protected array $guarded = ['id'];
-    protected array $casts = [];
-    protected array $hidden = [];        // serializer exclusion
-    protected array $appends = [];       // computed accessors
-    protected array $relations = [];     // loaded relation cache
-    protected array $original = [];      // dirty-tracking snapshot
+ protected string $table = '';
+ protected array $primaryKey = ['id'];
+ protected array $fillable = [];
+ protected array $guarded = ['id'];
+ protected array $casts = [];
+ protected array $hidden = []; // serializer exclusion
+ protected array $appends = []; // computed accessors
+ protected array $relations = []; // loaded relation cache
+ protected array $original = []; // dirty-tracking snapshot
 
-    // --- finder API (instance-style, static call) ---
-    public static function query(): Query;
-    public static function find(int|string $id): ?static;      // FIX: single arg
-    public static function findOrFail(int|string $id): static; // throws ModelNotFound
-    public static function all(array $columns = ['*']): Collection;
-    public static function where(string $column, mixed $operator = null, mixed $value = null): Query;
-    public static function firstOrCreate(array $attrs, array $values = []): static;
-    public static function updateOrCreate(array $attrs, array $values = []): static;
+ // --- finder API (instance-style, static call) ---
+ public static function query(): Query;
+ public static function find(int|string $id): ?static; // FIX: single arg
+ public static function findOrFail(int|string $id): static; // throws ModelNotFound
+ public static function all(array $columns = ['*']): Collection;
+ public static function where(string $column, mixed $operator = null, mixed $value = null): Query;
+ public static function firstOrCreate(array $attrs, array $values = []): static;
+ public static function updateOrCreate(array $attrs, array $values = []): static;
 
-    // --- persistence ---
-    public function save(?bool $runValidation = true): bool;
-    public function insert(array $attrs = []): bool;
-    public function update(array $attrs = []): bool;
-    public function delete(): bool;
-    public function refresh(): static;
-    public static function destroy(int|string ...$ids): int;
+ // --- persistence ---
+ public function save(?bool $runValidation = true): bool;
+ public function insert(array $attrs = []): bool;
+ public function update(array $attrs = []): bool;
+ public function delete(): bool;
+ public function refresh(): static;
+ public static function destroy(int|string ...$ids): int;
 
-    // --- state ---
-    public function isNewRecord(): bool;
-    public function getDirty(): array;
-    public function getOriginal(?string $key = null): mixed;
-    public function wasChanged(string $key): bool;
+ // --- state ---
+ public function isNewRecord(): bool;
+ public function getDirty(): array;
+ public function getOriginal(?string $key = null): mixed;
+ public function wasChanged(string $key): bool;
 
-    // --- relations ---
-    public function hasOne(string $class, string $foreignKey, string $localKey = 'id'): Relation;
-    public function hasMany(string $class, string $foreignKey, string $localKey = 'id'): Relation;
-    public function belongsTo(string $class, string $foreignKey, string $ownerKey = 'id'): Relation;
-    public function belongsToMany(string $class, string $pivotTable, string $fk, string $relatedFk): Relation;
-    public function __get(string $name): mixed;   // lazy relation resolution
-    public function getRelation(string $name): mixed;
+ // --- relations ---
+ public function hasOne(string $class, string $foreignKey, string $localKey = 'id'): Relation;
+ public function hasMany(string $class, string $foreignKey, string $localKey = 'id'): Relation;
+ public function belongsTo(string $class, string $foreignKey, string $ownerKey = 'id'): Relation;
+ public function belongsToMany(string $class, string $pivotTable, string $fk, string $relatedFk): Relation;
+ public function __get(string $name): mixed; // lazy relation resolution
+ public function getRelation(string $name): mixed;
 
-    // --- serialization ---
-    public function toArray(): array;
-    public function toJson(int $flags = 0): string;
-    public function fill(array $attrs): static;
-    public function validate(): bool;             // runs Validation from $rules
+ // --- serialization ---
+ public function toArray(): array;
+ public function toJson(int $flags = 0): string;
+ public function fill(array $attrs): static;
+ public function validate(): bool; // runs Validation from $rules
 
-    // --- events ---
-    public function onBeforeSave(): void {}
-    public function onAfterSave(bool $isNew): void {}
-    public function onAfterFind(): void {}
-    public function onBeforeDelete(): void {}
+ // --- events ---
+ public function onBeforeSave(): void {}
+ public function onAfterSave(bool $isNew): void {}
+ public function onAfterFind(): void {}
+ public function onBeforeDelete(): void {}
 }
 ```
 
@@ -189,44 +189,44 @@ abstract class Entity
 ```php
 class Query
 {
-    protected string $model;
-    protected array $wheres = [];
-    protected array $with = [];
-    protected array $orders = [];
-    protected ?int $limit = null;
-    protected ?int $offset = null;
-    protected bool $asArray = false;
+ protected string $model;
+ protected array $wheres = [];
+ protected array $with = [];
+ protected array $orders = [];
+ protected ?int $limit = null;
+ protected ?int $offset = null;
+ protected bool $asArray = false;
 
-    public function __construct(string $model) { $this->model = $model; }
+ public function __construct(string $model) { $this->model = $model; }
 
-    public function where(string $column, mixed $operator = null, mixed $value = null): static
-    {
-        if (func_num_args() === 2) { $value = $operator; $operator = '='; }
-        $this->wheres[] = compact('column', 'operator', 'value');
-        return $this;
-    }
+ public function where(string $column, mixed $operator = null, mixed $value = null): static
+ {
+ if (func_num_args() === 2) { $value = $operator; $operator = '='; }
+ $this->wheres[] = compact('column', 'operator', 'value');
+ return $this;
+ }
 
-    public function with(string ...$relations): static
-    {
-        $this->with = array_merge($this->with, $relations);
-        return $this;
-    }
+ public function with(string ...$relations): static
+ {
+ $this->with = array_merge($this->with, $relations);
+ return $this;
+ }
 
-    public function get(): Collection
-    {
-        $rows = $this->run();
-        $models = array_map(fn($row) => $this->model::hydrate($row), $rows);
-        if ($this->with) { $this->eagerLoad($models); }
-        return new Collection($models);
-    }
+ public function get(): Collection
+ {
+ $rows = $this->run();
+ $models = array_map(fn($row) => $this->model::hydrate($row), $rows);
+ if ($this->with) { $this->eagerLoad($models); }
+ return new Collection($models);
+ }
 
-    protected function eagerLoad(array $models): void
-    {
-        foreach ($this->with as $name) {
-            $relation = $models[0]->{$name}();
-            $relation->eagerLoad($models);
-        }
-    }
+ protected function eagerLoad(array $models): void
+ {
+ foreach ($this->with as $name) {
+ $relation = $models[0]->{$name}();
+ $relation->eagerLoad($models);
+ }
+ }
 }
 ```
 
@@ -239,25 +239,25 @@ Currently `Database` exposes only raw PDO + `select/insert/update/delete` helper
 ```php
 class QueryBuilder
 {
-    public function select(string|array $columns = '*'): static;
-    public function from(string $table): static;
-    public function where(string|array $column, mixed $op = null, mixed $val = null): static;
-    public function andWhere(...): static;  // orWhere, whereIn, whereNotIn, whereBetween, whereNull, whereLike
-    public function join(string $table, string $first, string $op, string $second, string $type = 'INNER'): static;
-    public function orderBy(string|array $column, string $direction = 'ASC'): static;
-    public function groupBy(string|array $columns): static;
-    public function having(...): static;
-    public function limit(int $n): static;
-    public function offset(int $n): static;
-    public function count(string $column = '*'): int;
-    public function sum(string $column): float;
-    public function avg(string $column): float;
-    public function exists(): bool;
-    public function get(): array;            // fetch all assoc
-    public function first(): ?array;
-    public function column(string $column = null): array;
-    public function paginate(int $perPage, int $page = 1): array; // ['items'=>, 'total'=>, 'last_page'=>]
-    public function toSql(): array;          // [sql, bindings] - critical for debugging
+ public function select(string|array $columns = '*'): static;
+ public function from(string $table): static;
+ public function where(string|array $column, mixed $op = null, mixed $val = null): static;
+ public function andWhere(...): static; // orWhere, whereIn, whereNotIn, whereBetween, whereNull, whereLike
+ public function join(string $table, string $first, string $op, string $second, string $type = 'INNER'): static;
+ public function orderBy(string|array $column, string $direction = 'ASC'): static;
+ public function groupBy(string|array $columns): static;
+ public function having(...): static;
+ public function limit(int $n): static;
+ public function offset(int $n): static;
+ public function count(string $column = '*'): int;
+ public function sum(string $column): float;
+ public function avg(string $column): float;
+ public function exists(): bool;
+ public function get(): array; // fetch all assoc
+ public function first(): ?array;
+ public function column(string $column = null): array;
+ public function paginate(int $perPage, int $page = 1): array; // ['items'=>, 'total'=>, 'last_page'=>]
+ public function toSql(): array; // [sql, bindings] - critical for debugging
 }
 ```
 
@@ -272,45 +272,45 @@ class QueryBuilder
 **Canyon implementation: replace the in-memory `AccessControl` with a persistent RBAC layer**
 
 ```
-app/Core/Auth/RbacManager.php      # assign/revoke/checkAccess/addRole/addPermission/addRule
+app/Core/Auth/RbacManager.php # assign/revoke/checkAccess/addRole/addPermission/addRule
 app/Core/Auth/Role.php
 app/Core/Auth/Permission.php
-app/Core/Auth/Rule.php             # interface: execute($user, $item, $params): bool
-app/Core/Auth/Rules/OwnerRule.php  # example rule
+app/Core/Auth/Rule.php # interface: execute($user, $item, $params): bool
+app/Core/Auth/Rules/OwnerRule.php # example rule
 ```
 
 ```php
 class RbacManager
 {
-    public static function addRole(string $name, string $description = ''): Role;
-    public static function addPermission(string $name, string $description = ''): Permission;
-    public static function addChild(string $parent, string $child): void;      // hierarchy
-    public static function assign(string $role, int|string $userId): void;     // auth_assignment
-    public static function revoke(string $role, int|string $userId): void;
-    public static function revokeAll(int|string $userId): void;
-    public static function getRolesByUser(int|string $userId): array;
-    public static function checkAccess(int|string $userId, string $permission, array $params = []): bool;
-    public static function getPermissionsByUser(int|string $userId): array;
-    public static function getChildren(string $item): array;
+ public static function addRole(string $name, string $description = ''): Role;
+ public static function addPermission(string $name, string $description = ''): Permission;
+ public static function addChild(string $parent, string $child): void; // hierarchy
+ public static function assign(string $role, int|string $userId): void; // auth_assignment
+ public static function revoke(string $role, int|string $userId): void;
+ public static function revokeAll(int|string $userId): void;
+ public static function getRolesByUser(int|string $userId): array;
+ public static function checkAccess(int|string $userId, string $permission, array $params = []): bool;
+ public static function getPermissionsByUser(int|string $userId): array;
+ public static function getChildren(string $item): array;
 }
 ```
 
 **Schema (mirror Yii's, minus the `type` redundancy):**
 ```sql
 CREATE TABLE auth_item (
-  name VARCHAR(64) NOT NULL PRIMARY KEY,
-  type TINYINT NOT NULL,            -- 1=role, 2=permission
-  description TEXT,
-  rule_name VARCHAR(64) NULL,
-  created_at INT UNSIGNED, updated_at INT UNSIGNED
+ name VARCHAR(64) NOT NULL PRIMARY KEY,
+ type TINYINT NOT NULL, -- 1=role, 2=permission
+ description TEXT,
+ rule_name VARCHAR(64) NULL,
+ created_at INT UNSIGNED, updated_at INT UNSIGNED
 );
 CREATE TABLE auth_item_child (
-  parent VARCHAR(64) NOT NULL, child VARCHAR(64) NOT NULL,
-  PRIMARY KEY (parent, child), FOREIGN KEY (parent) REFERENCES auth_item(name) ON DELETE CASCADE
+ parent VARCHAR(64) NOT NULL, child VARCHAR(64) NOT NULL,
+ PRIMARY KEY (parent, child), FOREIGN KEY (parent) REFERENCES auth_item(name) ON DELETE CASCADE
 );
 CREATE TABLE auth_assignment (
-  item_name VARCHAR(64) NOT NULL, user_id VARCHAR(64) NOT NULL,
-  created_at INT UNSIGNED, PRIMARY KEY (item_name, user_id)
+ item_name VARCHAR(64) NOT NULL, user_id VARCHAR(64) NOT NULL,
+ created_at INT UNSIGNED, PRIMARY KEY (item_name, user_id)
 );
 CREATE TABLE auth_rule ( name VARCHAR(64) PRIMARY KEY, data TEXT, created_at INT UNSIGNED );
 ```
@@ -329,7 +329,7 @@ CREATE TABLE auth_rule ( name VARCHAR(64) PRIMARY KEY, data TEXT, created_at INT
 
 **Canyon implementation:**
 ```
-app/Core/Behavior.php              # base: $owner, attach(), detach(), events()
+app/Core/Behavior.php # base: $owner, attach(), detach(), events()
 app/Core/Behaviors/TimestampBehavior.php
 app/Core/Behaviors/BlameableBehavior.php
 app/Core/Behaviors/SluggableBehavior.php
@@ -341,14 +341,14 @@ app/Core/Behaviors/CacheableBehavior.php
 ```php
 abstract class Behavior
 {
-    public object $owner;
-    abstract public function events(): array;   // ['beforeSave' => 'touchTimestamps', ...]
+ public object $owner;
+ abstract public function events(): array; // ['beforeSave' => 'touchTimestamps', ...]
 
-    public function attach(object $owner): void { $this->owner = $owner; }
-    public function detach(): void { unset($this->owner); }
+ public function attach(object $owner): void { $this->owner = $owner; }
+ public function detach(): void { unset($this->owner); }
 
-    public function __get(string $name) { return $this->owner->{$name} ?? null; }
-    public function __call(string $m, array $a) { return $this->owner->{$m}(...$a); }
+ public function __get(string $name) { return $this->owner->{$name} ?? null; }
+ public function __call(string $m, array $a) { return $this->owner->{$m}(...$a); }
 }
 ```
 
@@ -365,7 +365,7 @@ abstract class Behavior
 **Canyon implementation: add a class-based widget layer on top of the existing `Widget` registry**
 
 ```
-app/Core/Widget.php                # keep registry; add Widget::widget() for class widgets
+app/Core/Widget.php # keep registry; add Widget::widget() for class widgets
 app/Core/Widgets/ActiveForm.php
 app/Core/Widgets/Menu.php
 app/Core/Widgets/GridView.php
@@ -377,32 +377,32 @@ app/Core/Widgets/DetailView.php
 ```php
 abstract class BaseWidget
 {
-    protected array $config = [];
-    protected string $content = '';
+ protected array $config = [];
+ protected string $content = '';
 
-    public static function widget(array $config = []): string
-    {
-        $w = new static();
-        $w->config = array_merge($w->defaults(), $config);
-        return $w->run();
-    }
+ public static function widget(array $config = []): string
+ {
+ $w = new static();
+ $w->config = array_merge($w->defaults(), $config);
+ return $w->run();
+ }
 
-    public static function begin(array $config = []): static
-    {
-        $w = new static();
-        $w->config = array_merge($w->defaults(), $config);
-        ob_start();
-        return $w;
-    }
+ public static function begin(array $config = []): static
+ {
+ $w = new static();
+ $w->config = array_merge($w->defaults(), $config);
+ ob_start();
+ return $w;
+ }
 
-    public function end(): string
-    {
-        $this->content = ob_get_clean();
-        return $this->run();
-    }
+ public function end(): string
+ {
+ $this->content = ob_get_clean();
+ return $this->run();
+ }
 
-    abstract protected function run(): string;
-    protected function defaults(): array { return []; }
+ abstract protected function run(): string;
+ protected function defaults(): array { return []; }
 }
 ```
 
@@ -416,25 +416,25 @@ abstract class BaseWidget
 
 **Canyon implementation:**
 ```
-app/Core/Rest/RestController.php     # base controller with CRUD actions
-app/Core/Rest/Serializer.php         # fields(), expand(), links()
-app/Core/Rest/ContentNegotiator.php  # picks format from Accept header
-app/Core/Rest/RateLimiter.php        # per-user/IP sliding window
+app/Core/Rest/RestController.php # base controller with CRUD actions
+app/Core/Rest/Serializer.php # fields(), expand(), links()
+app/Core/Rest/ContentNegotiator.php # picks format from Accept header
+app/Core/Rest/RateLimiter.php # per-user/IP sliding window
 app/Core/Rest/Auth/QueryParamAuth.php, BearerAuth.php, BasicAuth.php
 ```
 
 ```php
 class RestController extends Controller
 {
-    public string $modelClass = '';
-    protected array $actions = ['index','view','create','update','delete','options'];
+ public string $modelClass = '';
+ protected array $actions = ['index','view','create','update','delete','options'];
 
-    public function index(): never    // GET    /users      -> paginated collection
-    public function view(int $id): never   // GET    /users/1
-    public function create(): never   // POST   /users
-    public function update(int $id): never // PUT    /users/1
-    public function delete(int $id): never // DELETE /users/1
-    public function options(): never  // OPTIONS /users
+ public function index(): never // GET /users -> paginated collection
+ public function view(int $id): never // GET /users/1
+ public function create(): never // POST /users
+ public function update(int $id): never // PUT /users/1
+ public function delete(int $id): never // DELETE /users/1
+ public function options(): never // OPTIONS /users
 }
 ```
 
@@ -462,10 +462,10 @@ class RestController extends Controller
 
 **Canyon implementation: keep `Cache` façade, add contract + tags + stampede protection**
 ```
-app/Core/Cache.php               # existing façade -> PSR-16-ish + tags
+app/Core/Cache.php # existing façade -> PSR-16-ish + tags
 app/Core/Cache/Store/FileStore.php, RedisStore.php, ArrayStore.php, DatabaseStore.php
-app/Core/Cache/CacheItem.php     # PSR-6 item
-app/Core/Cache/TagSet.php        # tag -> key index for invalidation
+app/Core/Cache/CacheItem.php # PSR-6 item
+app/Core/Cache/TagSet.php # tag -> key index for invalidation
 ```
 
 - **Tag invalidation:** `Cache::tags(['posts', 'user:1'])->put(...)`; `Cache::tags('posts')->flush()` deletes every key recorded under that tag (store the mapping in a separate index key).
@@ -481,17 +481,17 @@ app/Core/Cache/TagSet.php        # tag -> key index for invalidation
 
 **Canyon implementation: extend `Security` (487 L) with a dedicated `Auth` namespace**
 ```
-app/Core/Security.php                 # existing: CSRF, host, redirect, throttle
-app/Core/Security/Hash.php            # bcrypt/argon2id, needsRehash, verify
-app/Core/Security/Encrypter.php       # AES-256-CBC/GCM with MAC, key rotation
-app/Core/Security/Csrf.php            # token, field, meta, per-session rotation
-app/Core/Security/Password.php        # reset tokens, expiry
-app/Core/Auth/Authenticator.php       # authenticate(), supports providers
-app/Core/Auth/ProviderInterface.php   # retrieveByIdentifier(), validateCredentials()
+app/Core/Security.php # existing: CSRF, host, redirect, throttle
+app/Core/Security/Hash.php # bcrypt/argon2id, needsRehash, verify
+app/Core/Security/Encrypter.php # AES-256-CBC/GCM with MAC, key rotation
+app/Core/Security/Csrf.php # token, field, meta, per-session rotation
+app/Core/Security/Password.php # reset tokens, expiry
+app/Core/Auth/Authenticator.php # authenticate(), supports providers
+app/Core/Auth/ProviderInterface.php # retrieveByIdentifier(), validateCredentials()
 app/Core/Auth/SessionAuthenticator.php
-app/Core/Auth/TokenAuthenticator.php  # API tokens / bearer
-app/Core/Auth/RememberMe.php          # long-lived cookie, hashed token in DB
-app/Core/Auth/LoginThrottle.php       # per-user+IP, sliding window, lockout
+app/Core/Auth/TokenAuthenticator.php # API tokens / bearer
+app/Core/Auth/RememberMe.php # long-lived cookie, hashed token in DB
+app/Core/Auth/LoginThrottle.php # per-user+IP, sliding window, lockout
 ```
 
 **Concrete additions:**
@@ -509,32 +509,32 @@ app/Core/Auth/LoginThrottle.php       # per-user+IP, sliding window, lockout
 
 **Canyon implementation:**
 ```
-tests/TestCase.php          # base: bootstraps Application, creates temp DB, wraps transactions
-tests/Fixtures/Fixture.php  # abstract: table, rows, load(), unload()
+tests/TestCase.php # base: bootstraps Application, creates temp DB, wraps transactions
+tests/Fixtures/Fixture.php # abstract: table, rows, load(), unload()
 tests/Fixtures/ActiveFixture.php
-tests/BrowserKit.php        # Request/Response simulation without a web server
+tests/BrowserKit.php # Request/Response simulation without a web server
 tests/Assertions/ResponseAssertions.php, DatabaseAssertions.php
 ```
 
 ```php
 abstract class TestCase extends \PHPUnit\Framework\TestCase
 {
-    protected function setUp(): void
-    {
-        Application::init();
-        Config::init();
-        $this->beginTransaction();          // each test in a rolled-back txn
-    }
-    protected function tearDown(): void
-    {
-        $this->rollBack();
-    }
+ protected function setUp(): void
+ {
+ Application::init();
+ Config::init();
+ $this->beginTransaction(); // each test in a rolled-back txn
+ }
+ protected function tearDown(): void
+ {
+ $this->rollBack();
+ }
 
-    protected function get(string $uri): TestResponse
-    protected function post(string $uri, array $data = []): TestResponse
-    protected function json(string $method, string $uri, array $data = []): TestResponse
-    protected function assertDatabaseHas(string $table, array $attrs): void
-    protected function assertStatus(int $code): void
+ protected function get(string $uri): TestResponse
+ protected function post(string $uri, array $data = []): TestResponse
+ protected function json(string $method, string $uri, array $data = []): TestResponse
+ protected function assertDatabaseHas(string $table, array $attrs): void
+ protected function assertStatus(int $code): void
 }
 ```
 
@@ -550,10 +550,10 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
 
 **Canyon implementation:**
 ```
-app/Core/Debug/DebugBar.php       # collect() on kernel.terminate, render() on response
-app/Core/Debug/Panel.php          # abstract: getName(), getData(), getSummary()
+app/Core/Debug/DebugBar.php # collect() on kernel.terminate, render() on response
+app/Core/Debug/Panel.php # abstract: getName(), getData(), getSummary()
 app/Core/Debug/Panels/LogPanel.php, DbPanel.php, TimelinePanel.php, RoutePanel.php,
-                   ConfigPanel.php, RequestPanel.php, ProfilePanel.php
+ ConfigPanel.php, RequestPanel.php, ProfilePanel.php
 ```
 
 - **Collect points:** `Database` records every query (sql, bindings, duration, trace) into `DebugBar`; `Router` records matched route + middleware; `EventDispatcher` records dispatched events; `Cache` records hits/misses.
@@ -583,50 +583,50 @@ app/Core/Http/FileBag.php
 ```php
 class Request
 {
-    public ParameterBag $query;     // $_GET
-    public InputBag $request;       // $_POST (InputBag: all strings/arrays, no object casting)
-    public ParameterBag $attributes;// routing params + app data
-    public ParameterBag $cookies;
-    public FileBag $files;
-    public ParameterBag $server;
-    public HeaderBag $headers;
+ public ParameterBag $query; // $_GET
+ public InputBag $request; // $_POST (InputBag: all strings/arrays, no object casting)
+ public ParameterBag $attributes;// routing params + app data
+ public ParameterBag $cookies;
+ public FileBag $files;
+ public ParameterBag $server;
+ public HeaderBag $headers;
 
-    public static function createFromGlobals(): static;
-    public function create(string $uri, string $method = 'GET', array $parameters = [],
-                           array $cookies = [], array $files = [], array $server = []): static;
+ public static function createFromGlobals(): static;
+ public function create(string $uri, string $method = 'GET', array $parameters = [],
+ array $cookies = [], array $files = [], array $server = []): static;
 
-    public function getPathInfo(): string;
-    public function getBaseUrl(): string;
-    public function getMethod(): string;          // resolved, honors _method spoof
-    public function getRealMethod(): string;
-    public function getContentType(): ?string;
-    public function getAcceptableContentTypes(): array;
-    public function getPreferredLanguage(array $locales = []): ?string;
-    public function isXmlHttpRequest(): bool;
-    public function isSecure(): bool;
-    public function getUri(): string;
-    public function getSchemeAndHttpHost(): string;
-    public function getClientIp(): string;
-    public function duplicate(?array $query = null, ?array $request = null): static;
-    public function get(string $key, mixed $default = null): mixed;      // merged query+request
-    public function post(string $key, mixed $default = null): mixed;
-    public function input(string $key, mixed $default = null): mixed;
+ public function getPathInfo(): string;
+ public function getBaseUrl(): string;
+ public function getMethod(): string; // resolved, honors _method spoof
+ public function getRealMethod(): string;
+ public function getContentType(): ?string;
+ public function getAcceptableContentTypes(): array;
+ public function getPreferredLanguage(array $locales = []): ?string;
+ public function isXmlHttpRequest(): bool;
+ public function isSecure(): bool;
+ public function getUri(): string;
+ public function getSchemeAndHttpHost(): string;
+ public function getClientIp(): string;
+ public function duplicate(?array $query = null, ?array $request = null): static;
+ public function get(string $key, mixed $default = null): mixed; // merged query+request
+ public function post(string $key, mixed $default = null): mixed;
+ public function input(string $key, mixed $default = null): mixed;
 }
 
 class Response
 {
-    public function __construct(string $content = '', int $status = 200, array $headers = []);
-    public function setStatusCode(int $code): static;
-    public function setContent(?string $content): static;
-    public function setPublic(): static;
-    public function setPrivate(): static;
-    public function setMaxAge(int $value): static;
-    public function setSharedMaxAge(int $value): static;
-    public function setEtag(?string $etag, bool $weak = false): static;
-    public function setLastModified(?\DateTimeInterface $date): static;
-    public function isNotModified(Request $request): bool;
-    public function prepare(Request $request): static;   // sets Content-Type, Vary, etc.
-    public function send(): static;                       // headers + echo
+ public function __construct(string $content = '', int $status = 200, array $headers = []);
+ public function setStatusCode(int $code): static;
+ public function setContent(?string $content): static;
+ public function setPublic(): static;
+ public function setPrivate(): static;
+ public function setMaxAge(int $value): static;
+ public function setSharedMaxAge(int $value): static;
+ public function setEtag(?string $etag, bool $weak = false): static;
+ public function setLastModified(?\DateTimeInterface $date): static;
+ public function isNotModified(Request $request): bool;
+ public function prepare(Request $request): static; // sets Content-Type, Vary, etc.
+ public function send(): static; // headers + echo
 }
 ```
 
@@ -640,24 +640,24 @@ class Response
 
 **Canyon implementation: upgrade `Container` with autowiring + reflection**
 ```
-app/Core/Container.php          # existing façade + add autowiring, tags, aliases, factories
+app/Core/Container.php # existing façade + add autowiring, tags, aliases, factories
 app/Core/Container/Definition.php
 app/Core/Container/CompilerPassInterface.php
-app/Core/Container/ContainerBuilder.php   # build + cache to storage/cache/container.php
+app/Core/Container/ContainerBuilder.php # build + cache to storage/cache/container.php
 ```
 
 ```php
 class Container
 {
-    public static function bind(string $id, mixed $concrete = null, bool $shared = false): void;
-    public static function singleton(string $id, mixed $concrete = null): void;
-    public static function instance(string $id, object $instance): void;
-    public static function alias(string $alias, string $id): void;
-    public static function tag(string $id, string $tag): void;
-    public static function tagged(string $tag): array;
-    public static function make(string $id, array $params = []): mixed;   // autowire
-    public static function call(callable $fn, array $params = []): mixed; // resolve by reflection
-    public static function has(string $id): bool;
+ public static function bind(string $id, mixed $concrete = null, bool $shared = false): void;
+ public static function singleton(string $id, mixed $concrete = null): void;
+ public static function instance(string $id, object $instance): void;
+ public static function alias(string $alias, string $id): void;
+ public static function tag(string $id, string $tag): void;
+ public static function tagged(string $tag): array;
+ public static function make(string $id, array $params = []): mixed; // autowire
+ public static function call(callable $fn, array $params = []): mixed; // resolve by reflection
+ public static function has(string $id): bool;
 }
 ```
 
@@ -683,30 +683,30 @@ app/Commands/ServeCommand.php, RoutesCommand.php, MakeCommand.php, MigrateComman
 ```php
 abstract class Command
 {
-    protected string $name = '';
-    protected string $description = '';
-    protected string $help = '';
-    protected array $arguments = [];
-    protected array $options = [];
+ protected string $name = '';
+ protected string $description = '';
+ protected string $help = '';
+ protected array $arguments = [];
+ protected array $options = [];
 
-    protected function configure(): void;
-    abstract protected function execute(InputInterface $input, OutputInterface $output): int;
+ protected function configure(): void;
+ abstract protected function execute(InputInterface $input, OutputInterface $output): int;
 
-    public function setName(string $name): static;
-    public function addArgument(string $name, int $mode = self::ARGUMENT_OPTIONAL,
-                               string $description = '', mixed $default = null): static;
-    public function addOption(string $name, ?string $shortcut = null, int $mode = self::OPTION_NONE,
-                              string $description = '', mixed $default = null): static;
-    protected function argument(string $name): mixed;
-    protected function option(string $name): mixed;
-    protected function info(string $msg): void;
-    protected function error(string $msg): void;
-    protected function table(array $headers, array $rows): void;
-    protected function ask(string $question, mixed $default = null): mixed;
-    protected function confirm(string $question, bool $default = false): bool;
-    protected function progressStart(int $max): void;
-    protected function progressAdvance(int $step = 1): void;
-    protected function progressFinish(): void;
+ public function setName(string $name): static;
+ public function addArgument(string $name, int $mode = self::ARGUMENT_OPTIONAL,
+ string $description = '', mixed $default = null): static;
+ public function addOption(string $name, ?string $shortcut = null, int $mode = self::OPTION_NONE,
+ string $description = '', mixed $default = null): static;
+ protected function argument(string $name): mixed;
+ protected function option(string $name): mixed;
+ protected function info(string $msg): void;
+ protected function error(string $msg): void;
+ protected function table(array $headers, array $rows): void;
+ protected function ask(string $question, mixed $default = null): mixed;
+ protected function confirm(string $question, bool $default = false): bool;
+ protected function progressStart(int $max): void;
+ protected function progressAdvance(int $step = 1): void;
+ protected function progressFinish(): void;
 }
 ```
 
@@ -720,55 +720,55 @@ abstract class Command
 
 **Canyon implementation - merge Symfony voters with Yii RBAC**
 ```
-app/Core/Security/Firewall.php          # pattern -> authenticators -> access rules
+app/Core/Security/Firewall.php # pattern -> authenticators -> access rules
 app/Core/Security/AuthenticatorInterface.php
 app/Core/Security/FormAuthenticator.php, JsonAuthenticator.php, TokenAuthenticator.php
 app/Core/Security/UserProviderInterface.php
-app/Core/Security/UserInterface.php      # getRoles(), getPassword(), getSalt(), eraseCredentials()
-app/Core/Security/PasswordHasher.php     # hash(), verify(), needsRehash()
-app/Core/Security/Voter/VoterInterface.php  # supports(), voteOnAttribute()
+app/Core/Security/UserInterface.php # getRoles(), getPassword(), getSalt(), eraseCredentials()
+app/Core/Security/PasswordHasher.php # hash(), verify(), needsRehash()
+app/Core/Security/Voter/VoterInterface.php # supports(), voteOnAttribute()
 app/Core/Security/Voter/Voter.php
-app/Core/Security/Voter/PostVoter.php    # example
-app/Core/Security/AuthorizationChecker.php  # isGranted(), denyAccessUnlessGranted()
-app/Core/Security/Security.php           # getUser(), isGranted(), getToken()
+app/Core/Security/Voter/PostVoter.php # example
+app/Core/Security/AuthorizationChecker.php # isGranted(), denyAccessUnlessGranted()
+app/Core/Security/Security.php # getUser(), isGranted(), getToken()
 ```
 
 ```php
 interface VoterInterface
 {
-    public function supports(string $attribute, mixed $subject): bool;
-    public function voteOnAttribute(string $attribute, mixed $subject, UserInterface $user): bool;
+ public function supports(string $attribute, mixed $subject): bool;
+ public function voteOnAttribute(string $attribute, mixed $subject, UserInterface $user): bool;
 }
 
 abstract class Voter implements VoterInterface
 {
-    public function voteOnAttribute(string $attribute, mixed $subject, UserInterface $user): bool
-    {
-        return match ($attribute) {
-            'view'   => $this->canView($subject, $user),
-            'edit'   => $this->canEdit($subject, $user),
-            'delete' => $this->canDelete($subject, $user),
-            default  => false,
-        };
-    }
-    abstract protected function canView(mixed $subject, UserInterface $user): bool;
-    abstract protected function canEdit(mixed $subject, UserInterface $user): bool;
-    abstract protected function canDelete(mixed $subject, UserInterface $user): bool;
+ public function voteOnAttribute(string $attribute, mixed $subject, UserInterface $user): bool
+ {
+ return match ($attribute) {
+ 'view' => $this->canView($subject, $user),
+ 'edit' => $this->canEdit($subject, $user),
+ 'delete' => $this->canDelete($subject, $user),
+ default => false,
+ };
+ }
+ abstract protected function canView(mixed $subject, UserInterface $user): bool;
+ abstract protected function canEdit(mixed $subject, UserInterface $user): bool;
+ abstract protected function canDelete(mixed $subject, UserInterface $user): bool;
 }
 ```
 
 **Firewall model:**
 ```php
 Firewall::register('main', [
-    'pattern'   => '^/',
-    'lazy'      => true,                  // authenticate only when needed
-    'provider'  => 'users',
-    'authenticators' => ['form', 'token'],
-    'entry_point' => FormAuthenticator::class,
-    'access'    => [
-        ['path' => '^/admin', 'roles' => 'ROLE_ADMIN'],
-        ['path' => '^/login', 'roles' => 'PUBLIC'],
-    ],
+ 'pattern' => '^/',
+ 'lazy' => true, // authenticate only when needed
+ 'provider' => 'users',
+ 'authenticators' => ['form', 'token'],
+ 'entry_point' => FormAuthenticator::class,
+ 'access' => [
+ ['path' => '^/admin', 'roles' => 'ROLE_ADMIN'],
+ ['path' => '^/login', 'roles' => 'PUBLIC'],
+ ],
 ]);
 ```
 
@@ -790,8 +790,8 @@ app/Core/Form/Form.php
 app/Core/Form/FormView.php
 app/Core/Form/Type/TypeInterface.php
 app/Core/Form/Type/TextType.php, TextareaType.php, ChoiceType.php, CheckboxType.php,
-        EmailType.php, PasswordType.php, HiddenType.php, FileType.php,
-        CollectionType.php, RepeatedType.php, SubmitType.php, EntityType.php
+ EmailType.php, PasswordType.php, HiddenType.php, FileType.php,
+ CollectionType.php, RepeatedType.php, SubmitType.php, EntityType.php
 app/Core/Form/TransformerInterface.php
 app/Core/Form/EventListenerInterface.php
 app/Core/Form/Themes/default.php
@@ -800,15 +800,15 @@ app/Core/Form/Themes/default.php
 ```php
 class Form
 {
-    public static function create(string $type, mixed $data = null, array $options = []): self;
-    public function add(string $name, string $type = 'text', array $options = []): static;
-    public function handleRequest(Request $request): static;
-    public function isSubmitted(): bool;
-    public function isValid(): bool;
-    public function getData(): mixed;                 // mapped back to the Entity
-    public function getErrors(bool $deep = false): array;
-    public function createView(): FormView;
-    public function render(array $vars = []): string;
+ public static function create(string $type, mixed $data = null, array $options = []): self;
+ public function add(string $name, string $type = 'text', array $options = []): static;
+ public function handleRequest(Request $request): static;
+ public function isSubmitted(): bool;
+ public function isValid(): bool;
+ public function getData(): mixed; // mapped back to the Entity
+ public function getErrors(bool $deep = false): array;
+ public function createView(): FormView;
+ public function render(array $vars = []): string;
 }
 ```
 
@@ -830,7 +830,7 @@ class Form
 app/Core/Serializer/Serializer.php
 app/Core/Serializer/Normalizer/NormalizerInterface.php, DenormalizerInterface.php
 app/Core/Serializer/Normalizer/ObjectNormalizer.php, ArrayNormalizer.php,
-                    DateTimeNormalizer.php, EntityNormalizer.php
+ DateTimeNormalizer.php, EntityNormalizer.php
 app/Core/Serializer/Encoder/JsonEncoder.php, XmlEncoder.php
 app/Core/Serializer/SerializerInterface.php
 ```
@@ -838,10 +838,10 @@ app/Core/Serializer/SerializerInterface.php
 ```php
 class Serializer implements SerializerInterface
 {
-    public function serialize(mixed $data, string $format, array $context = []): string;
-    public function deserialize(mixed $data, string $type, string $format, array $context = []): mixed;
-    public function normalize(mixed $data, ?string $format = null, array $context = []): mixed;
-    public function denormalize(mixed $data, string $type, ?string $format = null, array $context = []): mixed;
+ public function serialize(mixed $data, string $format, array $context = []): string;
+ public function deserialize(mixed $data, string $type, string $format, array $context = []): mixed;
+ public function normalize(mixed $data, ?string $format = null, array $context = []): mixed;
+ public function denormalize(mixed $data, string $type, ?string $format = null, array $context = []): mixed;
 }
 ```
 
@@ -855,36 +855,36 @@ class Serializer implements SerializerInterface
 
 **Canyon implementation - replace the `match`-based `Validation` with a constraint-object model**
 ```
-app/Core/Validation/Validator.php          # validate($value, $constraints, $groups)
-app/Core/Validation/Constraint.php          # abstract: message, groups, payload, validatedBy()
+app/Core/Validation/Validator.php # validate($value, $constraints, $groups)
+app/Core/Validation/Constraint.php # abstract: message, groups, payload, validatedBy()
 app/Core/Validation/Constraints/NotBlank.php, NotNull.php, Length.php, Email.php,
-        Url.php, Regex.php, Range.php, Choice.php, Type.php, Date.php,
-        Callback.php, Count.php, File.php, Image.php, Ip.php, Uuid.php,
-        Json.php, Unique.php, RequiredIf.php, SameAs.php, In.php, Max.php, Min.php
+ Url.php, Regex.php, Range.php, Choice.php, Type.php, Date.php,
+ Callback.php, Count.php, File.php, Image.php, Ip.php, Uuid.php,
+ Json.php, Unique.php, RequiredIf.php, SameAs.php, In.php, Max.php, Min.php
 app/Core/Validation/ConstraintViolation.php
 app/Core/Validation/ConstraintViolationList.php
 app/Core/Validation/GroupSequence.php
-app/Core/Validation/Metadata/ClassMetadata.php   # reads attributes + rules array
+app/Core/Validation/Metadata/ClassMetadata.php # reads attributes + rules array
 ```
 
 ```php
 abstract class Constraint
 {
-    public string $message = 'This value is invalid.';
-    public array $groups = ['Default'];
-    public array $payload = [];
+ public string $message = 'This value is invalid.';
+ public array $groups = ['Default'];
+ public array $payload = [];
 
-    public function __construct(array|string|null $options = null, ?array $groups = null);
-    abstract public function validatedBy(): string;   // -> ConstraintValidator class
+ public function __construct(array|string|null $options = null, ?array $groups = null);
+ abstract public function validatedBy(): string; // -> ConstraintValidator class
 }
 
 class Validator
 {
-    public function validate(mixed $value, Constraint|array|null $constraints = null,
-                            array|string|null $groups = null): ConstraintViolationList;
-    public function validateProperty(object $object, string $property, array|string|null $groups = null): ConstraintViolationList;
-    public function validateClass(object $object, array|string|null $groups = null): ConstraintViolationList;
-    public function startContext(): ContextualValidatorInterface;
+ public function validate(mixed $value, Constraint|array|null $constraints = null,
+ array|string|null $groups = null): ConstraintViolationList;
+ public function validateProperty(object $object, string $property, array|string|null $groups = null): ConstraintViolationList;
+ public function validateClass(object $object, array|string|null $groups = null): ConstraintViolationList;
+ public function startContext(): ContextualValidatorInterface;
 }
 ```
 
@@ -913,16 +913,16 @@ app/Core/Messenger/Failed/FailedTransport.php
 ```php
 interface TransportInterface
 {
-    public function send(Envelope $envelope): Envelope;
-    public function get(): iterable;                 // yields Envelopes
-    public function ack(Envelope $envelope): void;
-    public function reject(Envelope $envelope): void;
+ public function send(Envelope $envelope): Envelope;
+ public function get(): iterable; // yields Envelopes
+ public function ack(Envelope $envelope): void;
+ public function reject(Envelope $envelope): void;
 }
 
 class MessageBus
 {
-    public function dispatch(object $message, array $stamps = []): Envelope;
-    public function addMiddleware(MiddlewareInterface $middleware): static;
+ public function dispatch(object $message, array $stamps = []): Envelope;
+ public function addMiddleware(MiddlewareInterface $middleware): static;
 }
 ```
 
@@ -945,23 +945,23 @@ class MessageBus
 app/Core/Lock/LockFactory.php
 app/Core/Lock/LockInterface.php, Lock.php
 app/Core/Lock/Store/StoreInterface.php, FlockStore.php, SemaphoreStore.php,
-        RedisStore.php, DatabaseStore.php, InMemoryStore.php
+ RedisStore.php, DatabaseStore.php, InMemoryStore.php
 ```
 
 ```php
 class LockFactory
 {
-    public function __construct(private StoreInterface $store) {}
-    public function createLock(string $resource, ?float $ttl = 300.0, bool $autoRelease = true): LockInterface;
+ public function __construct(private StoreInterface $store) {}
+ public function createLock(string $resource, ?float $ttl = 300.0, bool $autoRelease = true): LockInterface;
 }
 
 interface LockInterface
 {
-    public function acquire(bool $blocking = false): bool;
-    public function release(): void;
-    public function isAcquired(): bool;
-    public function refresh(?float $ttl = null): void;
-    public function isExpired(): bool;
+ public function acquire(bool $blocking = false): bool;
+ public function release(): void;
+ public function isAcquired(): bool;
+ public function refresh(?float $ttl = null): void;
+ public function isExpired(): bool;
 }
 ```
 
@@ -977,22 +977,22 @@ interface LockInterface
 ```php
 class Finder implements \IteratorAggregate, \Countable
 {
-    public static function create(): static;
-    public function in(string ...$dirs): static;
-    public function files(): static;
-    public function directories(): static;
-    public function name(string|array $patterns): static;      // glob, or exact
-    public function notName(string|array $patterns): static;
-    public function contains(string|array $patterns): static;  // file contents
-    public function path(string|array $patterns): static;      // relative path
-    public function size(string|int $size): static;            // ">", "<", "==", "10K"
-    public function date(string $expr): static;                // "since yesterday"
-    public function depth(int|string $level): static;
-    public function filter(callable $callback): static;
-    public function sortByName(bool $reverse = false): static;
-    public function ignoreDotFiles(bool $ignore = true): static;
-    public function count(): int;
-    public function getIterator(): \Iterator;
+ public static function create(): static;
+ public function in(string ...$dirs): static;
+ public function files(): static;
+ public function directories(): static;
+ public function name(string|array $patterns): static; // glob, or exact
+ public function notName(string|array $patterns): static;
+ public function contains(string|array $patterns): static; // file contents
+ public function path(string|array $patterns): static; // relative path
+ public function size(string|int $size): static; // ">", "<", "==", "10K"
+ public function date(string $expr): static; // "since yesterday"
+ public function depth(int|string $level): static;
+ public function filter(callable $callback): static;
+ public function sortByName(bool $reverse = false): static;
+ public function ignoreDotFiles(bool $ignore = true): static;
+ public function count(): int;
+ public function getIterator(): \Iterator;
 }
 ```
 
@@ -1008,18 +1008,18 @@ class Finder implements \IteratorAggregate, \Countable
 ```php
 class Process
 {
-    public function __construct(array $command, ?string $cwd = null, ?array $env = null,
-                                mixed $input = null, ?float $timeout = 60.0, ?float $idleTimeout = null);
-    public static function fromShellCommandline(string $command, ...): static;
-    public function run(?callable $callback = null): int;
-    public function mustRun(?callable $callback = null): static;
-    public function start(?callable $callback = null): void;
-    public function wait(?callable $callback = null): int;
-    public function getOutput(): string;
-    public function getErrorOutput(): string;
-    public function getCommandLine(): string;
-    public function isRunning(): bool;
-    public function stop(float $timeout = 10.0, ?int $signal = null): ?int;
+ public function __construct(array $command, ?string $cwd = null, ?array $env = null,
+ mixed $input = null, ?float $timeout = 60.0, ?float $idleTimeout = null);
+ public static function fromShellCommandline(string $command, ...): static;
+ public function run(?callable $callback = null): int;
+ public function mustRun(?callable $callback = null): static;
+ public function start(?callable $callback = null): void;
+ public function wait(?callable $callback = null): int;
+ public function getOutput(): string;
+ public function getErrorOutput(): string;
+ public function getCommandLine(): string;
+ public function isRunning(): bool;
+ public function stop(float $timeout = 10.0, ?int $signal = null): ?int;
 }
 ```
 
@@ -1035,12 +1035,12 @@ class Process
 ```php
 class Expression
 {
-    public function __construct(array $functions = []);
-    public function evaluate(string $expression, array $values = []): mixed;
-    public function compile(string $expression, array $names = []): string;
-    public function lint(string $expression, array $names = []): ?string;  // null = valid
-    public function addFunction(string $name, callable $compiler, callable $evaluator): static;
-    public function addFunctionProvider(callable $provider): static;
+ public function __construct(array $functions = []);
+ public function evaluate(string $expression, array $values = []): mixed;
+ public function compile(string $expression, array $names = []): string;
+ public function lint(string $expression, array $names = []): ?string; // null = valid
+ public function addFunction(string $name, callable $compiler, callable $evaluator): static;
+ public function addFunctionProvider(callable $provider): static;
 }
 ```
 
@@ -1069,20 +1069,20 @@ app/Core/RateLimit/Storage/CacheStorage.php
 ```php
 class RateLimiter
 {
-    public function __construct(private PolicyInterface $policy, private Cache $storage) {}
-    public function consume(string $key, int $tokens = 1): Limit;
-    public function reset(string $key): void;
-    public function peek(string $key): Limit;
+ public function __construct(private PolicyInterface $policy, private Cache $storage) {}
+ public function consume(string $key, int $tokens = 1): Limit;
+ public function reset(string $key): void;
+ public function peek(string $key): Limit;
 }
 
 class Limit
 {
-    public function getLimit(): int;
-    public function getRemainingTokens(): int;
-    public function isAccepted(): bool;
-    public function getRetryAfter(): \DateTimeImmutable;
-    public function getInterval(): string;      // "60s", "1 hour"
-    public function toArray(): array;          // for X-RateLimit-* headers
+ public function getLimit(): int;
+ public function getRemainingTokens(): int;
+ public function isAccepted(): bool;
+ public function getRetryAfter(): \DateTimeImmutable;
+ public function getInterval(): string; // "60s", "1 hour"
+ public function toArray(): array; // for X-RateLimit-* headers
 }
 ```
 
@@ -1101,19 +1101,19 @@ class Limit
 
 **Canyon implementation: add Contracts + PSR-6 alongside the existing `Cache` façade**
 ```
-app/Core/Cache/Contracts/CacheInterface.php     # get(), delete()
+app/Core/Cache/Contracts/CacheInterface.php # get(), delete()
 app/Core/Cache/Contracts/CacheTrait.php
 app/Core/Cache/Psr/CacheItemPool.php, CacheItem.php
 app/Core/Cache/Adapter/ArrayAdapter.php, FileAdapter.php, RedisAdapter.php,
-        MemcachedAdapter.php, DatabaseAdapter.php, NullAdapter.php, ChainAdapter.php
+ MemcachedAdapter.php, DatabaseAdapter.php, NullAdapter.php, ChainAdapter.php
 app/Core/Cache/Adapter/TagAwareAdapter.php
 ```
 
 ```php
-interface CacheInterface  // Contracts - the one to type-hint
+interface CacheInterface // Contracts - the one to type-hint
 {
-    public function get(string $key, callable $callback, ?float $beta = null, ?array &$metadata = null): mixed;
-    public function delete(string $key): bool;
+ public function get(string $key, callable $callback, ?float $beta = null, ?array &$metadata = null): mixed;
+ public function delete(string $key): bool;
 }
 ```
 
@@ -1129,19 +1129,19 @@ interface CacheInterface  // Contracts - the one to type-hint
 
 **Canyon implementation: keep `AssetOptimizer`, add a manifest/versioning layer**
 ```
-app/Core/Asset/Manifest.php          # reads manifest.json -> hashed filenames
-app/Core/Asset/AssetManager.php      # addEntry(), entryScriptTags(), entryLinkTags(), integrity()
-app/Core/Asset/Entrypoints.php        # reads entrypoints.json
-app/Core/Asset/ImportMap.php         # bare-specifier resolution for ES modules
+app/Core/Asset/Manifest.php # reads manifest.json -> hashed filenames
+app/Core/Asset/AssetManager.php # addEntry(), entryScriptTags(), entryLinkTags(), integrity()
+app/Core/Asset/Entrypoints.php # reads entrypoints.json
+app/Core/Asset/ImportMap.php # bare-specifier resolution for ES modules
 ```
 
 ```php
 class AssetManager
 {
-    public static function entryScriptTags(string $entryName, array $attributes = []): string;
-    public static function entryLinkTags(string $entryName, array $attributes = []): string;
-    public static function asset(string $path): string;      // manifest lookup + version query
-    public static function integrity(string $path): string;  // SRI hash
+ public static function entryScriptTags(string $entryName, array $attributes = []): string;
+ public static function entryLinkTags(string $entryName, array $attributes = []): string;
+ public static function asset(string $path): string; // manifest lookup + version query
+ public static function integrity(string $path): string; // SRI hash
 }
 ```
 

@@ -6,7 +6,7 @@ namespace Canyon\Core;
  * Canyon Framework - Themes
  *
  * Theme system with variables and overrides.
- * based on Elgg's theme system.
+ * Elgg's theme system.
  */
 class Themes
 {

@@ -445,7 +445,7 @@ class Ai
 
         $headers = ['Content-Type: application/json'];
 
-        // Build authentication headers based on provider type
+        // Build authentication headers provider type
         switch ($authStyle) {
             case 'query_param':
                 // Google: append key as query parameter

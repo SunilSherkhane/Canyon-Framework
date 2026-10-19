@@ -9,7 +9,7 @@ namespace Canyon\Core;
  * images, a free-form profile field bag, friend requests with accept/reject,
  * blocking in both directions, and privacy-aware lookups.
  *
- * based on Elgg's user entities and Facebook-style social graphs.
+ * Elgg's user entities and Facebook-style social graphs.
  */
 class UserProfile implements \Canyon\Contracts\ProfileInterface
 {

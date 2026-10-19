@@ -6,7 +6,7 @@ namespace Canyon\Core;
  * Canyon Framework - Database Optimizer
  *
  * Database cleaning and optimization tools.
- * based on QUIC.cloud database cleaner.
+ * QUIC.cloud database cleaner.
  */
 class DatabaseOptimizer
 {

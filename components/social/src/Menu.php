@@ -6,7 +6,7 @@ namespace Canyon\Core;
  * Canyon Framework - Menu System
  *
  * Flexible menu registration and rendering.
- * based on Elgg's menu system.
+ * Elgg's menu system.
  */
 class Menu
 {

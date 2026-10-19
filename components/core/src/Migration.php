@@ -5,7 +5,7 @@ namespace Canyon\Core;
 /**
  * Canyon Framework - Migration System
  *
- * Simple database migration runner, based on Laravel's migrations.
+ * Simple database migration runner, Laravel's migrations.
  */
 class Migration
 {

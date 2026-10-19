@@ -10,7 +10,7 @@ namespace Canyon\Core;
  * message thread with read receipts, soft deletes per participant, blocking,
  * and per-user rate limiting.
  *
- * based on Elgg's messages plugin and Laravel's notification channels.
+ * Elgg's messages plugin and Laravel's notification channels.
  */
 class MessageSystem implements \Canyon\Contracts\MessagingInterface
 {

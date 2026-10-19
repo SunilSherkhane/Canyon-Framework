@@ -106,34 +106,34 @@ Create `/etc/apache2/sites-available/canyon.conf` (Ubuntu/Debian) or `/etc/httpd
 
 ```apache
 <VirtualHost *:80>
-    ServerName myproject.local
-    ServerAlias www.myproject.local
-    DocumentRoot /var/www/my-project/public
+ ServerName myproject.local
+ ServerAlias www.myproject.local
+ DocumentRoot /var/www/my-project/public
 
-    <Directory /var/www/my-project/public>
-        Options -Indexes +FollowSymLinks +MultiViews
-        AllowOverride All
-        Require all granted
+ <Directory /var/www/my-project/public>
+ Options -Indexes +FollowSymLinks +MultiViews
+ AllowOverride All
+ Require all granted
 
-        # Security: Block .env and sensitive files
-        <Files ".env">
-            Require all denied
-        </Files>
+ # Security: Block .env and sensitive files
+ <Files ".env">
+ Require all denied
+ </Files>
 
-        <Files ~ "^.*\.php$">
-            Order allow,deny
-            Deny from all
-        </Files>
-    </Directory>
+ <Files ~ "^.*\.php$">
+ Order allow,deny
+ Deny from all
+ </Files>
+ </Directory>
 
-    # Logging
-    ErrorLog ${APACHE_LOG_DIR}/canyon-error.log
-    CustomLog ${APACHE_LOG_DIR}/canyon-access.log combined
+ # Logging
+ ErrorLog ${APACHE_LOG_DIR}/canyon-error.log
+ CustomLog ${APACHE_LOG_DIR}/canyon-access.log combined
 
-    # Optional: HTTPS redirect
-    # RewriteEngine On
-    # RewriteCond %{HTTPS} off
-    # RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+ # Optional: HTTPS redirect
+ # RewriteEngine On
+ # RewriteCond %{HTTPS} off
+ # RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
 </VirtualHost>
 ```
 
@@ -155,55 +155,55 @@ Create `/etc/nginx/sites-available/canyon` (Ubuntu/Debian) or `/etc/nginx/conf.d
 
 ```nginx
 server {
-    listen 80;
-    server_name myproject.local www.myproject.local;
-    root /var/www/my-project/public;
-    index index.php;
+ listen 80;
+ server_name myproject.local www.myproject.local;
+ root /var/www/my-project/public;
+ index index.php;
 
-    # Security headers
-    add_header X-Frame-Options "DENY" always;
-    add_header X-Content-Type-Options "nosniff" always;
-    add_header X-XSS-Protection "1; mode=block" always;
-    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+ # Security headers
+ add_header X-Frame-Options "DENY" always;
+ add_header X-Content-Type-Options "nosniff" always;
+ add_header X-XSS-Protection "1; mode=block" always;
+ add_header Referrer-Policy "strict-origin-when-cross-origin" always;
 
-    # Block access to sensitive files
-    location ~ /\.env {
-        deny all;
-        return 404;
-    }
+ # Block access to sensitive files
+ location ~ /\.env {
+ deny all;
+ return 404;
+ }
 
-    location ~ ^/(app|config|storage|routes|resources|vendor|plugins)/ {
-        deny all;
-        return 404;
-    }
+ location ~ ^/(app|config|storage|routes|resources|vendor|plugins)/ {
+ deny all;
+ return 404;
+ }
 
-    location ~ \.php$ {
-        fastcgi_pass unix:/var/run/php/php8.2-fpm.sock;
-        fastcgi_index index.php;
-        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
-        include fastcgi_params;
+ location ~ \.php$ {
+ fastcgi_pass unix:/var/run/php/php8.2-fpm.sock;
+ fastcgi_index index.php;
+ fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+ include fastcgi_params;
 
-        # Security: Don't allow .php files in uploads
-        fastcgi_param PHP_VALUE "open_basedir=/var/www/my-project";
-    }
+ # Security: Don't allow .php files in uploads
+ fastcgi_param PHP_VALUE "open_basedir=/var/www/my-project";
+ }
 
-    # Static assets with caching
-    location ~* \.(css|js|png|jpg|jpeg|gif|svg|webp|avif|ico|woff2?|ttf|eot)$ {
-        expires 1y;
-        add_header Cache-Control "public, immutable";
-        access_log off;
-    }
+ # Static assets with caching
+ location ~* \.(css|js|png|jpg|jpeg|gif|svg|webp|avif|ico|woff2?|ttf|eot)$ {
+ expires 1y;
+ add_header Cache-Control "public, immutable";
+ access_log off;
+ }
 
-    # Main entry point
-    location / {
-        try_files $uri $uri/ /index.php?$query_string;
-    }
+ # Main entry point
+ location / {
+ try_files $uri $uri/ /index.php?$query_string;
+ }
 
-    # Health check endpoint
-    location /health {
-        return 200 "OK";
-        add_header Content-Type text/plain;
-    }
+ # Health check endpoint
+ location /health {
+ return 200 "OK";
+ add_header Content-Type text/plain;
+ }
 }
 ```
 
@@ -226,7 +226,7 @@ sudo systemctl reload nginx
 
 ```bash
 cp .env.example .env
-chmod 600 .env  # Restrict permissions
+chmod 600 .env # Restrict permissions
 ```
 
 ### Complete .env Configuration
@@ -277,14 +277,14 @@ RATE_LIMIT_WINDOW=60
 
 # Session settings
 SESSION_TIMEOUT=120
-SESSION_COOKIE_SECURE=false  # Set true for HTTPS
+SESSION_COOKIE_SECURE=false # Set true for HTTPS
 
 # ─────────────────────────────────────────────────────────────────────────────
 # DATABASE SETTINGS
 # ─────────────────────────────────────────────────────────────────────────────
 
 # Database connection
-DB_CONNECTION=mysql  # mysql | sqlite | pgsql
+DB_CONNECTION=mysql # mysql | sqlite | pgsql
 DB_HOST=127.0.0.1
 DB_PORT=3306
 DB_DATABASE=canyon
@@ -522,18 +522,18 @@ namespace Canyon\Controllers;
 
 class HomeController extends Controller
 {
-    public function index(): string
-    {
-        return $this->view('home.index', [
-            'title' => 'Welcome',
-            'message' => 'Hello from Canyon Framework!'
-        ]);
-    }
+ public function index(): string
+ {
+ return $this->view('home.index', [
+ 'title' => 'Welcome',
+ 'message' => 'Hello from Canyon Framework!'
+ ]);
+ }
 
-    public function error(): string
-    {
-        return $this->view('errors.404', [], 404);
-    }
+ public function error(): string
+ {
+ return $this->view('errors.404', [], 404);
+ }
 }
 ```
 
@@ -544,23 +544,23 @@ class HomeController extends Controller
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= htmlspecialchars($title) ?> - <?= env('APP_NAME') ?></title>
-    <link rel="stylesheet" href="/assets/css/app.css">
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title><?= htmlspecialchars($title) ?> - <?= env('APP_NAME') ?></title>
+ <link rel="stylesheet" href="/assets/css/app.css">
 </head>
 <body>
-    <header>
-        <h1><?= htmlspecialchars($message) ?></h1>
-    </header>
+ <header>
+ <h1><?= htmlspecialchars($message) ?></h1>
+ </header>
 
-    <main>
-        <p>Welcome to your Canyon Framework application!</p>
-    </main>
+ <main>
+ <p>Welcome to your Canyon Framework application!</p>
+ </main>
 
-    <?php echo csrfField(); ?>
+ <?php echo csrfField(); ?>
 
-    <script src="/assets/js/app.js"></script>
+ <script src="/assets/js/app.js"></script>
 </body>
 </html>
 ```
@@ -589,10 +589,10 @@ Expected output:
 ```
 Available Methods: GET, POST, PUT, DELETE, PATCH, OPTIONS, ANY
 ┌────────────┬──────────────────┬────────────────────┬────────────┐
-│ Method     │ Pattern          │ Handler            │ Name       │
+│ Method │ Pattern │ Handler │ Name │
 ├────────────┼──────────────────┼────────────────────┼────────────┤
-│ GET        │ /                │ HomeController     │ home       │
-│ ANY        │ {path}           │ HomeController     │ error      │
+│ GET │ / │ HomeController │ home │
+│ ANY │ {path} │ HomeController │ error │
 └────────────┴──────────────────┴────────────────────┴────────────┘
 ```
 
@@ -758,6 +758,6 @@ tail -f storage/logs/access.log
 
 ---
 
-**Framework Version**: 0.5.0  
-**PHP Compatibility**: 8.1, 8.2, 8.3  
+**Framework Version**: 0.5.0 
+**PHP Compatibility**: 8.1, 8.2, 8.3 
 **Last Updated**: October 2026

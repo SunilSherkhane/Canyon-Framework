@@ -1,22 +1,22 @@
 {
-    "name": "security",
-    "title": "Canyon Security",
-    "description": "Web application firewall (IP blocking, request inspection) plus the access-control layer: RBAC roles/permissions and ownership rules.",
-    "version": "1.0.0",
-    "type": "addon",
-    "enabled": true,
-    "requires": [
-        "core"
-    ],
-    "autoload": {
-        "psr-4": {
-            "Canyon\\Core\\": "src"
-        }
-    },
-    "classes": [
-        "AccessControl",
-        "Permissions",
-        "Rbac",
-        "Waf"
-    ]
+ "name": "security",
+ "title": "Canyon Security",
+ "description": "Web application firewall (IP blocking, request inspection) plus the access-control layer: RBAC roles/permissions and ownership rules.",
+ "version": "1.0.0",
+ "type": "addon",
+ "enabled": true,
+ "requires": [
+ "core"
+ ],
+ "autoload": {
+ "psr-4": {
+ "Canyon\\Core\\": "src"
+ }
+ },
+ "classes": [
+ "AccessControl",
+ "Permissions",
+ "Rbac",
+ "Waf"
+ ]
 }

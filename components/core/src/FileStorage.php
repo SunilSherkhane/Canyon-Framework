@@ -6,7 +6,7 @@ namespace Canyon\Core;
  * Canyon Framework - File Storage
  *
  * Flexible file storage API for user-generated files.
- * based on Elgg's file storage system.
+ * Elgg's file storage system.
  */
 class FileStorage
 {

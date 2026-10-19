@@ -6,7 +6,7 @@ namespace Canyon\Core;
  * Canyon Framework - Image Optimizer
  *
  * Image optimization with lossless/lossy compression, AVIF/WebP support,
- * and responsive image generation. based on QUIC.cloud image optimization.
+ * and responsive image generation. QUIC.cloud image optimization.
  */
 class ImageOptimizer
 {
@@ -78,7 +78,7 @@ class ImageOptimizer
 
         $targetPath = $targetDir . '/' . $filename;
 
-        // Optimize based on image type
+        // Optimize image type
         if (self::isImagickAvailable()) {
             $result = self::optimizeWithImagick($sourcePath, $targetPath);
         } elseif (self::isGdAvailable()) {
@@ -143,7 +143,7 @@ class ImageOptimizer
         try {
             $imagick = new \Imagick($source);
 
-            // Auto-orient based on EXIF
+            // Auto-orient EXIF
             $imagick->autoOrient();
 
             // Strip metadata

@@ -6,7 +6,7 @@ namespace Canyon\Core;
  * Canyon Framework - Search
  *
  * Entity search with filtering, sorting, and pagination.
- * based on Elgg's search system.
+ * Elgg's search system.
  */
 class Search
 {
@@ -175,7 +175,7 @@ class Search
     }
 
     /**
-     * Get search suggestions based on partial query.
+     * Get search suggestions partial query.
      */
     public function suggestions(string $partial, int $limit = 10): array
     {

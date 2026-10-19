@@ -6,7 +6,7 @@ namespace Canyon\Core;
  * Canyon Framework - OPcache Manager
  *
  * OPcache monitoring and management.
- * based on QUIC.cloud OPcache support.
+ * QUIC.cloud OPcache support.
  */
 class Opcache
 {
@@ -218,7 +218,7 @@ class Opcache
     }
 
     /**
-     * Get recommendations based on OPcache status.
+     * Get recommendations OPcache status.
      */
     protected static function getRecommendations(array $status, float $memoryUsage): array
     {

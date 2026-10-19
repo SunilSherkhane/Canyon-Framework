@@ -1,6 +1,6 @@
 # 🌊 Canyon Framework
 
-**A lightweight, secure PHP framework based on Laravel, CodeIgniter - works on any shared hosting.**
+**A lightweight, secure PHP framework Laravel, CodeIgniter - works on any shared hosting.**
 
 > Version: 0.5.0 | PHP: 8.1+ | License: MIT
 
@@ -35,24 +35,24 @@ The Canyon Framework follows a **modular and core-first principle**. The core fr
 <?php
 // 1. Create middleware in app/Middleware/
 class AuthMiddleware extends Middleware {
-    public function handle($request, $next) { /* ... */ }
+ public function handle($request, $next) { /* ... */ }
 }
 
 // 2. Register routes in routes/web.php
 Router::group([AuthMiddleware::class], function () {
-    Router::get('/dashboard', [DashboardController::class, 'index']);
+ Router::get('/dashboard', [DashboardController::class, 'index']);
 });
 
 // 3. Create services in app/Services/
 class PaymentService {
-    public function process($amount, $user) { /* ... */ }
+ public function process($amount, $user) { /* ... */ }
 }
 
 // 4. Create plugins in plugins/<name>/
 // plugins/my-plugin/canyon-plugin.php
 return [
-    'plugin' => ['name' => 'My Plugin', 'active' => true],
-    'routes' => ['my_route' => ['path' => '/custom', 'handler' => [MyController::class, 'index']]],
+ 'plugin' => ['name' => 'My Plugin', 'active' => true],
+ 'routes' => ['my_route' => ['path' => '/custom', 'handler' => [MyController::class, 'index']]],
 ];
 ```
 
@@ -87,18 +87,18 @@ addons. Each component is a self-contained directory under `components/` with a
 
 ```
 components/
-  core/          # kernel: routing, view, database, config, security   (required)
-  ai/            # multi-provider LLM integration, chatbot widget
-  social/        # Elgg-based community layer (river, groups, profiles…)
-  security/      # web application firewall + RBAC / access control
-  performance/   # asset & image optimisation, OPcache, preload, heartbeat
+ core/ # kernel: routing, view, database, config, security (required)
+ ai/ # multi-provider LLM integration, chatbot widget
+ social/ # Elgg community layer (river, groups, profiles…)
+ security/ # web application firewall + RBAC / access control
+ performance/ # asset & image optimisation, OPcache, preload, heartbeat
 ```
 
 ```bash
-./canyon component list              # what is installed and enabled
-./canyon component show social       # manifest detail
-./canyon component disable social    # persisted to components.json
-./canyon info                        # includes the component summary
+./canyon component list # what is installed and enabled
+./canyon component show social # manifest detail
+./canyon component disable social # persisted to components.json
+./canyon info # includes the component summary
 ```
 
 `core` can never be disabled, and disabling a component also disables anything
@@ -140,7 +140,7 @@ shared Canyon checkout (`CANYON_SHARED_PATH`).
 |---|---|---|
 | **Security** | `Security` | `csrfField()`, `verifyCsrfToken()`, `throttle()`, `sanitizeInput()` |
 | **AccessControl** | `AccessControl` | `addRole()`, `addGroup()`, `canAccess()` |
-| **RBAC** | `Rbac` | `assign()`, `can()`, `getPermissionsByRole()` - Yii2 |
+| **RBAC** | `Rbac` | `assign()`, `can()`, `getPermissionsByRole()` |
 | **Permissions** | `Permissions` | `can()`, `canEdit()`, `canDelete()`, `require()` |
 | **HMAC** | `Hmac` | `generate()`, `validate()`, `signedUrl()` |
 | **PageOwnership** | `PageOwnership` | `setOwner()`, `getOwner()`, `pushContext()` |
@@ -189,28 +189,28 @@ shared Canyon checkout (`CANYON_SHARED_PATH`).
 
 ```
 my-project/
-├── public/              # Web root (public_html/)
-│   ├── index.php        # Entry point (bootstrap)
-│   ├── install.php      # Web installer (delete after use)
-│   ├── .htaccess        # Apache rules (shared hosting safe)
-│   └── uploads/         # User uploads
+├── public/ # Web root (public_html/)
+│ ├── index.php # Entry point (bootstrap)
+│ ├── install.php # Web installer (delete after use)
+│ ├── .htaccess # Apache rules (shared hosting safe)
+│ └── uploads/ # User uploads
 ├── app/
-│   ├── Core/            # 40+ framework classes
-│   ├── Controllers/     # Your controllers
-│   └── Helpers/         # Global helper functions
+│ ├── Core/ # 40+ framework classes
+│ ├── Controllers/ # Your controllers
+│ └── Helpers/ # Global helper functions
 ├── routes/
-│   └── web.php          # URL routes
+│ └── web.php # URL routes
 ├── resources/
-│   ├── views/           # PHP templates
-│   ├── lang/            # Translations
-│   └── themes/          # Theme files
-├── config.php           # ← MAIN CONFIG (WordPress-style)
-├── storage/             # Sessions, cache, logs
-├── plugins/             # Plugin directory
-├── canyon               # CLI tool
-├── SHARED-HOSTING.md    # Shared hosting guide
-├── INSTALLATION.md      # Full installation guide
-└── README.md            # This file
+│ ├── views/ # PHP templates
+│ ├── lang/ # Translations
+│ └── themes/ # Theme files
+├── config.php # ← MAIN CONFIG (WordPress-style)
+├── storage/ # Sessions, cache, logs
+├── plugins/ # Plugin directory
+├── canyon # CLI tool
+├── SHARED-HOSTING.md # Shared hosting guide
+├── INSTALLATION.md # Full installation guide
+└── README.md # This file
 ```
 
 ---
@@ -226,7 +226,7 @@ use Canyon\Middleware\AuthMiddleware;
 Router::get('/posts', [PostController::class, 'index'], 'posts.index');
 
 Router::group(AuthMiddleware::class, function () {
-    Router::post('/posts', [PostController::class, 'store']);
+ Router::post('/posts', [PostController::class, 'store']);
 });
 ```
 
@@ -241,8 +241,8 @@ $file = $request->file('avatar');
 
 // JSON response
 return \Canyon\Core\Response::json([
-    'success' => true,
-    'data' => $user
+ 'success' => true,
+ 'data' => $user
 ]);
 
 // View response
@@ -252,12 +252,12 @@ return \Canyon\Core\Response::view('posts.index', ['posts' => $posts]);
 ### Console Commands
 ```php
 \Canyon\Core\Console::register('g:model', function($console, $argv) {
-    $console->info('Generating model...');
-    $bar = $console->progressBar(100);
-    $bar->start();
-    // ... do work ...
-    $bar->finish();
-    $console->success('Model created!');
+ $console->info('Generating model...');
+ $bar = $console->progressBar(100);
+ $bar->start();
+ // ... do work ...
+ $bar->finish();
+ $console->success('Model created!');
 }, 'Generate a new model');
 ```
 
@@ -267,18 +267,18 @@ return \Canyon\Core\Response::view('posts.index', ['posts' => $posts]);
 \Canyon\Core\Rbac::assign('editor', $userId);
 
 if (\Canyon\Core\Rbac::can($userId, 'posts.publish')) {
-    // Allow publishing
+ // Allow publishing
 }
 ```
 
 ### Finde
 ```php
 $files = \Canyon\Core\Finder::create()
-    ->in('/path/to/uploads')
-    ->name('*.jpg')
-    ->size('> 100K')
-    ->sortByModifiedTime()
-    ->getResults();
+ ->in('/path/to/uploads')
+ ->name('*.jpg')
+ ->size('> 100K')
+ ->sortByModifiedTime()
+ ->getResults();
 ```
 
 ### Entity + Search + River
@@ -294,10 +294,10 @@ $results = $search->query('hello', ['type' => 'post']);
 // River
 $river = new River();
 $river->add([
-    'type' => 'object',
-    'subtype' => 'post',
-    'action_type' => 'create',
-    'entity_id' => $post->getAttribute('id'),
+ 'type' => 'object',
+ 'subtype' => 'post',
+ 'action_type' => 'create',
+ 'entity_id' => $post->getAttribute('id'),
 ]);
 ```
 
@@ -309,7 +309,7 @@ EventDispatcher::dispatch('user.created', ['user_id' => 123]);
 Queue::push(SendEmail::class, ['to' => 'user@test.com']);
 
 Cron::register('daily', function () {
-    (new DatabaseOptimizer())->runAllCleanup();
+ (new DatabaseOptimizer())->runAllCleanup();
 });
 ```
 

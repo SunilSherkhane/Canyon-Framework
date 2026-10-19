@@ -9,7 +9,7 @@ namespace Canyon\Core;
  * and threaded discussions. Group content inherits the group's audience, so a
  * private group keeps its discussions out of the public feed.
  *
- * based on Facebook Groups and Elgg's group containers.
+ * Facebook Groups and Elgg's group containers.
  */
 class GroupSystem implements \Canyon\Contracts\GroupInterface
 {

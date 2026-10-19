@@ -8,7 +8,7 @@ namespace Canyon\Core;
  * Renders PHP templates with automatic output escaping (XSS prevention)
  * and path-traversal protection.
  *
- * based on Laravel Blade and CodeIgniter Views.
+ * Laravel Blade and CodeIgniter Views.
  */
 class View
 {

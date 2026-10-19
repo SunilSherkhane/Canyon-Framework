@@ -50,34 +50,34 @@ php -S localhost:8000 -t public
 
 ```
 my-app/
-├── public/                  # Web root
-│   ├── index.php           # Entry point (don't modify)
-│   ├── .htaccess           # Apache rules
-│   └── uploads/            # User uploads
+├── public/ # Web root
+│ ├── index.php # Entry point (don't modify)
+│ ├── .htaccess # Apache rules
+│ └── uploads/ # User uploads
 ├── app/
-│   ├── Core/               # Framework core (45+ classes)
-│   ├── Controllers/        # Your controllers
-│   ├── Models/             # Your models (Entity classes)
-│   ├── Middleware/          # Your middleware
-│   └── Helpers/            # Global helpers
+│ ├── Core/ # Framework core (45+ classes)
+│ ├── Controllers/ # Your controllers
+│ ├── Models/ # Your models (Entity classes)
+│ ├── Middleware/ # Your middleware
+│ └── Helpers/ # Global helpers
 ├── routes/
-│   ├── web.php             # Web routes
-│   └── ai.php              # AI routes (optional)
+│ ├── web.php # Web routes
+│ └── ai.php # AI routes (optional)
 ├── resources/
-│   ├── views/              # PHP templates
-│   ├── lang/               # Translations
-│   ├── css/                # Stylesheets
-│   └── js/                 # JavaScript
+│ ├── views/ # PHP templates
+│ ├── lang/ # Translations
+│ ├── css/ # Stylesheets
+│ └── js/ # JavaScript
 ├── config/
-│   └── ai.php              # AI provider config
-├── plugins/                # Plugins directory
-├── storage/                # Cache, logs, sessions
-│   ├── cache/
-│   ├── logs/
-│   └── sessions/
-├── config.php              # Main configuration (WordPress-style)
-├── canyon                  # CLI tool
-└── DEVELOPER-HANDBOOK.md   # This file
+│ └── ai.php # AI provider config
+├── plugins/ # Plugins directory
+├── storage/ # Cache, logs, sessions
+│ ├── cache/
+│ ├── logs/
+│ └── sessions/
+├── config.php # Main configuration (WordPress-style)
+├── canyon # CLI tool
+└── DEVELOPER-HANDBOOK.md # This file
 ```
 
 ---
@@ -102,7 +102,7 @@ HTTP Request → index.php → Router → Middleware → Controller → View →
 ```php
 // Bind a service in a service provider
 \Container::singleton('db', function () {
-    return new Database();
+ return new Database();
 });
 
 // Resolve anywhere
@@ -114,7 +114,7 @@ $db = \Container::make('db');
 ```php
 // Listen for events
 \EventDispatcher::listen('user.registered', function ($user) {
-    \Notification::send($user->id, 'Welcome!', 'Thanks for joining!');
+ \Notification::send($user->id, 'Welcome!', 'Thanks for joining!');
 });
 
 // Fire events
@@ -142,14 +142,14 @@ Router::get('/users/{user}/posts/{post}', [PostController::class, 'showByUser'],
 
 // Route groups with middleware
 Router::group('auth', function () {
-    Router::get('/dashboard', [DashboardController::class, 'index']);
-    Router::post('/profile/update', [ProfileController::class, 'update']);
+ Router::get('/dashboard', [DashboardController::class, 'index']);
+ Router::post('/profile/update', [ProfileController::class, 'update']);
 });
 
 // Route groups with prefix
 Router::group('api', 'prefix:api/v1', function () {
-    Router::get('/users', [Api\UserController::class, 'index']);
-    Router::post('/users', [Api\UserController::class, 'store']);
+ Router::get('/users', [Api\UserController::class, 'index']);
+ Router::post('/users', [Api\UserController::class, 'store']);
 });
 
 // Any HTTP method
@@ -173,44 +173,44 @@ use Canyon\Models\Post;
 
 class PostController extends Controller
 {
-    public function index(): string
-    {
-        $posts = Post::paginate(10);
-        return $this->view('posts.index', compact('posts'));
-    }
+ public function index(): string
+ {
+ $posts = Post::paginate(10);
+ return $this->view('posts.index', compact('posts'));
+ }
 
-    public function show(int $id): string
-    {
-        $post = Post::find($id);
-        if (!$post) {
-            return $this->notFound('Post not found');
-        }
-        return $this->view('posts.show', compact('post'));
-    }
+ public function show(int $id): string
+ {
+ $post = Post::find($id);
+ if (!$post) {
+ return $this->notFound('Post not found');
+ }
+ return $this->view('posts.show', compact('post'));
+ }
 
-    public function store(): never
-    {
-        // Validate input
-        $data = $this->validate([
-            'title' => 'required|string|max:255',
-            'body' => 'required|string',
-        ]);
+ public function store(): never
+ {
+ // Validate input
+ $data = $this->validate([
+ 'title' => 'required|string|max:255',
+ 'body' => 'required|string',
+ ]);
 
-        // Create post
-        $post = Post::create($data);
-        $post->author_id = auth()->id;
-        $post->save();
+ // Create post
+ $post = Post::create($data);
+ $post->author_id = auth()->id;
+ $post->save();
 
-        return $this->redirect()
-            ->route('posts.show', ['id' => $post->id])
-            ->with('success', 'Post created!');
-    }
+ return $this->redirect()
+ ->route('posts.show', ['id' => $post->id])
+ ->with('success', 'Post created!');
+ }
 
-    public function apiIndex(): never
-    {
-        $posts = Post::paginate(10);
-        $this->json(['data' => $posts], 200);
-    }
+ public function apiIndex(): never
+ {
+ $posts = Post::paginate(10);
+ $this->json(['data' => $posts], 200);
+ }
 }
 ```
 
@@ -227,25 +227,25 @@ use Canyon\Core\Response;
 
 class AuthMiddleware extends Middleware
 {
-    public function handle(Request $request, \Closure $next): Response
-    {
-        if (!auth()->check()) {
-            return Response::redirect('/login');
-        }
-        return $next($request);
-    }
+ public function handle(Request $request, \Closure $next): Response
+ {
+ if (!auth()->check()) {
+ return Response::redirect('/login');
+ }
+ return $next($request);
+ }
 }
 
 // app/Middleware/AdminMiddleware.php
 class AdminMiddleware extends Middleware
 {
-    public function handle(Request $request, \Closure $next): Response
-    {
-        if (!Rbac::can(auth()->id, 'admin.access')) {
-            abort(403, 'Access denied');
-        }
-        return $next($request);
-    }
+ public function handle(Request $request, \Closure $next): Response
+ {
+ if (!Rbac::can(auth()->id, 'admin.access')) {
+ abort(403, 'Access denied');
+ }
+ return $next($request);
+ }
 }
 ```
 
@@ -264,35 +264,35 @@ use Canyon\Core\Entity;
 
 class Post extends Entity
 {
-    protected string $table = 'posts';
-    protected array $fillable = ['title', 'body', 'author_id', 'status', 'excerpt'];
-    protected array $hidden = ['deleted_at'];
-    protected array $casts = [
-        'id' => 'int',
-        'author_id' => 'int',
-        'is_published' => 'boolean',
-        'views_count' => 'int',
-        'meta' => 'json',
-        'published_at' => 'datetime',
-    ];
+ protected string $table = 'posts';
+ protected array $fillable = ['title', 'body', 'author_id', 'status', 'excerpt'];
+ protected array $hidden = ['deleted_at'];
+ protected array $casts = [
+ 'id' => 'int',
+ 'author_id' => 'int',
+ 'is_published' => 'boolean',
+ 'views_count' => 'int',
+ 'meta' => 'json',
+ 'published_at' => 'datetime',
+ ];
 
-    // Relationships
-    public function author(): ?Entity
-    {
-        return User::find($this->author_id);
-    }
+ // Relationships
+ public function author(): ?Entity
+ {
+ return User::find($this->author_id);
+ }
 
-    // Scopes
-    public static function published(): Collection
-    {
-        return self::where('status', 'published');
-    }
+ // Scopes
+ public static function published(): Collection
+ {
+ return self::where('status', 'published');
+ }
 
-    // Accessors
-    public function getExcerptAttribute(): string
-    {
-        return str_limit($this->body, 150);
-    }
+ // Accessors
+ public function getExcerptAttribute(): string
+ {
+ return str_limit($this->body, 150);
+ }
 }
 ```
 
@@ -307,9 +307,9 @@ $users = Database::select('users', ['*'], ['active' => 1], 20);
 
 // Insert
 $id = Database::insert('posts', [
-    'title' => 'Hello World',
-    'body' => 'My first post',
-    'author_id' => 1,
+ 'title' => 'Hello World',
+ 'body' => 'My first post',
+ 'author_id' => 1,
 ]);
 
 // Update
@@ -320,9 +320,9 @@ Database::delete('sessions', ['last_activity' < time() - 3600]);
 
 // Transactions
 Database::transaction(function () {
-    $orderId = Database::insert('orders', $orderData);
-    Database::insert('order_items', $items);
-    Database::update('products', ['stock' => 'stock - 1'], ['id' => $productId]);
+ $orderId = Database::insert('orders', $orderData);
+ Database::insert('order_items', $items);
+ Database::update('products', ['stock' => 'stock - 1'], ['id' => $productId]);
 });
 
 // Raw queries
@@ -338,25 +338,25 @@ use Canyon\Core\Migration;
 
 class CreatePostsTable extends Migration
 {
-    public function up(): void
-    {
-        $this->createTable('posts', [
-            'id' => 'int|unsigned|auto_increment|primary',
-            'user_id' => 'int|unsigned|index',
-            'title' => 'varchar:255',
-            'slug' => 'varchar:255|unique',
-            'body' => 'text',
-            'status' => "enum('draft','published','archived')|default:draft",
-            'meta' => 'json|nullable',
-            'created_at' => 'timestamp|default:current_timestamp',
-            'updated_at' => 'timestamp|default:current_timestamp|on_update:current_timestamp',
-        ]);
-    }
+ public function up(): void
+ {
+ $this->createTable('posts', [
+ 'id' => 'int|unsigned|auto_increment|primary',
+ 'user_id' => 'int|unsigned|index',
+ 'title' => 'varchar:255',
+ 'slug' => 'varchar:255|unique',
+ 'body' => 'text',
+ 'status' => "enum('draft','published','archived')|default:draft",
+ 'meta' => 'json|nullable',
+ 'created_at' => 'timestamp|default:current_timestamp',
+ 'updated_at' => 'timestamp|default:current_timestamp|on_update:current_timestamp',
+ ]);
+ }
 
-    public function down(): void
-    {
-        $this->dropTable('posts');
-    }
+ public function down(): void
+ {
+ $this->dropTable('posts');
+ }
 }
 ```
 
@@ -374,18 +374,18 @@ class CreatePostsTable extends Migration
 
 <?php $this->section('content') ?>
 <div class="posts">
-    <?php foreach ($posts as $post): ?>
-        <article class="post-card">
-            <h2><a href="<?= route_path('posts.show', ['id' => $post->id]) ?>">
-                <?= e($post->title) ?>
-            </a></h2>
-            <p class="excerpt"><?= e($post->excerpt) ?></p>
-            <div class="meta">
-                <span>By <?= e($post->author->name) ?></span>
-                <span><?= human_time($post->created_at) ?></span>
-            </div>
-        </article>
-    <?php endforeach; ?>
+ <?php foreach ($posts as $post): ?>
+ <article class="post-card">
+ <h2><a href="<?= route_path('posts.show', ['id' => $post->id]) ?>">
+ <?= e($post->title) ?>
+ </a></h2>
+ <p class="excerpt"><?= e($post->excerpt) ?></p>
+ <div class="meta">
+ <span>By <?= e($post->author->name) ?></span>
+ <span><?= human_time($post->created_at) ?></span>
+ </div>
+ </article>
+ <?php endforeach; ?>
 </div>
 
 <?= $pagination->links() ?>
@@ -399,25 +399,25 @@ class CreatePostsTable extends Migration
 <!DOCTYPE html>
 <html lang="<?= app()->getLocale() ?>">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= $this->yield('title') ?> - <?= e(config('app.name')) ?></title>
-    <link rel="stylesheet" href="<?= asset('css/app.css') ?>">
-    <?= $this->yield('head') ?>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title><?= $this->yield('title') ?> - <?= e(config('app.name')) ?></title>
+ <link rel="stylesheet" href="<?= asset('css/app.css') ?>">
+ <?= $this->yield('head') ?>
 </head>
 <body>
-    <?= $this->include('partials.nav') ?>
+ <?= $this->include('partials.nav') ?>
 
-    <main>
-        <?php if ($message = flash('success')): ?>
-            <div class="alert alert-success"><?= e($message) ?></div>
-        <?php endif; ?>
+ <main>
+ <?php if ($message = flash('success')): ?>
+ <div class="alert alert-success"><?= e($message) ?></div>
+ <?php endif; ?>
 
-        <?= $this->yield('content') ?>
-    </main>
+ <?= $this->yield('content') ?>
+ </main>
 
-    <?= $this->include('partials.footer') ?>
-    <script src="<?= asset('js/app.js') ?>"></script>
+ <?= $this->include('partials.footer') ?>
+ <script src="<?= asset('js/app.js') ?>"></script>
 </body>
 </html>
 ```
@@ -439,18 +439,18 @@ define('CANYON_WAF_ENABLED', true);
 // app/Middleware/WafMiddleware.php
 class WafMiddleware extends Middleware
 {
-    public function handle(Request $request, \Closure $next): Response
-    {
-        if (!CANYON_WAF_ENABLED) {
-            return $next($request);
-        }
+ public function handle(Request $request, \Closure $next): Response
+ {
+ if (!CANYON_WAF_ENABLED) {
+ return $next($request);
+ }
 
-        // Check all WAF rules
-        \Waf::inspect($request);
+ // Check all WAF rules
+ \Waf::inspect($request);
 
-        // Inspect returned 403 or passes through
-        return $next($request);
-    }
+ // Inspect returned 403 or passes through
+ return $next($request);
+ }
 }
 ```
 
@@ -466,15 +466,15 @@ WAF protects against:
 ```php
 <!-- In forms: -->
 <form method="POST" action="/posts">
-    <?= Security::csrfField() ?>
-    <!-- or -->
-    <input type="hidden" name="_token" value="<?= Security::csrfToken() ?>">
-    ...
+ <?= Security::csrfField() ?>
+ <!-- or -->
+ <input type="hidden" name="_token" value="<?= Security::csrfToken() ?>">
+ ...
 </form>
 
 // In API routes:
 Router::post('/api/posts', [PostController::class, 'store'])
-    ->middleware('csrf');
+ ->middleware('csrf');
 ```
 
 ### Input Validation
@@ -483,23 +483,23 @@ Router::post('/api/posts', [PostController::class, 'store'])
 <?php
 // In controllers
 $data = $this->validate([
-    'email' => 'required|email|unique:users',
-    'password' => 'required|string|min:8|confirmed',
-    'age' => 'required|integer|min:18|max:120',
-    'website' => 'nullable|url',
-    'role' => 'required|in:admin,editor,user',
-    'tags' => 'array',
-    'tags.*' => 'string|max:50',
+ 'email' => 'required|email|unique:users',
+ 'password' => 'required|string|min:8|confirmed',
+ 'age' => 'required|integer|min:18|max:120',
+ 'website' => 'nullable|url',
+ 'role' => 'required|in:admin,editor,user',
+ 'tags' => 'array',
+ 'tags.*' => 'string|max:50',
 ]);
 
 // Manual validation
 $validator = new Validation($data, [
-    'email' => 'required|email',
-    'password' => 'required|min:8',
+ 'email' => 'required|email',
+ 'password' => 'required|min:8',
 ]);
 
 if ($validator->fails()) {
-    return $this->json(['errors' => $validator->errors()], 422);
+ return $this->json(['errors' => $validator->errors()], 422);
 }
 ```
 
@@ -507,11 +507,11 @@ if ($validator->fails()) {
 
 ```php
 <?php // Views auto-escape by default ?>
-<?= $user->name ?>              <!-- Safe: auto-escaped -->
-<?= $user->bio ?>                <!-- Safe: auto-escaped -->
+<?= $user->name ?> <!-- Safe: auto-escaped -->
+<?= $user->bio ?> <!-- Safe: auto-escaped -->
 
 // For trusted HTML (admin content):
-<?= View::raw($trustedHtml) ?>   <!-- Raw output - use carefully! -->
+<?= View::raw($trustedHtml) ?> <!-- Raw output - use carefully! -->
 ```
 
 ---
@@ -525,8 +525,8 @@ if ($validator->fails()) {
 // Login
 $user = User::find($_POST['email']);
 if ($user && password_verify($_POST['password'], $user->password)) {
-    auth()->login($user);
-    return redirect('/dashboard');
+ auth()->login($user);
+ return redirect('/dashboard');
 }
 
 // Register
@@ -550,19 +550,19 @@ Rbac::assign('editor', $user->id);
 
 // Check permissions
 if (Rbac::can($user->id, 'posts.publish')) {
-    // Allow publishing
+ // Allow publishing
 }
 
 // Check in middleware
 class AdminMiddleware extends Middleware
 {
-    public function handle(Request $request, \Closure $next): Response
-    {
-        if (!Rbac::can(auth()->id, 'admin.access')) {
-            abort(403);
-        }
-        return $next($request);
-    }
+ public function handle(Request $request, \Closure $next): Response
+ {
+ if (!Rbac::can(auth()->id, 'admin.access')) {
+ abort(403);
+ }
+ return $next($request);
+ }
 }
 ```
 
@@ -575,14 +575,14 @@ class AdminMiddleware extends Middleware
 ```
 plugins/
 └── my-plugin/
-    ├── canyon-plugin.php      # Plugin config (required)
-    ├── src/
-    │   ├── MyPlugin.php       # Main plugin class
-    │   └── Controllers/
-    │       └── PluginController.php
-    ├── views/
-    │   └── settings.php
-    └── composer.json
+ ├── canyon-plugin.php # Plugin config (required)
+ ├── src/
+ │ ├── MyPlugin.php # Main plugin class
+ │ └── Controllers/
+ │ └── PluginController.php
+ ├── views/
+ │ └── settings.php
+ └── composer.json
 ```
 
 ### Plugin Configuration
@@ -591,42 +591,42 @@ plugins/
 <?php
 // plugins/my-plugin/canyon-plugin.php
 return [
-    'plugin' => [
-        'name' => 'My Plugin',
-        'description' => 'Does something useful',
-        'version' => '1.0.0',
-        'author' => 'Your Name',
-        'active' => true,
-    ],
+ 'plugin' => [
+ 'name' => 'My Plugin',
+ 'description' => 'Does something useful',
+ 'version' => '1.0.0',
+ 'author' => 'Your Name',
+ 'active' => true,
+ ],
 
-    // Plugin routes
-    'routes' => [
-        'my_plugin_index' => [
-            'path' => '/my-plugin',
-            'method' => 'GET',
-            'controller' => [PluginController::class, 'index'],
-        ],
-    ],
+ // Plugin routes
+ 'routes' => [
+ 'my_plugin_index' => [
+ 'path' => '/my-plugin',
+ 'method' => 'GET',
+ 'controller' => [PluginController::class, 'index'],
+ ],
+ ],
 
-    // Plugin widgets
-    'widgets' => [
-        'my_widget' => [
-            'name' => 'My Widget',
-            'callback' => fn($data) => '<div>Widget!</div>',
-            'options' => ['access' => 'logged_in'],
-        ],
-    ],
+ // Plugin widgets
+ 'widgets' => [
+ 'my_widget' => [
+ 'name' => 'My Widget',
+ 'callback' => fn($data) => '<div>Widget!</div>',
+ 'options' => ['access' => 'logged_in'],
+ ],
+ ],
 
-    // Plugin settings
-    'settings' => [
-        'api_key' => '',
-        'enabled' => true,
-    ],
+ // Plugin settings
+ 'settings' => [
+ 'api_key' => '',
+ 'enabled' => true,
+ ],
 
-    // Plugin events
-    'events' => [
-        'user.registered' => [MyPlugin::class, 'onUserRegistered'],
-    ],
+ // Plugin events
+ 'events' => [
+ 'user.registered' => [MyPlugin::class, 'onUserRegistered'],
+ ],
 ];
 ```
 
@@ -639,15 +639,15 @@ namespace MyPlugin;
 
 class MyPlugin
 {
-    public static function boot(): void
-    {
-        // Plugin initialization
-    }
+ public static function boot(): void
+ {
+ // Plugin initialization
+ }
 
-    public static function onUserRegistered(array $data): void
-    {
-        // Handle event
-    }
+ public static function onUserRegistered(array $data): void
+ {
+ // Handle event
+ }
 }
 ```
 
@@ -661,14 +661,14 @@ Edit `config/ai.php`:
 
 ```php
 'providers' => [
-    'openai' => [
-        'api_key' => 'sk-your-real-key',
-        'model' => 'gpt-4o',
-    ],
-    'openrouter' => [
-        'api_key' => 'sk-or-your-real-key',
-        'model' => 'openai/gpt-4o',
-    ],
+ 'openai' => [
+ 'api_key' => 'sk-your-real-key',
+ 'model' => 'gpt-4o',
+ ],
+ 'openrouter' => [
+ 'api_key' => 'sk-or-your-real-key',
+ 'model' => 'openai/gpt-4o',
+ ],
 ],
 ```
 
@@ -680,36 +680,36 @@ use Canyon\Core\AiHelper;
 
 class AiController extends Controller
 {
-    use AiHelper;
+ use AiHelper;
 
-    public function chat(): never
-    {
-        $message = $this->input('message');
-        $response = $this->aiChat($message, [
-            'system' => 'You are a helpful assistant.',
-        ]);
+ public function chat(): never
+ {
+ $message = $this->input('message');
+ $response = $this->aiChat($message, [
+ 'system' => 'You are a helpful assistant.',
+ ]);
 
-        $this->json([
-            'reply' => $response->content,
-            'tokens' => $response->tokensUsed,
-        ]);
-    }
+ $this->json([
+ 'reply' => $response->content,
+ 'tokens' => $response->tokensUsed,
+ ]);
+ }
 
-    public function summarize(): never
-    {
-        $text = $this->input('text');
-        $summary = $this->aiSummarize($text);
-        $this->json(['summary' => $summary]);
-    }
+ public function summarize(): never
+ {
+ $text = $this->input('text');
+ $summary = $this->aiSummarize($text);
+ $this->json(['summary' => $summary]);
+ }
 
-    public function code(): never
-    {
-        $code = $this->aiGenerateCode(
-            'Create a REST API endpoint for user registration',
-            'php'
-        );
-        $this->json(['code' => $code]);
-    }
+ public function code(): never
+ {
+ $code = $this->aiGenerateCode(
+ 'Create a REST API endpoint for user registration',
+ 'php'
+ );
+ $this->json(['code' => $code]);
+ }
 }
 ```
 
@@ -719,8 +719,8 @@ class AiController extends Controller
 <?php
 // In a service provider or routes file
 AiChatbot::register('bottom-right', [
-    'title' => 'AI Assistant',
-    'welcome_message' => 'How can I help you?',
+ 'title' => 'AI Assistant',
+ 'welcome_message' => 'How can I help you?',
 ]);
 ```
 
@@ -734,9 +734,9 @@ AiChatbot::register('bottom-right', [
 <?php
 // Create profile
 \UserProfile::create($user->id, [
-    'bio' => 'Software developer',
-    'location' => 'New York',
-    'website' => 'https://example.com',
+ 'bio' => 'Software developer',
+ 'location' => 'New York',
+ 'website' => 'https://example.com',
 ]);
 
 // Get profile
@@ -787,8 +787,8 @@ $conversations = \MessageSystem::getConversations($userId);
 
 // Get messages in conversation
 $messages = \MessageSystem::getMessages($conversationId, [
-    'limit' => 20,
-    'before' => $lastMessageId,
+ 'limit' => 20,
+ 'before' => $lastMessageId,
 ]);
 
 // Mark as read
@@ -804,15 +804,15 @@ $unread = \MessageSystem::getUnreadCount($userId);
 <?php
 // Create post
 $post = \ActivityFeed::post($userId, [
-    'content' => 'Hello world!',
-    'type' => 'text', // text, image, video, link
+ 'content' => 'Hello world!',
+ 'type' => 'text', // text, image, video, link
 ]);
 
 // Get feed
 $feed = \ActivityFeed::getFeed([
-    'user_id' => $userId,
-    'limit' => 20,
-    'offset' => 0,
+ 'user_id' => $userId,
+ 'limit' => 20,
+ 'offset' => 0,
 ]);
 
 // Like/unlike
@@ -835,10 +835,10 @@ $feed = \ActivityFeed::getFeed([
 <?php
 // Create group
 $group = \GroupSystem::create([
-    'name' => 'PHP Developers',
-    'description' => 'A group for PHP enthusiasts',
-    'privacy' => 'public', // public, private, secret
-    'owner_id' => $userId,
+ 'name' => 'PHP Developers',
+ 'description' => 'A group for PHP enthusiasts',
+ 'privacy' => 'public', // public, private, secret
+ 'owner_id' => $userId,
 ]);
 
 // Join group
@@ -882,20 +882,20 @@ Don't want the built-in social plugin? Build your own:
 <?php
 // In your plugin's canyon-plugin.php
 return [
-    'plugin' => [
-        'name' => 'Custom Social',
-        'version' => '1.0.0',
-        'active' => true,
-    ],
-    'services' => [
-        'social' => CustomSocialService::class,
-    ],
-    'routes' => [
-        'custom_profile' => [
-            'path' => '/profile/{id}',
-            'handler' => [ProfileController::class, 'show'],
-        ],
-    ],
+ 'plugin' => [
+ 'name' => 'Custom Social',
+ 'version' => '1.0.0',
+ 'active' => true,
+ ],
+ 'services' => [
+ 'social' => CustomSocialService::class,
+ ],
+ 'routes' => [
+ 'custom_profile' => [
+ 'path' => '/profile/{id}',
+ 'handler' => [ProfileController::class, 'show'],
+ ],
+ ],
 ];
 ```
 
@@ -915,22 +915,22 @@ return [
 // Create middleware in app/Middleware/
 class AuthMiddleware extends Middleware
 {
-    public function handle($request, $next) {
-        // Your auth logic
-        return $next($request);
-    }
+ public function handle($request, $next) {
+ // Your auth logic
+ return $next($request);
+ }
 }
 
 // Register in routes/web.php
 Router::group([AuthMiddleware::class], function () {
-    // Protected routes
+ // Protected routes
 });
 
 // Create services in app/Services/
 class PaymentService {
-    public function process($amount, $user) {
-        // Your payment logic
-    }
+ public function process($amount, $user) {
+ // Your payment logic
+ }
 }
 ```
 
@@ -958,10 +958,10 @@ use Canyon\Contracts\ProfileInterface;
 
 class CustomProfileService implements ProfileInterface
 {
-    public function create(int $userId, array $data): bool { /* ... */ }
-    public function get(int $userId): ?array { /* ... */ }
-    public function update(int $userId, array $data): bool { /* ... */ }
-    // ... implement all interface methods
+ public function create(int $userId, array $data): bool { /* ... */ }
+ public function get(int $userId): ?array { /* ... */ }
+ public function update(int $userId, array $data): bool { /* ... */ }
+ // ... implement all interface methods
 }
 
 // Register in a service provider or public/index.php
@@ -1070,36 +1070,36 @@ define('CANYON_WAF_ENABLED', true);
 
 ```nginx
 server {
-    listen 80;
-    server_name yourdomain.com;
-    root /var/www/my-app/public;
-    index index.php;
+ listen 80;
+ server_name yourdomain.com;
+ root /var/www/my-app/public;
+ index index.php;
 
-    # Security headers
-    add_header X-Frame-Options DENY always;
-    add_header X-Content-Type-Options nosniff always;
+ # Security headers
+ add_header X-Frame-Options DENY always;
+ add_header X-Content-Type-Options nosniff always;
 
-    # Block sensitive files
-    location ~ /\.env { deny all; return 404; }
-    location ~ ^/(app|config|storage|routes|resources|vendor)/ { deny all; return 404; }
+ # Block sensitive files
+ location ~ /\.env { deny all; return 404; }
+ location ~ ^/(app|config|storage|routes|resources|vendor)/ { deny all; return 404; }
 
-    # Static files
-    location ~* \.(css|js|png|jpg|jpeg|gif|svg|webp|avif|ico|woff2?|ttf)$ {
-        expires 1y;
-        add_header Cache-Control "public, immutable";
-    }
+ # Static files
+ location ~* \.(css|js|png|jpg|jpeg|gif|svg|webp|avif|ico|woff2?|ttf)$ {
+ expires 1y;
+ add_header Cache-Control "public, immutable";
+ }
 
-    # PHP
-    location ~ \.php$ {
-        fastcgi_pass unix:/var/run/php/php8.2-fpm.sock;
-        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
-        include fastcgi_params;
-    }
+ # PHP
+ location ~ \.php$ {
+ fastcgi_pass unix:/var/run/php/php8.2-fpm.sock;
+ fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+ include fastcgi_params;
+ }
 
-    # Front controller
-    location / {
-        try_files $uri $uri/ /index.php?$query_string;
-    }
+ # Front controller
+ location / {
+ try_files $uri $uri/ /index.php?$query_string;
+ }
 }
 ```
 

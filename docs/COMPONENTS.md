@@ -7,11 +7,11 @@ one flat pile of classes.
 
 ```
 components/
-  core/          # kernel — routing, view, database, config, security   (required)
-  ai/            # multi-provider LLM integration, chatbot widget
-  social/        # Elgg-based community layer (river, groups, profiles, widgets…)
-  security/      # web application firewall + RBAC / access control
-  performance/   # asset & image optimisation, OPcache, preload, heartbeat
+ core/ # kernel — routing, view, database, config, security (required)
+ ai/ # multi-provider LLM integration, chatbot widget
+ social/ # Elgg community layer (river, groups, profiles, widgets…)
+ security/ # web application firewall + RBAC / access control
+ performance/ # asset & image optimisation, OPcache, preload, heartbeat
 ```
 
 ## The manifest
@@ -20,15 +20,15 @@ Every component is described by `components/<name>/component.json`:
 
 ```json
 {
-    "name": "social",
-    "title": "Canyon Social",
-    "description": "Elgg-based community layer: activity river, groups, messaging, …",
-    "version": "1.0.0",
-    "type": "addon",
-    "enabled": true,
-    "requires": ["core"],
-    "autoload": { "psr-4": { "Canyon\\Core\\": "src" } },
-    "classes": ["ActivityFeed", "GroupSystem", "Menu", "…"]
+ "name": "social",
+ "title": "Canyon Social",
+ "description": "Elgg community layer: activity river, groups, messaging, …",
+ "version": "1.0.0",
+ "type": "addon",
+ "enabled": true,
+ "requires": ["core"],
+ "autoload": { "psr-4": { "Canyon\\Core\\": "src" } },
+ "classes": ["ActivityFeed", "GroupSystem", "Menu", "…"]
 }
 ```
 
@@ -50,11 +50,11 @@ map, so the namespace stays stable while the physical layout is componentised.
 ## Enabling and disabling
 
 ```bash
-./canyon component list              # installed components and their state
-./canyon component show social       # full manifest detail
-./canyon component disable social    # persists the decision
-./canyon component enable social     # turns it back on, with its dependencies
-./canyon info                        # framework summary, incl. components
+./canyon component list # installed components and their state
+./canyon component show social # full manifest detail
+./canyon component disable social # persists the decision
+./canyon component enable social # turns it back on, with its dependencies
+./canyon info # framework summary, incl. components
 ```
 
 Decisions are written to `components.json` at the framework root:
@@ -67,10 +67,10 @@ Rules the loader enforces:
 
 - `core` can never be disabled — without it nothing loads.
 - Disabling a component also disables anything whose `requires` names it, so a
-  request can never fail while autoloading a missing parent.
+ request can never fail while autoloading a missing parent.
 - Re-enabling a component re-enables the dependencies it needs.
 - `CANYON_COMPONENTS_DISABLED` in `config.php` is merged with `components.json`,
-  so a deployment can pin a set without touching the file the CLI writes.
+ so a deployment can pin a set without touching the file the CLI writes.
 
 ## How loading works
 
@@ -79,7 +79,7 @@ configures the autoloader — so it uses nothing but the standard library:
 
 1. `canyon_discover_components()` — glob `components/*/component.json`.
 2. `canyon_resolve_components()` — apply `enabled`, the disable list and
-   `requires` (transitively); `core` is always added.
+ `requires` (transitively); `core` is always added.
 3. `canyon_component_psr4()` — flatten the manifests into prefix → directories.
 4. `canyon_component_files()` — the `files` entries to require up front.
 
@@ -87,7 +87,7 @@ configures the autoloader — so it uses nothing but the standard library:
 order:
 
 1. **Application** (`CANYON_APP_PATH`) — so an app can override a framework
-   default of the same name.
+ default of the same name.
 2. **Enabled components** — the kernel and addons.
 3. **The framework's app skeleton** — `Canyon\Controllers\Controller` and friends.
 
@@ -95,11 +95,11 @@ Once the autoloader is live, `Canyon\Core\Component` (`components/core/src/Compo
 provides the object-oriented API used by the CLI and available to applications:
 
 ```php
-Component::enabledNames();     // ['ai', 'core', 'performance', 'security', 'social']
+Component::enabledNames(); // ['ai', 'core', 'performance', 'security', 'social']
 Component::isEnabled('social');
 Component::manifest('core');
 Component::srcPath('social');
-Component::info();             // rows for a listing / admin screen
+Component::info(); // rows for a listing / admin screen
 Component::setEnabled('social', false);
 ```
 
@@ -131,10 +131,10 @@ Constants:
 ### Updating a consuming application
 
 ```bash
-cd shared/canyon && git pull          # update the framework once
+cd shared/canyon && git pull # update the framework once
 # or, from an application that defines CANYON_SHARED_PATH:
-bash bin/update-framework.sh --check  # show what would change
-bash bin/update-framework.sh          # pull, and report which components moved
+bash bin/update-framework.sh --check # show what would change
+bash bin/update-framework.sh # pull, and report which components moved
 ```
 
 Because nothing framework-owned is copied into the app, one pull updates every
@@ -144,7 +144,7 @@ application that points at that checkout.
 
 1. Create `components/<name>/src/` and put the classes in it.
 2. Add `components/<name>/component.json` with a `name`, `version`, `requires`
-   and an `autoload.psr-4` map.
+ and an `autoload.psr-4` map.
 3. `./canyon component list` — it appears immediately; no registration step.
 
 Keep `requires` honest: the loader uses it both to pull dependencies in and to

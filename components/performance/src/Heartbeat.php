@@ -6,7 +6,7 @@ namespace Canyon\Core;
  * Canyon Framework - Heartbeat Control
  *
  * Manages WordPress-like heartbeat functionality for periodic requests.
- * based on QUIC.cloud heartbeat control.
+ * QUIC.cloud heartbeat control.
  */
 class Heartbeat
 {

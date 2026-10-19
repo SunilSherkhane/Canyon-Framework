@@ -8,7 +8,7 @@ use Closure;
  * Canyon Framework Router
  *
  * Resolves the incoming HTTP request to a registered route handler.
- * based on Laravel and CodeIgniter routers.
+ * Laravel and CodeIgniter routers.
  *
  * Security: strict method allow-list, URI sanitization, handler validation,
  * and sanitized error responses with no information disclosure.

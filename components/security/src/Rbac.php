@@ -3,7 +3,7 @@
 namespace Canyon\Core;
 
 /**
- * Canyon Framework - RBAC (Yii2)
+ * Canyon Framework - RBAC 
  *
  * Role-Based Access Control with roles, permissions, and hierarchy.
  */

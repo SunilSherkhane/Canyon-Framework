@@ -6,7 +6,7 @@ use Closure;
 
 /**
  * Canyon Framework Middleware System
- * based on Laravel Middleware
+ * Laravel Middleware
  */
 abstract class Middleware
 {

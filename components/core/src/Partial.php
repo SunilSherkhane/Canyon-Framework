@@ -6,7 +6,7 @@ namespace Canyon\Core;
  * Canyon Framework - View Partials
  *
  * Reusable view components with data isolation.
- * based on CodeIgniter's View Cells and Laravel's view partials.
+ * CodeIgniter's View Cells and Laravel's view partials.
  */
 class Partial
 {
