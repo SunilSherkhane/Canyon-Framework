@@ -107,6 +107,18 @@ class Database
   }
 
   /**
+   * Execute a raw SQL query statically (convenience method).
+   *
+   * @param string $sql The SQL query
+   * @param array $bindings Values to bind to the query
+   * @return \PDOStatement The executed statement
+   */
+  public static function query(string $sql, array $bindings = []): \PDOStatement
+  {
+    return (new self())->statement($sql, $bindings);
+  }
+
+  /**
    * Select rows from a table.
    *
    * @param string $table Table name

@@ -118,7 +118,7 @@ define('CANYON_ENV', 'development');
 /**
  * Enable error display (only in development).
  */
-define('CANYON_DEBUG', true);
+define('CANYON_DEBUG', false);
 
 /**
  * Log errors to file (always recommended).
@@ -293,7 +293,7 @@ $canyonSharedHosting = (
  file_exists(__DIR__ . '/.cpanel') ||
  file_exists(__DIR__ . '/.plesk') ||
  strpos($_SERVER['DOCUMENT_ROOT'] ?? '', 'public_html') !== false ||
- strpos($_SERVER['DOCUMENT_ROOT'] !== false, 'htdocs') !== false ||
+ strpos($_SERVER['DOCUMENT_ROOT'] ?? '', 'htdocs') !== false ||
  strpos($_SERVER['DOCUMENT_ROOT'] ?? '', 'www') !== false
 );
 

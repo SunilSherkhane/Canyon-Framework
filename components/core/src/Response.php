@@ -60,21 +60,11 @@ class Response
 
   public static function redirect(string $url, int $statusCode = 302, array $headers = []): self
   {
-    // Security: Prevent open redirect attacks
-    // Block protocol-relative URLs and absolute URLs to external domains
-    if (str_starts_with($url, '//')) {
-      $url = '/';
-    }
-    
-    // If it's an absolute URL, verify it matches our domain
-    if (str_starts_with($url, 'http://') || str_starts_with($url, 'https://')) {
-      $siteUrl = defined('CANYON_SITE_URL') ? CANYON_SITE_URL : '';
-      if ($siteUrl && !str_starts_with($url, rtrim($siteUrl, '/'))) {
-        $url = '/';
-      }
-    }
-    
-    $headers['Location'] = $url;
+    // Security: delegate to the central redirect sanitiser which rejects
+    // protocol-relative URLs, absolute URLs to external domains, and
+    // anything carrying a scheme or host.
+    $sanitized = \Canyon\Core\Security::sanitizeRedirectUrl($url);
+    $headers['Location'] = $sanitized ?? '/';
     return new self('', $statusCode, $headers);
   }
 
@@ -210,6 +200,19 @@ class Response
   public function status(int $code): self
   {
     $this->statusCode = $code;
+    return $this;
+  }
+
+  /**
+   * Flash a session value that persists for the next request.
+   * Useful for "success" messages after a redirect.
+   */
+  public function with(string $key, mixed $value): self
+  {
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+      session_start();
+    }
+    $_SESSION['_flash_' . $key] = $value;
     return $this;
   }
 

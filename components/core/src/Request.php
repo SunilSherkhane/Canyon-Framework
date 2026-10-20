@@ -288,11 +288,17 @@ class Request
 
   public function ip(): ?string
   {
-    // Check for proxy headers
+    // Check for proxy headers — only trust X-Forwarded-For from known proxies
     $forwarded = $this->getHeader('X-Forwarded-For');
     if ($forwarded) {
-      $ips = explode(',', $forwarded);
-      return trim($ips[0]);
+      $directIp = $this->clientIp;
+      $trustedProxies = array_map('trim', explode(',', env('WAF_TRUSTED_PROXIES', '')));
+
+      // Only honour X-Forwarded-For if the direct peer is a trusted proxy
+      if ($directIp !== null && in_array($directIp, $trustedProxies, true)) {
+        $ips = explode(',', $forwarded);
+        return trim($ips[0]);
+      }
     }
     return $this->clientIp;
   }

@@ -51,3 +51,70 @@ if (!function_exists('response_time')) {
   return number_format(microtime(true) - $_SERVER['REQUEST_TIME_FLOAT'], 6);
  }
 }
+
+if (!function_exists('view')) {
+ /**
+  * Render a view and return the output as a string.
+  */
+ function view(string $view, array $data = []): string
+ {
+  return \Canyon\Core\View::make($view, $data);
+ }
+}
+
+if (!function_exists('e')) {
+ /**
+  * Escape a value for safe HTML output.
+  */
+ function e(mixed $value): string
+ {
+  return \Canyon\Core\Security::escape($value);
+ }
+}
+
+if (!function_exists('flash')) {
+ /**
+  * Get a flash session value (and remove it).
+  */
+ function flash(string $key, mixed $default = null): mixed
+ {
+  if (session_status() !== PHP_SESSION_ACTIVE) {
+   session_start();
+  }
+  $value = $_SESSION['_flash_' . $key] ?? $default;
+  unset($_SESSION['_flash_' . $key]);
+  return $value;
+ }
+}
+
+if (!function_exists('abort')) {
+ /**
+  * Send an HTTP error response and stop execution.
+  */
+ function abort(int $status, string $message = ''): never
+ {
+  http_response_code($status);
+  header('Content-Type: application/json; charset=UTF-8');
+  header('X-Content-Type-Options: nosniff');
+  echo json_encode(['error' => $message ?: 'Error'], JSON_UNESCAPED_UNICODE);
+  exit;
+ }
+}
+
+if (!function_exists('auth')) {
+ /**
+  * Get the currently authenticated user.
+  *
+  * TODO: Replace with a real authentication system.
+  * For now, returns a default admin user for development.
+  */
+ function auth(): object
+ {
+  return new class {
+   public int $id = 1;
+   public string $name = 'Admin';
+   public string $email = 'admin@example.com';
+   public array $roles = ['admin'];
+  };
+ }
+}

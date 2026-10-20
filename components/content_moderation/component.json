@@ -1,0 +1,16 @@
+{
+    "name": "content_moderation",
+    "version": "1.0.0",
+    "type": "module",
+    "description": "Editorial workflows and content states for moderation",
+    "enabled": true,
+    "requires": ["core", "content"],
+    "autoload": {
+        "psr-4": {
+            "Canyon\\Core\\ContentModeration\\": "src/"
+        }
+    },
+    "classes": [
+        "Canyon\\Core\\ContentModeration\\ContentModerationModule"
+    ]
+}

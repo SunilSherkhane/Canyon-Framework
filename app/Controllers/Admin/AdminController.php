@@ -142,7 +142,7 @@ class AdminController extends Controller
      */
     public function fields(Request $request): string
     {
-        $fields = \Canyon\Core\Database::statement('SELECT * FROM fields ORDER BY weight, label');
+        $fields = \Canyon\Core\Database::query('SELECT * FROM fields ORDER BY weight, label');
         $types = ContentModule::getTypes();
 
         return view('admin.fields.index', [
@@ -228,8 +228,8 @@ class AdminController extends Controller
     public function searchRebuild(Request $request): string
     {
         $stats = [
-            'indexed' => \Canyon\Core\Database::statement('SELECT COUNT(*) as cnt FROM search_index')[0]['cnt'] ?? 0,
-            'total' => \Canyon\Core\Database::statement('SELECT COUNT(*) as cnt FROM content')[0]['cnt'] ?? 0,
+            'indexed' => \Canyon\Core\Database::query('SELECT COUNT(*) as cnt FROM search_index')[0]['cnt'] ?? 0,
+            'total' => \Canyon\Core\Database::query('SELECT COUNT(*) as cnt FROM content')[0]['cnt'] ?? 0,
         ];
 
         return view('admin.search.rebuild', [

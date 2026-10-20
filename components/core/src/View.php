@@ -15,6 +15,15 @@ class View
   /** @var array<string, array<int, string>> */
   protected static array $paths = [];
 
+  /** @var string|null Layout to wrap the rendered view in */
+  protected static ?string $layout = null;
+
+  /** @var array<string, string> Named sections captured during rendering */
+  protected static array $sections = [];
+
+  /** @var string|null Name of the section currently being captured */
+  protected static ?string $currentSection = null;
+
   // -----------------------------------------------------------------------
   // Path registration
   // -----------------------------------------------------------------------
@@ -54,6 +63,11 @@ class View
     $escapedData = $escape ? self::escapeData($data) : $data;
     $rawData = $data;
 
+    // Reset layout and sections for this render
+    self::$layout = null;
+    self::$sections = [];
+    self::$currentSection = null;
+
     ob_start();
 
     extract($escapedData, EXTR_SKIP);
@@ -64,6 +78,9 @@ class View
       $raw->$key = $value;
     }
 
+    // Make $this available to the view for layout/section calls
+    $this = new self();
+
     try {
       include $viewPath;
     } catch (\Throwable $exception) {
@@ -71,7 +88,55 @@ class View
       throw $exception;
     }
 
-    return ob_get_clean();
+    $content = ob_get_clean();
+
+    // If a layout was set, render the layout with the captured sections
+    if (self::$layout !== null) {
+      $layoutData = array_merge($data, self::$sections);
+      return self::make(self::$layout, $layoutData, $escape);
+    }
+
+    return $content;
+  }
+
+  // -----------------------------------------------------------------------
+  // Layout support (Laravel-style)
+  // -----------------------------------------------------------------------
+
+  /**
+   * Set the layout to wrap the rendered view in.
+   */
+  public function layout(string $name): void
+  {
+    self::$layout = $name;
+  }
+
+  /**
+   * Start capturing a named section.
+   */
+  public function section(string $name): void
+  {
+    self::$currentSection = $name;
+    ob_start();
+  }
+
+  /**
+   * End capturing the current section.
+   */
+  public function endSection(): void
+  {
+    if (self::$currentSection !== null) {
+      self::$sections[self::$currentSection] = ob_get_clean();
+      self::$currentSection = null;
+    }
+  }
+
+  /**
+   * Output a captured section's content.
+   */
+  public function yield(string $name): string
+  {
+    return self::$sections[$name] ?? '';
   }
 
   /**

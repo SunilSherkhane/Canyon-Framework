@@ -1,0 +1,17 @@
+{
+    "name": "views",
+    "version": "1.0.0",
+    "type": "module",
+    "description": "Dynamic content lists with ORM-like query builder, filtering, and pagination",
+    "enabled": true,
+    "requires": ["core"],
+    "autoload": {
+        "psr-4": {
+            "Canyon\\Core\\Views\\": "src/"
+        }
+    },
+    "classes": [
+        "Canyon\\Core\\Views\\View",
+        "Canyon\\Core\\Views\\ViewBuilder"
+    ]
+}
