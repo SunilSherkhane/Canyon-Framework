@@ -208,7 +208,7 @@ class Cron
       json_encode($results)
     );
 
-    file_put_contents(self::$logFile, $entry, FILE_APPEND | LOCK_EX);
+    @file_put_contents(self::$logFile, $entry, FILE_APPEND | LOCK_EX);
   }
 
   /**

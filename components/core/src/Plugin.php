@@ -242,7 +242,7 @@ class Plugin
     $data[$key] = $value;
 
     $content = "<?php\n\nreturn " . var_export($data, true) . ";\n";
-    return file_put_contents($file, $content) !== false;
+    return @file_put_contents($file, $content) !== false;
   }
 
   /**

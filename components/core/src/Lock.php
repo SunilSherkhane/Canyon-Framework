@@ -200,7 +200,7 @@ class Lock
 
     // Use atomic file creation
     $tempFile = $file . '.tmp.' . $this->token;
-    if (file_put_contents($tempFile, serialize($data)) === false) {
+    if (@file_put_contents($tempFile, serialize($data)) === false) {
       return false;
     }
 
@@ -387,7 +387,7 @@ class Lock
     }
 
     $data['expires_at'] = time() + $ttl;
-    return file_put_contents($file, serialize($data)) !== false;
+    return @file_put_contents($file, serialize($data)) !== false;
   }
 
   protected function extendDatabase(int $ttl): bool

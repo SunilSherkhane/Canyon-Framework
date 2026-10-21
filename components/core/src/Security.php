@@ -482,6 +482,6 @@ class Security
       json_encode($data, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE)
     );
 
-    file_put_contents($logDir . '/security.log', $logEntry, FILE_APPEND | LOCK_EX);
+    @file_put_contents($logDir . '/security.log', $logEntry, FILE_APPEND | LOCK_EX);
   }
 }

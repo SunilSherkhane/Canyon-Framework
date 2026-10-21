@@ -139,9 +139,9 @@ if (is_file(CANYON_APP_PATH . '/Helpers/app.php')) {
  require_once CANYON_APP_PATH . '/Helpers/app.php';
 }
 
-// ============================================================================
+// ===========================================================================
 // Bridge config.php constants into the env() helper
-// ============================================================================
+// ===========================================================================
 // config.php is the single source of truth; env() reads from $_ENV. Copy the
 // core values across so framework classes and views see the same settings.
 
@@ -150,11 +150,35 @@ foreach ([
  'APP_ENV'  => 'CANYON_ENV',
  'APP_URL'  => 'CANYON_SITE_URL',
  'APP_DEBUG'  => 'CANYON_DEBUG',
- 'DB_CONNECTION' => 'CANYON_DB_CONNECTION',
- 'DB_DATABASE' => 'CANYON_DB_PATH',
 ] as $envKey => $constKey) {
  if (defined($constKey) && !array_key_exists($envKey, $_ENV)) {
   $_ENV[$envKey] = constant($constKey);
+ }
+}
+
+// Database: the bridge differs by driver.
+if (defined('CANYON_DB_CONNECTION')) {
+ $dbDriver = strtolower((string) CANYON_DB_CONNECTION);
+ if (!array_key_exists('DB_CONNECTION', $_ENV)) {
+  $_ENV['DB_CONNECTION'] = $dbDriver;
+ }
+ if ($dbDriver === 'sqlite') {
+  if (!array_key_exists('DB_DATABASE', $_ENV)) {
+   $_ENV['DB_DATABASE'] = CANYON_DB_PATH ?? constant('CANYON_DB_PATH');
+  }
+ } elseif ($dbDriver === 'mysql' || $dbDriver === 'mariadb') {
+  foreach ([
+   'DB_HOST'     => 'CANYON_DB_HOST',
+   'DB_PORT'     => 'CANYON_DB_PORT',
+   'DB_DATABASE' => 'CANYON_DB_NAME',
+   'DB_USERNAME' => 'CANYON_DB_USER',
+   'DB_PASSWORD' => 'CANYON_DB_PASS',
+   'DB_CHARSET'  => 'CANYON_DB_CHARSET',
+  ] as $envKey => $constKey) {
+   if (defined($constKey) && !array_key_exists($envKey, $_ENV)) {
+    $_ENV[$envKey] = constant($constKey);
+   }
+  }
  }
 }
 

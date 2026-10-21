@@ -52,7 +52,7 @@ class Queue
     ];
 
     $file = self::$queueDir . '/' . $id . '.job';
-    file_put_contents($file, serialize($job), LOCK_EX);
+    @file_put_contents($file, serialize($job), LOCK_EX);
 
     return $id;
   }
@@ -156,7 +156,7 @@ class Queue
     $job['error'] = $error;
 
     $file = self::$failedDir . '/' . $job['id'] . '.failed';
-    file_put_contents($file, serialize($job), LOCK_EX);
+    @file_put_contents($file, serialize($job), LOCK_EX);
   }
 
   /**

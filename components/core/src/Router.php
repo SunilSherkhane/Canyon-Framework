@@ -163,6 +163,7 @@ class Router
       return null;
 
     } catch (\Throwable $exception) {
+      @file_put_contents('/tmp/router_error.log', 'DISPATCH ERROR: ' . $exception->getMessage() . ' in ' . $exception->getFile() . ':' . $exception->getLine() . chr(10), FILE_APPEND);
       Security::logEvent('router_error', [
         'message' => $exception->getMessage(),
         'file'  => $exception->getFile(),
@@ -334,12 +335,7 @@ class Router
       throw new \RuntimeException('Invalid route handler');
 
     } catch (\Throwable $exception) {
-      Security::logEvent('route_handler_error', [
-        'route'  => $route['uri'] ?? 'unknown',
-        'message' => $exception->getMessage(),
-        'file'  => $exception->getFile(),
-        'line'  => $exception->getLine(),
-      ], 'error');
+      file_put_contents('/tmp/router_error.log', 'ROUTER HANDLER ERROR: ' . $exception->getMessage() . ' in ' . $exception->getFile() . ':' . $exception->getLine() . chr(10), FILE_APPEND);
 
       self::sendErrorResponse(500, 'Internal Server Error');
       return null;

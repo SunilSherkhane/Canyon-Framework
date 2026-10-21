@@ -188,7 +188,7 @@ class I18n
     self::init();
     $file = self::$dir . '/' . $locale . '.php';
     $content = "<?php\n\nreturn " . var_export($translations, true) . ";\n";
-    return file_put_contents($file, $content) !== false;
+    return @file_put_contents($file, $content) !== false;
   }
 
   /**

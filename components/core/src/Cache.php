@@ -39,7 +39,7 @@ class Cache
       'value' => $value,
     ];
     $file = self::getCacheFile($key);
-    file_put_contents($file, serialize($data), LOCK_EX);
+    @file_put_contents($file, serialize($data), LOCK_EX);
   }
 
   /**

@@ -140,7 +140,7 @@ class Email
       mkdir($logDir, 0750, true);
     }
 
-    file_put_contents($logDir . '/email.log', $logEntry, FILE_APPEND | LOCK_EX);
+    @file_put_contents($logDir . '/email.log', $logEntry, FILE_APPEND | LOCK_EX);
 
     return true;
   }

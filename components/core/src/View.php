@@ -49,6 +49,19 @@ class View
    */
   public static function make(string $view, array $data = [], bool $escape = true): string
   {
+    return (new self())->renderInternal($view, $data, $escape);
+  }
+
+  /**
+   * Instance-level rendering.
+   *
+   * Having this as an instance method means $this is available inside the
+   * included template file, so views can call $this->layout(),
+   * $this->section(), etc.  (PHP 8+ forbids reassigning $this, which is why
+   * the old code crashed.)
+   */
+  private function renderInternal(string $view, array $data = [], bool $escape = true): string
+  {
     self::assertValidViewName($view);
 
     $viewPath = self::findView($view);
@@ -78,9 +91,9 @@ class View
       $raw->$key = $value;
     }
 
-    // Make $this available to the view for layout/section calls
-    $this = new self();
-
+    // $this is available because renderInternal() is an instance method.
+    // (Previously the code did `$this = new self();` here, which is illegal
+    // in PHP 8+ and caused a fatal error.)
     try {
       include $viewPath;
     } catch (\Throwable $exception) {
