@@ -59,7 +59,7 @@ define('CANYON_DB_CHARSET', 'utf8mb4');
  * define('CANYON_SITE_URL', 'https://example.com');
  * define('CANYON_SITE_URL', 'https://example.com/myapp');
  */
-define('CANYON_SITE_URL', 'http://localhost');
+define('CANYON_SITE_URL', 'http://192.168.28.135:8083');
 
 /**
  * Application name shown in page titles and emails.
