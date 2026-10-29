@@ -273,6 +273,19 @@ HTML;
   {
     self::init();
 
+    // Reject prompt injection attempts
+    $injection = self::detectPromptInjection($message);
+    if ($injection) {
+     Security::logEvent('ai_prompt_injection', [
+      'session' => $sessionId,
+      'pattern' => $injection,
+     ], 'warning');
+     return [
+      'success' => false,
+      'error' => 'Your message contains disallowed content. Please rephrase.',
+     ];
+    }
+
     // Add user message to history
     self::$history[] = [
       'role' => 'user',
@@ -283,29 +296,82 @@ HTML;
 
     // Get AI response
     try {
-      $response = Ai::chat($message, [
-        'system' => 'You are a helpful assistant embedded in a website. Be concise, friendly, and helpful.',
-      ]);
+     $response = Ai::chat($message, [
+      'system' => 'You are a helpful assistant embedded in a website. Be concise, friendly, and helpful.',
+     ]);
 
-      // Add bot response to history
-      self::$history[] = [
-        'role' => 'assistant',
-        'content' => $response->content,
-        'session' => $sessionId,
-        'timestamp' => time(),
-      ];
+     // Add bot response to history
+     self::$history[] = [
+      'role' => 'assistant',
+      'content' => $response->content,
+      'session' => $sessionId,
+      'timestamp' => time(),
+     ];
 
-      return [
-        'success' => true,
-        'response' => $response->content,
-        'tokens_used' => $response->tokensUsed,
-      ];
+     return [
+      'success' => true,
+      'response' => $response->content,
+      'tokens_used' => $response->tokensUsed,
+     ];
     } catch (\Exception $e) {
-      return [
-        'success' => false,
-        'error' => $e->getMessage(),
-      ];
+     return [
+      'success' => false,
+      'error' => $e->getMessage(),
+     ];
     }
+  }
+
+  /**
+   * Detect common prompt injection patterns in user input.
+   * Returns the matched pattern or null if clean.
+   */
+  protected static function detectPromptInjection(string $input): ?string
+  {
+    $lower = strtolower($input);
+
+    $patterns = [
+     'ignore previous',
+     'ignore all previous',
+     'you are now',
+     'you will now',
+     'system prompt',
+     'disregard',
+     'override',
+     'pretend',
+     'act as',
+     'jailbreak',
+     'developer mode',
+     'dan mode',
+     'do anything now',
+     'bypass',
+     'unfiltered',
+     'no restrictions',
+     'no rules',
+     'forget your',
+     'forget everything',
+     'new instructions',
+     'new directive',
+     'ignore your',
+     'reveal your',
+     'show your',
+     'print your',
+     'output your',
+     'repeat your',
+     'say your',
+     'tell me your',
+     'what is your',
+     'what are your',
+     'describe your',
+     'explain your',
+    ];
+
+    foreach ($patterns as $pattern) {
+     if (str_contains($lower, $pattern)) {
+      return $pattern;
+     }
+    }
+
+    return null;
   }
 
   /**

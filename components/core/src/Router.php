@@ -163,7 +163,7 @@ class Router
       return null;
 
     } catch (\Throwable $exception) {
-      @file_put_contents('/tmp/router_error.log', 'DISPATCH ERROR: ' . $exception->getMessage() . ' in ' . $exception->getFile() . ':' . $exception->getLine() . chr(10), FILE_APPEND);
+      @file_put_contents(CANYON_STORAGE_PATH . '/logs/router_error.log', 'DISPATCH ERROR: ' . $exception->getMessage() . chr(10), FILE_APPEND);
       Security::logEvent('router_error', [
         'message' => $exception->getMessage(),
         'file'  => $exception->getFile(),
@@ -232,9 +232,16 @@ class Router
       $spoofed = $_POST['_method'] ?? null;
       if (is_string($spoofed)) {
         $spoofed = strtoupper($spoofed);
-        if (in_array($spoofed, ['PUT', 'PATCH', 'DELETE'], true)) {
-          return $spoofed;
+        // Only allow spoofing when the route handler itself declares the target method.
+        if (!in_array($spoofed, ['PUT', 'PATCH', 'DELETE'], true)) {
+          return $method;
         }
+        // Enforce CSRF on any method-spoofed state-changing request.
+        $token = $_POST['_canyon_csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? null;
+        if ($token === null || !\Canyon\Core\Security::verifyCsrfToken($token)) {
+          self::sendErrorResponse(403, 'CSRF token required');
+        }
+        return $spoofed;
       }
     }
 
@@ -343,6 +350,46 @@ class Router
   }
 
   /**
+   * Parse a middleware spec into a class name and optional config string.
+   * Supports:
+   *   - "ThrottleMiddleware"               → class name, no config
+   *   - "throttle:60,1"                    → alias resolved via registry, config "60,1"
+   *   - \Canyon\Core\ThrottleMiddleware    → fully-qualified class name
+   */
+  protected static function resolveMiddleware(string $spec): ?array
+  {
+    $spec = trim($spec);
+
+    // Fully-qualified class
+    if (str_starts_with($spec, '\\') || class_exists($spec)) {
+      return ['class' => $spec, 'config' => ''];
+    }
+
+    // Alias with config: "throttle:60,1"
+    if (str_contains($spec, ':')) {
+      [$alias, $config] = explode(':', $spec, 2);
+      $alias = trim($alias);
+      $config = trim($config);
+
+      $map = [
+        'throttle'   => ThrottleMiddleware::class,
+      ];
+
+      if (isset($map[$alias])) {
+        return ['class' => $map[$alias], 'config' => $config];
+      }
+    }
+
+    // Try as a plain class name
+    $class = '\\Canyon\\Core\\' . $spec;
+    if (class_exists($class)) {
+      return ['class' => $class, 'config' => ''];
+    }
+
+    return null;
+  }
+
+  /**
    * Execute middleware pipeline using the pipeline pattern.
    * Each middleware can either pass control to the next handler or terminate early.
    */
@@ -351,11 +398,28 @@ class Router
     // Build the pipeline - inner to outer
     $pipeline = $finalHandler;
 
-    // Reverse middleware to build correct pipeline order
-    foreach (array_reverse($middleware) as $middlewareClass) {
-      $pipeline = function() use ($middlewareClass, $pipeline, $params) {
-        $middleware = new $middlewareClass();
-        return $middleware->handle(null, $pipeline);
+    // Reverse middleware to build correct pipeline order (outermost first)
+    foreach (array_reverse($middleware) as $middlewareSpec) {
+      $resolved = self::resolveMiddleware((string) $middlewareSpec);
+
+      if ($resolved === null) {
+        throw new \InvalidArgumentException("Unknown middleware: {$middlewareSpec}");
+      }
+
+      $pipeline = function() use ($resolved, $pipeline, $params) {
+        $class = $resolved['class'];
+        $config = $resolved['config'];
+
+        if ($config !== '' && method_exists($class, 'parse')) {
+          $middleware = $class::parse($config);
+        } else {
+          $middleware = new $class();
+        }
+
+        // Build a lightweight request context for middleware
+        $request = Request::createFromGlobals();
+
+        return $middleware->handle($request, $pipeline);
       };
     }
 

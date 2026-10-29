@@ -18,6 +18,16 @@ Router::group('throttle:60,1', function () {
  // AI Chatbot endpoint
  Router::post('/api/ai/chat', function () {
   $request = Request::createFromGlobals();
+
+  // CSRF protection for state-changing AI requests
+  $token = $request->getHeader('X-CSRF-TOKEN') ?? $_POST['_canyon_csrf_token'] ?? '';
+  if (!\Canyon\Core\Security::verifyCsrfToken($token)) {
+   http_response_code(403);
+   header('Content-Type: application/json');
+   echo json_encode(['error' => 'CSRF token required'], JSON_UNESCAPED_UNICODE);
+   exit;
+  }
+
   $message = $request->input('message', '');
   $session = $request->input('session', session_id());
 
@@ -45,6 +55,16 @@ Router::group('throttle:60,1', function () {
  // AI Completion endpoint
  Router::post('/api/ai/complete', function () {
   $request = Request::createFromGlobals();
+
+  // CSRF protection for state-changing AI requests
+  $token = $request->getHeader('X-CSRF-TOKEN') ?? $_POST['_canyon_csrf_token'] ?? '';
+  if (!\Canyon\Core\Security::verifyCsrfToken($token)) {
+   http_response_code(403);
+   header('Content-Type: application/json');
+   echo json_encode(['error' => 'CSRF token required'], JSON_UNESCAPED_UNICODE);
+   exit;
+  }
+
   $prompt = $request->input('prompt', '');
   $system = $request->input('system', '');
 
@@ -68,13 +88,25 @@ Router::group('throttle:60,1', function () {
     'model' => $response->model,
    ]);
   } catch (\Exception $e) {
-   return Response::json(['error' => $e->getMessage()], 500);
+   // Log the real error server-side; return a generic message to the client
+   \Canyon\Core\Security::logEvent('ai_api_error', ['message' => $e->getMessage()], 'error');
+   return Response::json(['error' => 'AI service temporarily unavailable'], 500);
   }
  }, 'ai.complete');
 
  // AI Summarize endpoint
  Router::post('/api/ai/summarize', function () {
   $request = Request::createFromGlobals();
+
+  // CSRF protection for state-changing AI requests
+  $token = $request->getHeader('X-CSRF-TOKEN') ?? $_POST['_canyon_csrf_token'] ?? '';
+  if (!\Canyon\Core\Security::verifyCsrfToken($token)) {
+   http_response_code(403);
+   header('Content-Type: application/json');
+   echo json_encode(['error' => 'CSRF token required'], JSON_UNESCAPED_UNICODE);
+   exit;
+  }
+
   $text = $request->input('text', '');
 
   if (empty($text)) {
@@ -97,13 +129,25 @@ Router::group('throttle:60,1', function () {
     'summary_length' => strlen($response->content),
    ]);
   } catch (\Exception $e) {
-   return Response::json(['error' => $e->getMessage()], 500);
+   // Log the real error server-side; return a generic message to the client
+   \Canyon\Core\Security::logEvent('ai_api_error', ['message' => $e->getMessage()], 'error');
+   return Response::json(['error' => 'AI service temporarily unavailable'], 500);
   }
  }, 'ai.summarize');
 
  // AI Translate endpoint
  Router::post('/api/ai/translate', function () {
   $request = Request::createFromGlobals();
+
+  // CSRF protection for state-changing AI requests
+  $token = $request->getHeader('X-CSRF-TOKEN') ?? $_POST['_canyon_csrf_token'] ?? '';
+  if (!\Canyon\Core\Security::verifyCsrfToken($token)) {
+   http_response_code(403);
+   header('Content-Type: application/json');
+   echo json_encode(['error' => 'CSRF token required'], JSON_UNESCAPED_UNICODE);
+   exit;
+  }
+
   $text = $request->input('text', '');
   $language = $request->input('language', 'English');
 
@@ -129,13 +173,25 @@ Router::group('throttle:60,1', function () {
     'language' => $language,
    ]);
   } catch (\Exception $e) {
-   return Response::json(['error' => $e->getMessage()], 500);
+   // Log the real error server-side; return a generic message to the client
+   \Canyon\Core\Security::logEvent('ai_api_error', ['message' => $e->getMessage()], 'error');
+   return Response::json(['error' => 'AI service temporarily unavailable'], 500);
   }
  }, 'ai.translate');
 
  // AI Embed endpoint
  Router::post('/api/ai/embed', function () {
   $request = Request::createFromGlobals();
+
+  // CSRF protection for state-changing AI requests
+  $token = $request->getHeader('X-CSRF-TOKEN') ?? $_POST['_canyon_csrf_token'] ?? '';
+  if (!\Canyon\Core\Security::verifyCsrfToken($token)) {
+   http_response_code(403);
+   header('Content-Type: application/json');
+   echo json_encode(['error' => 'CSRF token required'], JSON_UNESCAPED_UNICODE);
+   exit;
+  }
+
   $text = $request->input('text', '');
 
   if (empty($text)) {

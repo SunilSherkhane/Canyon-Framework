@@ -88,7 +88,7 @@ class Response
 
   public static function download(string $filePath, ?string $filename = null, array $headers = []): self
   {
-    // Security: Prevent directory traversal
+    // Security: Prevent directory traversal and limit download size
     $realPath = realpath($filePath);
     if ($realPath === false || !file_exists($realPath)) {
       return self::json(['error' => 'File not found'], 404);
@@ -99,6 +99,11 @@ class Response
       return self::json(['error' => 'Access denied'], 403);
     }
 
+    $fileSize = filesize($realPath);
+    if ($fileSize > 100 * 1024 * 1024) { // 100MB limit
+      return self::json(['error' => 'File too large'], 413);
+    }
+
     $filename = $filename !== null ? preg_replace('/[^a-zA-Z0-9._-]/', '_', $filename) : basename($realPath);
     $mimeType = mime_content_type($realPath);
     if ($mimeType === false) {
@@ -106,9 +111,14 @@ class Response
     }
 
     $headers['Content-Type'] = $mimeType;
-    $headers['Content-Length'] = (string) filesize($realPath);
+    $headers['Content-Length'] = (string) $fileSize;
     $headers['Content-Disposition'] = 'attachment; filename="' . $filename . '"';
     $headers['Cache-Control'] = 'no-cache, must-revalidate';
+
+    // Stream large files instead of loading into memory
+    if ($fileSize > 2 * 1024 * 1024) { // 2MB threshold
+      return new self('', 200, $headers); // Empty body; caller must flush
+    }
 
     return new self(file_get_contents($realPath), 200, $headers);
   }

@@ -72,7 +72,7 @@ class Queue
 
     sort($files);
     $file = $files[0];
-    $job = unserialize(file_get_contents($file));
+    $job = unserialize(file_get_contents($file), ['allowed_classes' => false]);
 
     // Check if job is available yet
     if (time() < $job['available_at']) {
@@ -168,7 +168,7 @@ class Queue
     $files = glob(self::$queueDir . '/*.job') ?: [];
     $jobs = [];
     foreach ($files as $file) {
-      $jobs[] = unserialize(file_get_contents($file));
+      $jobs[] = unserialize(file_get_contents($file), ['allowed_classes' => false]);
     }
     sort($jobs);
     return $jobs;
@@ -183,7 +183,7 @@ class Queue
     $files = glob(self::$failedDir . '/*.failed') ?: [];
     $jobs = [];
     foreach ($files as $file) {
-      $jobs[] = unserialize(file_get_contents($file));
+      $jobs[] = unserialize(file_get_contents($file), ['allowed_classes' => false]);
     }
     return $jobs;
   }

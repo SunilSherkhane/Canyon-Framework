@@ -6,7 +6,7 @@
  * Secure, simplified installation for any shared hosting.
  */
 
-// Prevent re-installation
+// Prevent re-installation after successful installation
 if (file_exists(__DIR__ . '/.installed')) {
  die('Canyon Framework is already installed. Delete the .installed file to reinstall.');
 }

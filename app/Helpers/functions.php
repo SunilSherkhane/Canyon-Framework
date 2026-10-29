@@ -103,18 +103,37 @@ if (!function_exists('abort')) {
 
 if (!function_exists('auth')) {
  /**
-  * Get the currently authenticated user.
+  * Get the currently authenticated user from the database.
   *
-  * TODO: Replace with a real authentication system.
-  * For now, returns a default admin user for development.
+  * Returns a User model object when a valid session exists,
+  * or a Guest object (id=0, roles=['guest']) when not authenticated.
   */
  function auth(): object
- {
-  return new class {
-   public int $id = 1;
-   public string $name = 'Admin';
-   public string $email = 'admin@example.com';
-   public array $roles = ['admin'];
-  };
- }
+  {
+   $userId = $_SESSION['canyon_user_id'] ?? 0;
+
+   if ($userId > 0) {
+    try {
+     $user = \Canyon\Models\User::findById((int) $userId);
+     if ($user) {
+      return (object) [
+       'id'    => (int) $user['id'],
+       'name'  => $user['name'],
+       'email' => $user['email'],
+       'roles' => $user['roles'] ?? ['user'],
+      ];
+     }
+    } catch (\Throwable $e) {
+     // Database unavailable — fall through to guest
+    }
+   }
+
+   // Unauthenticated guest — never return a fake admin.
+   return (object) [
+    'id'    => 0,
+    'name'  => 'Guest',
+    'email' => '',
+    'roles' => ['guest'],
+   ];
+  }
 }

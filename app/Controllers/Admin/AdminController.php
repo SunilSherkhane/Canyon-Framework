@@ -19,6 +19,19 @@ use Canyon\Core\Search\SearchModule;
 class AdminController extends Controller
 {
     /**
+     * AdminController constructor — gate all routes behind admin auth.
+     */
+    public function __construct()
+    {
+        $user = auth();
+        if ((int) $user->id === 0) {
+            Response::redirect('/login')->with('error', 'Please log in to access the admin area.');
+        }
+        if (!in_array('admin', $user->roles ?? [], true)) {
+            Response::redirect('/')->with('error', 'You do not have permission to access the admin area.');
+        }
+    }
+    /**
      * Content list page.
      */
     public function contentList(Request $request): string
@@ -73,7 +86,7 @@ class AdminController extends Controller
         $slug = ContentModule::slugify($data['title']);
         $data['slug'] = $slug;
 
-        $id = ContentModule::create($data['type'], $data, auth()->user()->id);
+        $id = ContentModule::create($data['type'], $data, auth()->id);
 
         // Index for search
         SearchModule::index('content', $id, [

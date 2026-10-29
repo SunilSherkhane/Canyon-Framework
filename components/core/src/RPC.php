@@ -107,9 +107,14 @@ class RPC
       return false;
     }
 
-    // Validate API key
-    $validKeys = explode(',', env('RPC_API_KEYS', ''));
-    return in_array($apiKey, $validKeys);
+    // Validate API key using timing-safe comparison
+    $validKeys = array_filter(array_map('trim', explode(',', env('RPC_API_KEYS', ''))));
+    foreach ($validKeys as $validKey) {
+     if (hash_equals($validKey, $apiKey)) {
+      return true;
+     }
+    }
+    return false;
   }
 
   /**

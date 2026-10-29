@@ -113,7 +113,7 @@ define('CANYON_ALLOWED_HOSTS', 'localhost,127.0.0.1');
  * production: Optimized, no error display, faster
  * development: Shows errors, debug toolbar, slower
  */
-define('CANYON_ENV', 'development');
+define('CANYON_ENV', env('APP_ENV', 'production'));
 
 /**
  * Enable error display (only in development).

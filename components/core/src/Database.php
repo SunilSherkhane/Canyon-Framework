@@ -135,7 +135,8 @@ class Database
     ?int $limit = null,
     ?int $offset = null
   ): array {
-    $columns = is_array($columns) ? implode(', ', $columns) : $columns;
+    $table = preg_replace('/[^a-zA-Z0-9_]/', '', $table);
+    $columns = is_array($columns) ? implode(', ', array_map(fn($col) => "`" . str_replace("`", "``", $col) . "`", $columns)) : $columns;
 
     $sql = "SELECT $columns FROM `$table`";
     $bindings = [];
@@ -145,8 +146,12 @@ class Database
       $conditions = [];
       foreach ($where as $key => $value) {
         if (is_array($value)) {
-          // [operator, value] format
-          $conditions[] = "`$key` " . $value[0] . ' ?';
+          // [operator, value] format — operator must be a safe comparison token
+          $operator = preg_replace('/[^a-zA-Z0-9_<>=!]/', '', $value[0]);
+          if (!in_array($operator, ['=', '!=', '<>', '<', '>', '<=', '>=', 'LIKE', 'NOT LIKE', 'IN', 'IS NULL', 'IS NOT NULL', 'BETWEEN'], true)) {
+            $operator = '=';
+          }
+          $conditions[] = "`" . str_replace("`", "``", $key) . "` " . $operator . ' ?';
           $bindings[] = $value[1] ?? null;
         } else {
           // [column => value] format - exact match
@@ -183,7 +188,8 @@ class Database
       throw new \InvalidArgumentException('Cannot insert empty data');
     }
 
-    $columns = implode(', ', array_map(fn($col) => "`$col`", array_keys($data)));
+    $table = preg_replace('/[^a-zA-Z0-9_]/', '', $table);
+    $columns = implode(', ', array_map(fn($col) => "`" . str_replace("`", "``", $col) . "`", array_keys($data)));
     $placeholders = implode(', ', array_fill(0, count($data), '?'));
 
     $sql = "INSERT INTO `$table` ($columns) VALUES ($placeholders)";
@@ -207,7 +213,8 @@ class Database
       return 0;
     }
 
-    $set = implode(', ', array_map(fn($col) => "`$col` = ?", array_keys($data)));
+    $table = preg_replace('/[^a-zA-Z0-9_]/', '', $table);
+    $set = implode(', ', array_map(fn($col) => "`" . str_replace("`", "``", $col) . "` = ?", array_keys($data)));
     $sql = "UPDATE `$table` SET $set";
     $bindings = array_values($data);
 
@@ -215,10 +222,14 @@ class Database
       $conditions = [];
       foreach ($where as $key => $value) {
         if (is_array($value)) {
-          $conditions[] = "`$key` " . $value[0] . ' ?';
+          $operator = preg_replace('/[^a-zA-Z0-9_<>=!]/', '', $value[0]);
+          if (!in_array($operator, ['=', '!=', '<>', '<', '>', '<=', '>=', 'LIKE', 'NOT LIKE', 'IS NULL', 'IS NOT NULL'], true)) {
+            $operator = '=';
+          }
+          $conditions[] = "`" . str_replace("`", "``", $key) . "` " . $operator . ' ?';
           $bindings[] = $value[1] ?? null;
         } else {
-          $conditions[] = "`$key` = ?";
+          $conditions[] = "`" . str_replace("`", "``", $key) . "` = ?";
           $bindings[] = $value;
         }
       }
@@ -237,6 +248,7 @@ class Database
    */
   public function delete(string $table, array $where = []): int
   {
+    $table = preg_replace('/[^a-zA-Z0-9_]/', '', $table);
     $sql = "DELETE FROM `$table`";
 
     if (!empty($where)) {
@@ -244,10 +256,14 @@ class Database
       $bindings = [];
       foreach ($where as $key => $value) {
         if (is_array($value)) {
-          $conditions[] = "`$key` " . $value[0] . ' ?';
+          $operator = preg_replace('/[^a-zA-Z0-9_<>=!]/', '', $value[0]);
+          if (!in_array($operator, ['=', '!=', '<>', '<', '>', '<=', '>=', 'LIKE', 'NOT LIKE', 'IS NULL', 'IS NOT NULL'], true)) {
+            $operator = '=';
+          }
+          $conditions[] = "`" . str_replace("`", "``", $key) . "` " . $operator . ' ?';
           $bindings[] = $value[1] ?? null;
         } else {
-          $conditions[] = "`$key` = ?";
+          $conditions[] = "`" . str_replace("`", "``", $key) . "` = ?";
           $bindings[] = $value;
         }
       }

@@ -186,7 +186,7 @@ if (defined('CANYON_DB_CONNECTION')) {
 // Environment & error reporting
 // ============================================================================
 
-$isDebug = defined('CANYON_DEBUG') ? CANYON_DEBUG : (env('APP_DEBUG', 'true') === 'true');
+$isDebug = defined('CANYON_DEBUG') ? CANYON_DEBUG : (env('APP_DEBUG', 'false') === 'true');
 
 if ($isDebug) {
  error_reporting(E_ALL);
@@ -296,6 +296,7 @@ defined('CANYON_BASE_URL') || define('CANYON_BASE_URL', rtrim((string) $siteUrl,
 // ============================================================================
 
 if (!headers_sent()) {
+ header_remove('X-Powered-By');
  header('X-Frame-Options: DENY');
  header('X-Content-Type-Options: nosniff');
  header('X-XSS-Protection: 1; mode=block');
@@ -305,6 +306,16 @@ if (!headers_sent()) {
  header("Content-Security-Policy: $csp");
 
  header('Permissions-Policy: accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()');
+
+ // Enforce CORS when an Origin header is present
+ $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+ if ($origin !== '' && \Canyon\Core\Security::isValidOrigin($origin)) {
+  header("Access-Control-Allow-Origin: {$origin}");
+  header('Access-Control-Allow-Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS');
+  header('Access-Control-Allow-Headers: Content-Type, Authorization, X-CSRF-TOKEN, X-API-Key');
+  header('Access-Control-Allow-Credentials: true');
+  header('Access-Control-Max-Age: 86400');
+ }
 
  if ($protocol === 'https') {
   $hstsEnabled = defined('CANYON_HSTS_ENABLED') ? CANYON_HSTS_ENABLED : true;

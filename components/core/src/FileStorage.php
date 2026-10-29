@@ -70,8 +70,13 @@ class FileStorage
       return null;
     }
 
-    // Generate safe filename
-    $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
+    // Generate safe filename with strict extension whitelist
+    $extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+    $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'pdf', 'doc', 'docx', 'zip'];
+    if (!in_array($extension, $allowedExtensions, true)) {
+      self::$errors[] = 'File type not allowed';
+      return null;
+    }
     $filename = uniqid() . '_' . md5($file['name']) . '.' . $extension;
 
     // Create owner directory
